@@ -804,6 +804,8 @@ export interface components {
          *     non-zero when it reduces or closes a position).
          */
         Trade: {
+            /** Client Order Id */
+            client_order_id?: string | null;
             /**
              * Executed At
              * Format: date-time
