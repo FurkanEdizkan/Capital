@@ -5,17 +5,6 @@
 import { I } from "../components/icons";
 import { ScreenStub } from "./ScreenStub";
 
-export function Strategies() {
-  return (
-    <ScreenStub
-      title="Strategies"
-      phase="Phase 3"
-      icon={<I.Strategies size={22} />}
-      summary="Create, configure and enable trading strategies, set per-strategy capital allocation, and track net PnL & fees."
-    />
-  );
-}
-
 export function Backtest() {
   return (
     <ScreenStub

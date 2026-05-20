@@ -226,6 +226,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/strategies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Strategies
+         * @description Every registered strategy with its allocation, state and PnL.
+         */
+        get: operations["list_strategies_api_strategies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/strategies/{name}/allocation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Allocation
+         * @description Set a strategy's capital budget; the engine caps its exposure to it.
+         */
+        patch: operations["update_allocation_api_strategies__name__allocation_patch"];
+        trace?: never;
+    };
+    "/api/strategies/{name}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close Strategy
+         * @description Close every open position held by the strategy.
+         */
+        post: operations["close_strategy_api_strategies__name__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/strategies/{name}/enabled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Enabled
+         * @description Enable or disable a strategy. Disabling stops new entries only.
+         */
+        patch: operations["update_enabled_api_strategies__name__enabled_patch"];
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -302,6 +382,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AllocationUpdate */
+        AllocationUpdate: {
+            /** Allocated */
+            allocated: number | string;
+        };
         /** Body_login_api_auth_login_post */
         Body_login_api_auth_login_post: {
             /** Client Id */
@@ -359,6 +444,16 @@ export interface components {
             symbol: string;
             /** Volume */
             volume: string;
+        };
+        /** CloseResult */
+        CloseResult: {
+            /** Closed */
+            closed: number;
+        };
+        /** EnabledUpdate */
+        EnabledUpdate: {
+            /** Enabled */
+            enabled: boolean;
         };
         /**
          * EquitySnapshot
@@ -510,6 +605,36 @@ export interface components {
          * @enum {string}
          */
         Role: "admin" | "user";
+        /**
+         * StrategyRead
+         * @description A strategy's identity, lifecycle state and accounting summary.
+         */
+        StrategyRead: {
+            /** Allocated */
+            allocated: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Fees */
+            fees: string;
+            /** Kind */
+            kind: string;
+            /** Market */
+            market: string;
+            /** Name */
+            name: string;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Open Positions */
+            open_positions: number;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /** Symbol */
+            symbol: string;
+            /** Timeframe */
+            timeframe: string;
+            /** Unrealized Pnl */
+            unrealized_pnl: string;
+        };
         /** StrategySummary */
         StrategySummary: {
             /** Allocated */
@@ -941,6 +1066,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Trade"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_strategies_api_strategies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"][];
+                };
+            };
+        };
+    };
+    update_allocation_api_strategies__name__allocation_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllocationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_strategy_api_strategies__name__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_enabled_api_strategies__name__enabled_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnabledUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
                 };
             };
             /** @description Validation Error */

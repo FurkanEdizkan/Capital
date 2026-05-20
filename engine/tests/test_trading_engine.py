@@ -15,7 +15,7 @@ from trading.engine import TradingEngine
 from trading.executors.base import Order
 from trading.executors.sim import SimExecutor
 from trading.models import FillSide, PositionSide, Trade
-from trading.portfolio import set_allocation
+from trading.portfolio import list_positions, set_allocation
 
 
 def _klines(n: int) -> list[Kline]:
@@ -132,3 +132,15 @@ def test_start_and_stop(factory: Any) -> None:
     eng = _engine(factory, [])
     eng.start()
     eng.stop()  # must not raise
+
+
+def test_flatten_closes_open_positions(db_engine: Any, factory: Any) -> None:
+    eng = _engine(factory, [BuyWhenFlat("MA Cross", "BTCUSDT")])
+    eng.tick()  # opens a long position
+    with Session(db_engine) as s:
+        assert len(list_positions(s, strategy="MA Cross", open_only=True)) == 1
+
+    closed = eng.flatten("MA Cross")
+    assert closed == 1
+    with Session(db_engine) as s:
+        assert list_positions(s, strategy="MA Cross", open_only=True) == []
