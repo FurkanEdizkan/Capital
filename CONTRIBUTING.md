@@ -66,6 +66,12 @@ cd web && npm run lint && npm run build
 - Open the PR against `main`, fill in the template, and add `Closes #<issue>`.
 - CI must pass; a review is required (the repo admin may self-merge solo work).
 
+## Merging
+
+PRs are merged with a **merge commit** — *not* squashed — so each feature's
+branch and its individual commits stay visible in the history graph
+(`git log --graph`). Feature branches are kept after merge for the same reason.
+
 ## Workflow
 
 Work is tracked on the **Capital** GitHub Project board. Pick an issue from
