@@ -11,6 +11,7 @@ from decimal import Decimal
 
 from sqlmodel import Session, select
 
+from trading.executors.base import Order
 from trading.models import FillSide, Position, PositionSide, StrategyAllocation
 
 
@@ -150,3 +151,28 @@ def set_allocation(
 
 def list_allocations(session: Session) -> list[StrategyAllocation]:
     return list(session.exec(select(StrategyAllocation)).all())
+
+
+def enforce_allocation(
+    position: Position, allocation: Decimal, order: Order, price: Decimal
+) -> Order | None:
+    """Clip `order` so the strategy's exposure stays within its allocation.
+
+    Allocation caps the *absolute* position value (`|qty| * price`). An order
+    that only reduces exposure is always allowed in full; one that would push
+    exposure past the budget is clipped to the remaining headroom. Returns the
+    order unchanged, a quantity-reduced copy, or `None` when nothing fits.
+    """
+    price = Decimal(price)
+    if price <= 0 or order.quantity <= 0:
+        return None
+
+    cap_qty = max(Decimal(allocation), Decimal(0)) / price  # max |position size|
+    signed = _signed_qty(position)
+    # Headroom on the order's side before the absolute cap is breached.
+    headroom = cap_qty - signed if order.side is FillSide.buy else cap_qty + signed
+    if headroom <= 0:
+        return None
+    if order.quantity <= headroom:
+        return order
+    return order.model_copy(update={"quantity": headroom})
