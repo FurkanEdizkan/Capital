@@ -20,6 +20,37 @@ def _naive_utc(dt: datetime) -> datetime:
     return dt
 
 
+def _to_candle(market: Market, symbol: str, interval: str, k: object) -> Candle:
+    """Build a `Candle` row from an exchange `Kline`."""
+    return Candle(
+        market=market.value,
+        symbol=symbol,
+        interval=interval,
+        open_time=_naive_utc(k.open_time),  # type: ignore[attr-defined]
+        open=k.open,  # type: ignore[attr-defined]
+        high=k.high,  # type: ignore[attr-defined]
+        low=k.low,  # type: ignore[attr-defined]
+        close=k.close,  # type: ignore[attr-defined]
+        volume=k.volume,  # type: ignore[attr-defined]
+        close_time=_naive_utc(k.close_time),  # type: ignore[attr-defined]
+    )
+
+
+def _existing_open_times(
+    session: Session, *, market: Market, symbol: str, interval: str
+) -> set[datetime]:
+    """The set of `open_time`s already cached for this market/symbol/interval."""
+    return set(
+        session.exec(
+            select(Candle.open_time).where(
+                Candle.market == market.value,
+                Candle.symbol == symbol,
+                Candle.interval == interval,
+            )
+        ).all()
+    )
+
+
 def get_cached_candles(
     session: Session,
     *,
@@ -42,6 +73,27 @@ def get_cached_candles(
     return list(reversed(rows))
 
 
+def get_candle_range(
+    session: Session,
+    *,
+    market: Market,
+    symbol: str,
+    interval: str,
+    start: datetime,
+    end: datetime | None = None,
+) -> list[Candle]:
+    """Cached candles with `open_time` in ``[start, end]``, oldest-first."""
+    query = select(Candle).where(
+        Candle.market == market.value,
+        Candle.symbol == symbol,
+        Candle.interval == interval,
+        Candle.open_time >= _naive_utc(start),
+    )
+    if end is not None:
+        query = query.where(Candle.open_time <= _naive_utc(end))
+    return list(session.exec(query.order_by(Candle.open_time)).all())  # type: ignore[arg-type]
+
+
 def refresh_candles(
     session: Session,
     client: BinanceClient,
@@ -53,30 +105,11 @@ def refresh_candles(
 ) -> list[Candle]:
     """Fetch the latest candles from Binance, cache new ones, return the series."""
     fetched = client.get_klines(symbol, interval, market, limit)
-
-    existing = set(
-        session.exec(
-            select(Candle.open_time).where(
-                Candle.market == market.value,
-                Candle.symbol == symbol,
-                Candle.interval == interval,
-            )
-        ).all()
+    existing = _existing_open_times(
+        session, market=market, symbol=symbol, interval=interval
     )
-
     new_rows = [
-        Candle(
-            market=market.value,
-            symbol=symbol,
-            interval=interval,
-            open_time=_naive_utc(k.open_time),
-            open=k.open,
-            high=k.high,
-            low=k.low,
-            close=k.close,
-            volume=k.volume,
-            close_time=_naive_utc(k.close_time),
-        )
+        _to_candle(market, symbol, interval, k)
         for k in fetched
         if _naive_utc(k.open_time) not in existing
     ]
@@ -87,3 +120,36 @@ def refresh_candles(
     return get_cached_candles(
         session, market=market, symbol=symbol, interval=interval, limit=limit
     )
+
+
+def download_candles(
+    session: Session,
+    client: BinanceClient,
+    *,
+    market: Market,
+    symbol: str,
+    interval: str,
+    start: datetime,
+    end: datetime | None = None,
+) -> int:
+    """Download historical klines for ``[start, end]`` and cache new ones.
+
+    Returns the number of newly-inserted candles. The cache is insert-only, so
+    re-downloading an already-cached range is a cheap no-op. Backs the backtest
+    history downloader.
+    """
+    fetched = client.get_historical_klines(
+        symbol, interval, start=start, end=end, market=market
+    )
+    existing = _existing_open_times(
+        session, market=market, symbol=symbol, interval=interval
+    )
+    new_rows = [
+        _to_candle(market, symbol, interval, k)
+        for k in fetched
+        if _naive_utc(k.open_time) not in existing
+    ]
+    if new_rows:
+        session.add_all(new_rows)
+        session.commit()
+    return len(new_rows)

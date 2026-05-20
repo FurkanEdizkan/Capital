@@ -1,5 +1,6 @@
 """Tests for the Binance REST client wrapper — hermetic (no network)."""
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -40,6 +41,11 @@ class FakeBinanceLib:
 
     futures_klines = get_klines
 
+    def get_historical_klines(self, *_: Any, **__: Any) -> list[list[Any]]:
+        return [_KLINE]
+
+    futures_historical_klines = get_historical_klines
+
     def futures_mark_price(self, **_: Any) -> dict[str, Any]:
         return _MARK
 
@@ -73,6 +79,14 @@ def test_get_klines(bc: BinanceClient) -> None:
     assert k.open == Decimal("67000.0")
     assert k.close == Decimal("67320.0")
     assert k.open_time.year == 2024
+
+
+def test_get_historical_klines(bc: BinanceClient) -> None:
+    klines = bc.get_historical_klines(
+        "BTCUSDT", "1h", start=datetime(2024, 1, 1, tzinfo=UTC)
+    )
+    assert len(klines) == 1
+    assert klines[0].close == Decimal("67320.0")
 
 
 def test_get_funding(bc: BinanceClient) -> None:
