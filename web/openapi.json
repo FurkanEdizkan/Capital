@@ -60,6 +60,117 @@
         "title": "Body_login_auth_login_post",
         "type": "object"
       },
+      "Candle": {
+        "description": "A single OHLCV bar for one symbol/interval/market.",
+        "properties": {
+          "close": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Close",
+            "type": "string"
+          },
+          "close_time": {
+            "format": "date-time",
+            "title": "Close Time",
+            "type": "string"
+          },
+          "high": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "High",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "interval": {
+            "maxLength": 8,
+            "title": "Interval",
+            "type": "string"
+          },
+          "low": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Low",
+            "type": "string"
+          },
+          "market": {
+            "maxLength": 8,
+            "title": "Market",
+            "type": "string"
+          },
+          "open": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Open",
+            "type": "string"
+          },
+          "open_time": {
+            "format": "date-time",
+            "title": "Open Time",
+            "type": "string"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "volume": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Volume",
+            "type": "string"
+          }
+        },
+        "required": [
+          "market",
+          "symbol",
+          "interval",
+          "open_time",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "close_time"
+        ],
+        "title": "Candle",
+        "type": "object"
+      },
+      "FundingRate": {
+        "properties": {
+          "funding_rate": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Funding Rate",
+            "type": "string"
+          },
+          "mark_price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Mark Price",
+            "type": "string"
+          },
+          "next_funding_time": {
+            "format": "date-time",
+            "title": "Next Funding Time",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "funding_rate",
+          "mark_price",
+          "next_funding_time"
+        ],
+        "title": "FundingRate",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -71,6 +182,63 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Market": {
+        "enum": [
+          "spot",
+          "futures"
+        ],
+        "title": "Market",
+        "type": "string"
+      },
+      "OrderBook": {
+        "properties": {
+          "asks": {
+            "items": {
+              "$ref": "#/components/schemas/OrderBookLevel"
+            },
+            "title": "Asks",
+            "type": "array"
+          },
+          "bids": {
+            "items": {
+              "$ref": "#/components/schemas/OrderBookLevel"
+            },
+            "title": "Bids",
+            "type": "array"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "bids",
+          "asks"
+        ],
+        "title": "OrderBook",
+        "type": "object"
+      },
+      "OrderBookLevel": {
+        "properties": {
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price",
+            "type": "string"
+          },
+          "qty": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Qty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "price",
+          "qty"
+        ],
+        "title": "OrderBookLevel",
         "type": "object"
       },
       "PasswordReset": {
@@ -109,6 +277,37 @@
         ],
         "title": "Role",
         "type": "string"
+      },
+      "Ticker": {
+        "properties": {
+          "change_pct_24h": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Change Pct 24H",
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price",
+            "type": "string"
+          },
+          "quote_volume_24h": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quote Volume 24H",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "price",
+          "change_pct_24h",
+          "quote_volume_24h"
+        ],
+        "title": "Ticker",
+        "type": "object"
       },
       "TokenPair": {
         "properties": {
@@ -292,6 +491,260 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/market/funding": {
+      "get": {
+        "description": "Current futures funding rate for a symbol.",
+        "operationId": "get_funding_api_market_funding_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": true,
+            "schema": {
+              "title": "Symbol",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundingRate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Funding",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/market/klines": {
+      "get": {
+        "description": "Candle history \u2014 served from the cache, refreshed from Binance.",
+        "operationId": "get_klines_api_market_klines_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": true,
+            "schema": {
+              "maxLength": 24,
+              "minLength": 3,
+              "title": "Symbol",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "required": false,
+            "schema": {
+              "default": "1h",
+              "title": "Interval",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Market",
+              "default": "spot"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Candle"
+                  },
+                  "title": "Response Get Klines Api Market Klines Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Klines",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/market/orderbook": {
+      "get": {
+        "description": "Order-book depth for a symbol.",
+        "operationId": "get_orderbook_api_market_orderbook_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": true,
+            "schema": {
+              "title": "Symbol",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Market",
+              "default": "spot"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 5,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderBook"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Orderbook",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/market/tickers": {
+      "get": {
+        "description": "Latest 24h tickers \u2014 from the live snapshot, or REST as a fallback.",
+        "operationId": "list_tickers_api_market_tickers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Market",
+              "default": "spot"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Ticker"
+                  },
+                  "title": "Response List Tickers Api Market Tickers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Tickers",
+        "tags": [
+          "market"
+        ]
+      }
+    },
     "/api/users": {
       "get": {
         "operationId": "list_users_api_users_get",
