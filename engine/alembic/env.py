@@ -15,6 +15,7 @@ from auth import models as _auth_models  # noqa: F401 — register tables on met
 from config import settings
 from db import SQLModel
 from marketdata import models as _md_models  # noqa: F401 — register tables on metadata
+from trading import models as _trading_models  # noqa: F401 — register tables on metadata
 
 # Model modules are imported above so their tables register on
 # SQLModel.metadata and `alembic revision --autogenerate` can see them.
