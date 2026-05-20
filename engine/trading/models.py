@@ -61,3 +61,25 @@ class Position(SQLModel, table=True):
     fees_paid: Decimal = Field(default=Decimal(0), **_AMT)
     opened_at: datetime | None = None
     updated_at: datetime | None = None
+
+
+class Trade(SQLModel, table=True):
+    """An executed fill — the transaction-log row, attributed to a strategy.
+
+    `realized_pnl` is the PnL booked *by this fill* (0 for opening/adding fills,
+    non-zero when it reduces or closes a position).
+    """
+
+    __tablename__ = "trade"
+
+    id: int | None = Field(default=None, primary_key=True)
+    strategy: str = Field(index=True, max_length=64)
+    market: str = Field(max_length=8)
+    symbol: str = Field(index=True, max_length=24)
+    side: str = Field(max_length=8)
+    quantity: Decimal = Field(**_AMT)
+    price: Decimal = Field(**_AMT)
+    fee: Decimal = Field(default=Decimal(0), **_AMT)
+    realized_pnl: Decimal = Field(default=Decimal(0), **_AMT)
+    mode: str = Field(default="sim", max_length=8)
+    executed_at: datetime = Field(index=True)
