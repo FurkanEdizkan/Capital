@@ -1,0 +1,28 @@
+# Capital — base service definitions.
+# Phase 0 (issue #2): PostgreSQL only. The `engine`, `web` and `caddy` services
+# are added in later Phase 0 / Phase 6 work; dev overrides live in
+# docker-compose.override.yml.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: capital-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-capital}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-capital}
+      POSTGRES_DB: ${POSTGRES_DB:-capital}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Other services wait for this before starting (depends_on: condition).
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-capital} -d ${POSTGRES_DB:-capital}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    name: capital-pgdata

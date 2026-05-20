@@ -1,0 +1,17 @@
+# Repo-wide ignores. Per-app ignores live in engine/.gitignore and web/.gitignore.
+
+# Local environment / secrets — never commit
+.env
+.env.local
+*.local
+
+# PostgreSQL data volume + backups (see Deployment plan)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS / editor
+.DS_Store
+*.log
