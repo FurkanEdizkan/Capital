@@ -218,6 +218,21 @@ class BinanceClient:
             for r in raw
         ]
 
+    # -- account state (authenticated) -----------------------------------
+    def get_futures_positions(self) -> dict[str, Decimal]:
+        """Open USDⓈ-M futures positions — `{symbol: signed quantity}`.
+
+        Requires API keys. Used by reconciliation to compare Binance's
+        account-level position against the engine sub-ledger.
+        """
+        raw = self._call(self._c.futures_position_information)
+        positions: dict[str, Decimal] = {}
+        for entry in raw:
+            amount = Decimal(str(entry["positionAmt"]))
+            if amount != 0:
+                positions[entry["symbol"]] = amount
+        return positions
+
     # -- symbol filters ---------------------------------------------------
     def get_symbol_filters(
         self, symbol: str, market: Market = Market.spot

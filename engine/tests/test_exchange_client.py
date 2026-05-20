@@ -78,6 +78,13 @@ class FakeBinanceLib:
             ]
         }
 
+    def futures_position_information(self, **_: Any) -> list[dict[str, Any]]:
+        return [
+            {"symbol": "BTCUSDT", "positionAmt": "0.5"},
+            {"symbol": "ETHUSDT", "positionAmt": "-2.0"},
+            {"symbol": "SOLUSDT", "positionAmt": "0"},  # flat — excluded
+        ]
+
     def futures_income_history(self, **_: Any) -> list[dict[str, Any]]:
         return [
             {
@@ -141,6 +148,12 @@ def test_get_funding_payments(bc: BinanceClient) -> None:
     assert len(payments) == 1
     assert payments[0].amount == Decimal("-0.5")  # a funding fee paid
     assert payments[0].symbol == "BTCUSDT"
+
+
+def test_get_futures_positions(bc: BinanceClient) -> None:
+    positions = bc.get_futures_positions()
+    assert positions == {"BTCUSDT": Decimal("0.5"), "ETHUSDT": Decimal("-2.0")}
+    assert "SOLUSDT" not in positions  # flat positions are excluded
 
 
 def test_get_funding(bc: BinanceClient) -> None:
