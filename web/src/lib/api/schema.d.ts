@@ -66,6 +66,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/backtest/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run
+         * @description Replay a strategy over the requested date range and return the result.
+         */
+        post: operations["run_api_backtest_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/market/funding": {
         parameters: {
             query?: never;
@@ -387,6 +407,97 @@ export interface components {
             /** Allocated */
             allocated: number | string;
         };
+        /** BacktestMetricsRead */
+        BacktestMetricsRead: {
+            /** Losses */
+            losses: number;
+            /** Max Drawdown Pct */
+            max_drawdown_pct: string;
+            /** Sharpe */
+            sharpe: string;
+            /** Total Return Pct */
+            total_return_pct: string;
+            /** Trades */
+            trades: number;
+            /** Win Rate Pct */
+            win_rate_pct: string;
+            /** Wins */
+            wins: number;
+        };
+        /** BacktestRequest */
+        BacktestRequest: {
+            /** End */
+            end?: string | null;
+            /**
+             * Fee Rate
+             * @default 0.001
+             */
+            fee_rate: number | string;
+            /**
+             * Funding Rate
+             * @default 0
+             */
+            funding_rate: number | string;
+            /**
+             * Initial Capital
+             * @default 10000
+             */
+            initial_capital: number | string;
+            /**
+             * Slippage Bps
+             * @default 2
+             */
+            slippage_bps: number | string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /** Strategy */
+            strategy: string;
+        };
+        /** BacktestResponse */
+        BacktestResponse: {
+            /** Candles */
+            candles: number;
+            /** Equity Curve */
+            equity_curve: components["schemas"]["EquityPoint"][];
+            /** Final Equity */
+            final_equity: string;
+            /** Initial Capital */
+            initial_capital: string;
+            /** Interval */
+            interval: string;
+            metrics: components["schemas"]["BacktestMetricsRead"];
+            /** Net Pnl */
+            net_pnl: string;
+            /** Strategy */
+            strategy: string;
+            /** Symbol */
+            symbol: string;
+            /** Total Fees */
+            total_fees: string;
+            /** Trades */
+            trades: components["schemas"]["BacktestTradeRead"][];
+        };
+        /** BacktestTradeRead */
+        BacktestTradeRead: {
+            /** Fee */
+            fee: string;
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /** Side */
+            side: string;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+        };
         /** Body_login_api_auth_login_post */
         Body_login_api_auth_login_post: {
             /** Client Id */
@@ -454,6 +565,16 @@ export interface components {
         EnabledUpdate: {
             /** Enabled */
             enabled: boolean;
+        };
+        /** EquityPoint */
+        EquityPoint: {
+            /** Equity */
+            equity: string;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
         };
         /**
          * EquitySnapshot
@@ -846,6 +967,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_api_backtest_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacktestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestResponse"];
                 };
             };
             /** @description Validation Error */

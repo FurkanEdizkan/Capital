@@ -3,9 +3,10 @@ import { AuthProvider, RequireAuth } from "./lib/auth";
 import { Shell } from "./components/shell/Shell";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
+import { Backtest } from "./pages/Backtest";
 import { Markets } from "./pages/Markets";
 import { Strategies } from "./pages/Strategies";
-import { Backtest, History, Settings, Users } from "./pages/screens";
+import { History, Settings, Users } from "./pages/screens";
 
 export function App() {
   return (

@@ -133,7 +133,9 @@ export function Dashboard() {
       <Card>
         <SectionHeader title="Equity curve" subtitle="Snapshot per engine tick" />
         <div style={{ padding: 14 }}>
-          <EquityChart snapshots={equity} />
+          <EquityChart
+            points={equity.map((s) => ({ time: s.ts, value: Number(s.equity) }))}
+          />
         </div>
       </Card>
 
