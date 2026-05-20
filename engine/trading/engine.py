@@ -18,8 +18,9 @@ from exchange.client import BinanceClient
 from marketdata.cache import refresh_candles
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
-from trading.executors.base import BaseExecutor
-from trading.portfolio import get_allocation, get_or_create_position
+from trading.executors.base import BaseExecutor, ExecutionError
+from trading.lifecycle import is_enabled
+from trading.portfolio import enforce_allocation, get_allocation, get_or_create_position
 
 log = logging.getLogger("capital.trading.engine")
 
@@ -85,6 +86,10 @@ class TradingEngine:
                 return
             price = candles[-1].close
             self._last_prices[strat.symbol] = price
+            # Lifecycle: a disabled strategy is skipped — no new entries — but
+            # its open positions are left intact for a manual close.
+            if not is_enabled(session, strat.name):
+                return
             position = get_or_create_position(
                 session, strat.name, strat.market.value, strat.symbol
             )
@@ -98,9 +103,17 @@ class TradingEngine:
             order = strat.evaluate(ctx)
             if order is None:
                 return
-            # Phase 2: risk checks are pass-through — the full risk manager
-            # arrives in Phase 3 (issue #23).
-            self._executor.execute(session, order, reference_price=price)
+            # Cap the order to the strategy's capital allocation. The full risk
+            # manager (sizing, SL/TP, kill switch) arrives in issue #23.
+            order = enforce_allocation(position, allocation, order, price)
+            if order is None:
+                log.info("strategy %r order rejected — allocation exhausted", strat.name)
+                return
+            try:
+                self._executor.execute(session, order, reference_price=price)
+            except ExecutionError as exc:
+                log.info("strategy %r order skipped: %s", strat.name, exc)
+                return
             log.info("strategy %r executed %s %s", strat.name, order.side, order.symbol)
 
     def start(self) -> None:

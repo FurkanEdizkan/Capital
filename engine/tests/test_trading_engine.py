@@ -15,6 +15,7 @@ from trading.engine import TradingEngine
 from trading.executors.base import Order
 from trading.executors.sim import SimExecutor
 from trading.models import FillSide, PositionSide, Trade
+from trading.portfolio import set_allocation
 
 
 def _klines(n: int) -> list[Kline]:
@@ -77,6 +78,11 @@ def factory(db_engine: Any) -> Iterator[Any]:
 
 
 def _engine(factory: Any, strategies: list[BaseStrategy]) -> TradingEngine:
+    # Mirror startup seeding — every strategy gets a capital budget so the
+    # allocation enforcer admits its orders.
+    with factory() as session:
+        for strat in strategies:
+            set_allocation(session, strat.name, Decimal("100000"))
     return TradingEngine(
         session_factory=factory,
         client=FakeClient(),  # type: ignore[arg-type]

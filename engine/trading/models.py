@@ -28,13 +28,19 @@ class FillSide(StrEnum):
 
 
 class StrategyAllocation(SQLModel, table=True):
-    """The capital budget (quote currency) assigned to one strategy."""
+    """Per-strategy config row — capital budget and lifecycle state.
+
+    `allocated` is the quote-currency budget the engine caps the strategy's
+    exposure to; `enabled` gates whether the engine ticks it for new entries
+    (a disabled strategy keeps its open positions — see trading/lifecycle.py).
+    """
 
     __tablename__ = "strategy_allocation"
 
     id: int | None = Field(default=None, primary_key=True)
     strategy: str = Field(unique=True, index=True, max_length=64)
     allocated: Decimal = Field(default=Decimal(0), **_AMT)
+    enabled: bool = Field(default=True)
 
 
 class Position(SQLModel, table=True):
