@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  engine:
+    name: engine — lint, migrate, test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: capital
+          POSTGRES_PASSWORD: capital
+          POSTGRES_DB: capital
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U capital -d capital"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    defaults:
+      run:
+        working-directory: engine
+    env:
+      CAPITAL_DATABASE_URL: postgresql+psycopg://capital:capital@localhost:5432/capital
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Apply migrations
+        run: uv run alembic upgrade head
+      - name: Test (pytest)
+        run: uv run pytest
+
+  web:
+    name: web — lint, typecheck, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Lint (eslint)
+        run: npm run lint
+      - name: Build (tsc + vite)
+        run: npm run build
+
+  docker:
+    name: docker — images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: docker compose -f docker-compose.yml build

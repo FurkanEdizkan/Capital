@@ -1,0 +1,13 @@
+{
+  "name": "capital",
+  "private": true,
+  "description": "Repo-level tooling (husky + commitlint). Apps live in engine/ and web/.",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7"
+  }
+}
