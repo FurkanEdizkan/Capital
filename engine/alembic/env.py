@@ -11,11 +11,12 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from auth import models as _auth_models  # noqa: F401 — register tables on metadata
 from config import settings
 from db import SQLModel
 
-# Import model modules here so their tables register on SQLModel.metadata.
-# (No models yet — Phase 0 auth, issue #3, adds the first ones.)
+# Model modules are imported above so their tables register on
+# SQLModel.metadata and `alembic revision --autogenerate` can see them.
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

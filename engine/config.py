@@ -22,5 +22,21 @@ class Settings(BaseSettings):
     # CAPITAL_DATABASE_URL; the default targets the local docker-compose Postgres.
     database_url: str = "postgresql+psycopg://capital:capital@localhost:5432/capital"
 
+    # --- Auth -------------------------------------------------------------
+    # JWT signing secret. MUST be overridden in any real deployment via
+    # CAPITAL_JWT_SECRET — the default is for local development only.
+    jwt_secret: str = "dev-insecure-jwt-secret-change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    access_token_ttl_minutes: int = 30
+    refresh_token_ttl_days: int = 14
+
+    # Seeded admin operator — created on first startup if no users exist.
+    admin_username: str = "admin"
+    admin_password: str = "changeme"
+
+    # Login rate limiting (brute-force protection).
+    login_max_attempts: int = 5
+    login_lockout_minutes: int = 15
+
 
 settings = Settings()
