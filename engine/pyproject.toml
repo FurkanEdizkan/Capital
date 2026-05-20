@@ -1,0 +1,35 @@
+[project]
+name = "capital-engine"
+version = "0.1.0"
+description = "Capital — self-hosted automated Binance trading engine"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+]
+
+# This is an application, not a distributable library — uv manages the
+# environment and lockfile without trying to build/install the project itself.
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+# Flat app layout: modules live directly under engine/, so engine/ is on the path.
+pythonpath = ["."]
+testpaths = ["tests"]
