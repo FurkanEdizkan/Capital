@@ -1,7 +1,7 @@
-# Capital — base service definitions.
-# Phase 0 (issue #2): PostgreSQL only. The `engine`, `web` and `caddy` services
-# are added in later Phase 0 / Phase 6 work; dev overrides live in
-# docker-compose.override.yml.
+# Capital — base service definitions (postgres + engine + web).
+# Dev overrides (hot reload, mounted source) live in docker-compose.override.yml,
+# which Compose merges automatically. Production tuning lives in
+# docker-compose.prod.yml (added in Phase 6, alongside the Caddy reverse proxy).
 
 services:
   postgres:
@@ -16,11 +16,35 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      # Other services wait for this before starting (depends_on: condition).
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-capital} -d ${POSTGRES_DB:-capital}"]
       interval: 5s
       timeout: 5s
       retries: 12
+    restart: unless-stopped
+
+  engine:
+    build: ./engine
+    container_name: capital-engine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CAPITAL_ENVIRONMENT: ${CAPITAL_ENVIRONMENT:-development}
+      CAPITAL_DATABASE_URL: >-
+        postgresql+psycopg://${POSTGRES_USER:-capital}:${POSTGRES_PASSWORD:-capital}@postgres:5432/${POSTGRES_DB:-capital}
+    # Apply migrations, then serve the API.
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "${ENGINE_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    container_name: capital-web
+    depends_on:
+      - engine
+    ports:
+      - "${WEB_PORT:-5173}:80"
     restart: unless-stopped
 
 volumes:
