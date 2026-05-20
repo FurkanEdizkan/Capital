@@ -1,7 +1,7 @@
 {
   "components": {
     "schemas": {
-      "Body_login_auth_login_post": {
+      "Body_login_api_auth_login_post": {
         "properties": {
           "client_id": {
             "anyOf": [
@@ -57,7 +57,7 @@
           "username",
           "password"
         ],
-        "title": "Body_login_auth_login_post",
+        "title": "Body_login_api_auth_login_post",
         "type": "object"
       },
       "Candle": {
@@ -477,7 +477,7 @@
         "flows": {
           "password": {
             "scopes": {},
-            "tokenUrl": "/auth/login"
+            "tokenUrl": "/api/auth/login"
           }
         },
         "type": "oauth2"
@@ -491,6 +491,117 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/auth/login": {
+      "post": {
+        "description": "Exchange operator credentials for an access + refresh token pair.\n\nRate-limited: repeated failures lock the username out (brute-force guard).",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_api_auth_login_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "description": "Return the currently authenticated operator.",
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "description": "Issue a fresh token pair from a valid refresh token.",
+        "operationId": "refresh_api_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/market/funding": {
       "get": {
         "description": "Current futures funding rate for a symbol.",
@@ -923,117 +1034,6 @@
         "summary": "Reset Password",
         "tags": [
           "users"
-        ]
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "description": "Exchange operator credentials for an access + refresh token pair.\n\nRate-limited: repeated failures lock the username out (brute-force guard).",
-        "operationId": "login_auth_login_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_login_auth_login_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenPair"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Login",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/me": {
-      "get": {
-        "description": "Return the currently authenticated operator.",
-        "operationId": "me_auth_me_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInfo"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "summary": "Me",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/refresh": {
-      "post": {
-        "description": "Issue a fresh token pair from a valid refresh token.",
-        "operationId": "refresh_auth_refresh_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenPair"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Refresh",
-        "tags": [
-          "auth"
         ]
       }
     },
