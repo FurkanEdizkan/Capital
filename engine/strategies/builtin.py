@@ -1,7 +1,9 @@
 """Built-in strategies registered with the engine on startup.
 
-Phase 2 ships one strategy type (MA crossover) on two symbols. Phase 3 adds
-more strategy types and UI-driven configuration; this stays the default set.
+Phase 3 ships five strategy types — MA crossover, RSI mean-reversion, MACD
+trend, Bollinger breakout and DCA — each ready to run on a default symbol.
+UI-driven configuration of additional instances arrives with the Strategies
+page; this stays the out-of-the-box default set.
 """
 
 import logging
@@ -12,7 +14,11 @@ from sqlmodel import Session
 
 from exchange.client import Market
 from strategies.base import BaseStrategy
+from strategies.bollinger import BollingerStrategy
+from strategies.dca import DCAStrategy
 from strategies.ma_cross import MACrossStrategy
+from strategies.macd import MACDStrategy
+from strategies.rsi import RSIStrategy
 from trading.portfolio import get_allocation, set_allocation
 
 log = logging.getLogger("capital.strategies")
@@ -25,6 +31,10 @@ def default_strategies() -> list[BaseStrategy]:
     return [
         MACrossStrategy("MA Cross BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
         MACrossStrategy("MA Cross ETH", "ETHUSDT", market=Market.spot, timeframe="1h"),
+        RSIStrategy("RSI Reversion BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
+        MACDStrategy("MACD Trend ETH", "ETHUSDT", market=Market.spot, timeframe="1h"),
+        BollingerStrategy("Bollinger Breakout BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
+        DCAStrategy("DCA Accumulate BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
     ]
 
 
