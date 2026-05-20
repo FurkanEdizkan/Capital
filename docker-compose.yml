@@ -28,6 +28,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Inject the operator's .env (JWT secret, admin credentials, …) when present.
+    # `environment:` below still wins for the keys it sets explicitly.
+    env_file:
+      - path: .env
+        required: false
     environment:
       CAPITAL_ENVIRONMENT: ${CAPITAL_ENVIRONMENT:-development}
       CAPITAL_DATABASE_URL: >-
