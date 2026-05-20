@@ -1,0 +1,28 @@
+# Dev overrides — merged automatically by `docker compose up`.
+# Engine runs with --reload and mounted source; web runs the Vite dev server.
+
+services:
+  engine:
+    # Mount source for hot reload; uvicorn --reload restarts on change.
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./engine:/app
+      # Keep the image's virtualenv — don't let the bind mount shadow it.
+      - /app/.venv
+
+  web:
+    # Dev: Vite dev server instead of the nginx production image.
+    build: !reset null
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    ports: !override
+      - "${WEB_PORT:-5173}:5173"
+
+volumes:
+  web_node_modules:

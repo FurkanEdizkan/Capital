@@ -1,0 +1,7 @@
+# Keep host dependencies/build output out of the build context — the image
+# runs its own `npm install` and `npm run build`.
+node_modules
+dist
+dist-ssr
+.vite
+*.local
