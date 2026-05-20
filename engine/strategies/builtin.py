@@ -12,10 +12,12 @@ from decimal import Decimal
 
 from sqlmodel import Session
 
+from config import settings
 from exchange.client import Market
 from strategies.base import BaseStrategy
 from strategies.bollinger import BollingerStrategy
 from strategies.dca import DCAStrategy
+from strategies.loader import load_plugin_strategies
 from strategies.ma_cross import MACrossStrategy
 from strategies.macd import MACDStrategy
 from strategies.rsi import RSIStrategy
@@ -36,6 +38,23 @@ def default_strategies() -> list[BaseStrategy]:
         BollingerStrategy("Bollinger Breakout BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
         DCAStrategy("DCA Accumulate BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
     ]
+
+
+def all_strategies() -> list[BaseStrategy]:
+    """Built-in defaults plus any discovered plugin strategies.
+
+    Strategy names key the position sub-ledger and must be unique — a plugin
+    that reuses a built-in (or another plugin's) name is logged and dropped.
+    """
+    combined: list[BaseStrategy] = list(default_strategies())
+    seen = {s.name for s in combined}
+    for strat in load_plugin_strategies(settings.strategy_plugins_dir):
+        if strat.name in seen:
+            log.warning("duplicate strategy name %r from plugin — skipping", strat.name)
+            continue
+        seen.add(strat.name)
+        combined.append(strat)
+    return combined
 
 
 def seed_allocations(

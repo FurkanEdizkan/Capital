@@ -21,7 +21,7 @@ from config import settings
 from db import engine as db_engine
 from exchange.client import BinanceClient
 from marketdata.stream import StreamManager
-from strategies.builtin import default_strategies, seed_allocations
+from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
 from trading.executors.sim import SimExecutor
 
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     def session_factory() -> Session:
         return Session(db_engine)
 
-    strategies = default_strategies()
+    strategies = all_strategies()
     try:
         seed_allocations(session_factory, strategies)
     except Exception:  # noqa: BLE001 — never let seeding crash startup
