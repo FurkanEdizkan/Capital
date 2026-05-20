@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     environment: str = "development"
 
+    # Directory scanned for custom code-strategy plugins (see strategies/loader.py).
+    # Relative paths resolve against the engine working directory.
+    strategy_plugins_dir: str = "strategies/plugins"
+
     # PostgreSQL connection (SQLAlchemy URL, psycopg3 driver). Override via
     # CAPITAL_DATABASE_URL; the default targets the local docker-compose Postgres.
     database_url: str = "postgresql+psycopg://capital:capital@localhost:5432/capital"
