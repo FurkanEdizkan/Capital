@@ -24,6 +24,7 @@ from marketdata.stream import StreamManager
 from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
 from trading.executors.sim import SimExecutor
+from trading.risk import RiskManager
 
 log = logging.getLogger("capital")
 
@@ -55,6 +56,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         client=BinanceClient(),
         executor=SimExecutor(),
         strategies=strategies,
+        risk=RiskManager.from_settings(settings),
     )
     app.state.trading = trading
     trading.start()
