@@ -4,7 +4,8 @@ import { Shell } from "./components/shell/Shell";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Markets } from "./pages/Markets";
-import { Backtest, History, Settings, Strategies, Users } from "./pages/screens";
+import { Strategies } from "./pages/Strategies";
+import { Backtest, History, Settings, Users } from "./pages/screens";
 
 export function App() {
   return (

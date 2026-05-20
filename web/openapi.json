@@ -1,6 +1,28 @@
 {
   "components": {
     "schemas": {
+      "AllocationUpdate": {
+        "properties": {
+          "allocated": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Allocated"
+          }
+        },
+        "required": [
+          "allocated"
+        ],
+        "title": "AllocationUpdate",
+        "type": "object"
+      },
       "Body_login_api_auth_login_post": {
         "properties": {
           "client_id": {
@@ -138,6 +160,32 @@
           "close_time"
         ],
         "title": "Candle",
+        "type": "object"
+      },
+      "CloseResult": {
+        "properties": {
+          "closed": {
+            "title": "Closed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "closed"
+        ],
+        "title": "CloseResult",
+        "type": "object"
+      },
+      "EnabledUpdate": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "EnabledUpdate",
         "type": "object"
       },
       "EquitySnapshot": {
@@ -494,6 +542,80 @@
         ],
         "title": "Role",
         "type": "string"
+      },
+      "StrategyRead": {
+        "description": "A strategy's identity, lifecycle state and accounting summary.",
+        "properties": {
+          "allocated": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Allocated",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fees",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "market": {
+            "title": "Market",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "net_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pnl",
+            "type": "string"
+          },
+          "open_positions": {
+            "title": "Open Positions",
+            "type": "integer"
+          },
+          "realized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "unrealized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized Pnl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "symbol",
+          "market",
+          "timeframe",
+          "enabled",
+          "allocated",
+          "realized_pnl",
+          "unrealized_pnl",
+          "fees",
+          "net_pnl",
+          "open_positions"
+        ],
+        "title": "StrategyRead",
+        "type": "object"
       },
       "StrategySummary": {
         "properties": {
@@ -1340,6 +1462,201 @@
         "summary": "Trades",
         "tags": [
           "portfolio"
+        ]
+      }
+    },
+    "/api/strategies": {
+      "get": {
+        "description": "Every registered strategy with its allocation, state and PnL.",
+        "operationId": "list_strategies_api_strategies_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyRead"
+                  },
+                  "title": "Response List Strategies Api Strategies Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Strategies",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/{name}/allocation": {
+      "patch": {
+        "description": "Set a strategy's capital budget; the engine caps its exposure to it.",
+        "operationId": "update_allocation_api_strategies__name__allocation_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Allocation",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/{name}/close": {
+      "post": {
+        "description": "Close every open position held by the strategy.",
+        "operationId": "close_strategy_api_strategies__name__close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Close Strategy",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/{name}/enabled": {
+      "patch": {
+        "description": "Enable or disable a strategy. Disabling stops new entries only.",
+        "operationId": "update_enabled_api_strategies__name__enabled_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnabledUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Enabled",
+        "tags": [
+          "strategies"
         ]
       }
     },

@@ -18,9 +18,15 @@ from exchange.client import BinanceClient
 from marketdata.cache import refresh_candles
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
-from trading.executors.base import BaseExecutor, ExecutionError
+from trading.executors.base import BaseExecutor, ExecutionError, Order
 from trading.lifecycle import is_enabled
-from trading.portfolio import enforce_allocation, get_allocation, get_or_create_position
+from trading.models import FillSide, PositionSide
+from trading.portfolio import (
+    enforce_allocation,
+    get_allocation,
+    get_or_create_position,
+    list_positions,
+)
 from trading.risk import RiskManager
 
 log = logging.getLogger("capital.trading.engine")
@@ -151,3 +157,35 @@ class TradingEngine:
             self._scheduler.shutdown(wait=False)
             self._scheduler = None
             log.info("trading engine stopped")
+
+    def flatten(self, strategy: str) -> int:
+        """Close every open position held by `strategy`. Returns the count closed.
+
+        Backs the manual-close action on the Strategies page — e.g. flattening
+        a disabled strategy before removing it. Positions are closed at the
+        last price seen for the symbol, falling back to the entry price.
+        """
+        closed = 0
+        with self._session_factory() as session:
+            for pos in list_positions(session, strategy=strategy, open_only=True):
+                price = self._last_prices.get(pos.symbol, pos.entry_price)
+                side = (
+                    FillSide.sell
+                    if pos.side == PositionSide.long.value
+                    else FillSide.buy
+                )
+                order = Order(
+                    strategy=strategy,
+                    market=pos.market,
+                    symbol=pos.symbol,
+                    side=side,
+                    quantity=pos.qty,
+                )
+                try:
+                    self._executor.execute(session, order, reference_price=price)
+                    closed += 1
+                except ExecutionError:
+                    log.warning(
+                        "could not flatten %r position on %s", strategy, pos.symbol
+                    )
+        return closed
