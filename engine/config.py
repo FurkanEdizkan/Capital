@@ -4,6 +4,8 @@ This is the single source of truth for runtime config. Later phases extend
 `Settings` with Binance keys, the JWT secret, etc.
 """
 
+from decimal import Decimal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -41,6 +43,21 @@ class Settings(BaseSettings):
     # Login rate limiting (brute-force protection).
     login_max_attempts: int = 5
     login_lockout_minutes: int = 15
+
+    # --- Risk manager -----------------------------------------------------
+    # Global trading limits enforced by trading/risk.py. Every limit is 0 by
+    # default, meaning *disabled* — risk control is strictly opt-in.
+    #
+    # Max notional value of any single order (quote currency).
+    risk_max_position_notional: Decimal = Decimal(0)
+    # Force-close a position when its unrealized loss/gain reaches this percent
+    # of the position's entry value.
+    risk_stop_loss_pct: Decimal = Decimal(0)
+    risk_take_profit_pct: Decimal = Decimal(0)
+    # Kill switch — halt new exposure when the day's realized loss (quote
+    # currency) or the equity drawdown from peak (percent) exceeds the limit.
+    risk_daily_loss_limit: Decimal = Decimal(0)
+    risk_max_drawdown_pct: Decimal = Decimal(0)
 
 
 settings = Settings()

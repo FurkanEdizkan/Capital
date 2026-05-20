@@ -21,6 +21,7 @@ from trading.accounting import record_equity_snapshot
 from trading.executors.base import BaseExecutor, ExecutionError
 from trading.lifecycle import is_enabled
 from trading.portfolio import enforce_allocation, get_allocation, get_or_create_position
+from trading.risk import RiskManager
 
 log = logging.getLogger("capital.trading.engine")
 
@@ -35,12 +36,14 @@ class TradingEngine:
         client: BinanceClient,
         executor: BaseExecutor,
         strategies: list[BaseStrategy] | None = None,
+        risk: RiskManager | None = None,
         tick_seconds: int = 60,
         candle_limit: int = 200,
     ) -> None:
         self._session_factory = session_factory
         self._client = client
         self._executor = executor
+        self._risk = risk or RiskManager()  # all limits disabled by default
         self._strategies: list[BaseStrategy] = list(strategies or [])
         self._tick_seconds = tick_seconds
         self._candle_limit = candle_limit
@@ -86,13 +89,21 @@ class TradingEngine:
                 return
             price = candles[-1].close
             self._last_prices[strat.symbol] = price
+            position = get_or_create_position(
+                session, strat.name, strat.market.value, strat.symbol
+            )
+            # Risk: force-close a position that breached its stop-loss or
+            # take-profit. This runs regardless of lifecycle state — a stop is
+            # a safety net, not a strategy-driven entry.
+            stop = self._risk.stop_order(position, price)
+            if stop is not None:
+                self._executor.execute(session, stop, reference_price=price)
+                log.info("risk: stopped out %r position on %s", strat.name, strat.symbol)
+                return
             # Lifecycle: a disabled strategy is skipped — no new entries — but
             # its open positions are left intact for a manual close.
             if not is_enabled(session, strat.name):
                 return
-            position = get_or_create_position(
-                session, strat.name, strat.market.value, strat.symbol
-            )
             allocation = get_allocation(session, strat.name)
             ctx = StrategyContext(
                 candles=candles,
@@ -108,6 +119,11 @@ class TradingEngine:
             order = enforce_allocation(position, allocation, order, price)
             if order is None:
                 log.info("strategy %r order rejected — allocation exhausted", strat.name)
+                return
+            # Risk: order sizing cap + kill switch (blocks new exposure only).
+            order = self._risk.review(session, order, position, price)
+            if order is None:
+                log.info("strategy %r order blocked by risk manager", strat.name)
                 return
             try:
                 self._executor.execute(session, order, reference_price=price)
