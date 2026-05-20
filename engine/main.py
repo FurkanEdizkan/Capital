@@ -1,18 +1,42 @@
 """Capital trading engine — FastAPI application entry point.
 
-Phase 0 scope: a health endpoint and the app skeleton. Later phases mount the
-market-data, trading, strategy, auth and MCP routers onto this app.
+Mounts the API routers and seeds the initial admin on startup. Later phases
+add the market-data, trading, strategy and MCP routers.
 """
+
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from api.users import router as users_router
+from auth.routes import router as auth_router
+from auth.seed import seed_admin
 from config import settings
+
+log = logging.getLogger("capital")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Startup/shutdown hooks."""
+    try:
+        seed_admin()
+    except Exception:  # noqa: BLE001 — never let seeding crash startup
+        log.exception("Admin seeding skipped (run `alembic upgrade head` first?)")
+    yield
+
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     summary="Self-hosted automated Binance trading engine.",
+    lifespan=lifespan,
 )
+
+app.include_router(auth_router)
+app.include_router(users_router)
 
 
 @app.get("/health", tags=["system"])
