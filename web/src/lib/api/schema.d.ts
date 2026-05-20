@@ -146,6 +146,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portfolio/equity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Equity
+         * @description Equity-curve history, oldest-first.
+         */
+        get: operations["equity_api_portfolio_equity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Positions
+         * @description Currently open positions across all strategies.
+         */
+        get: operations["positions_api_portfolio_positions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summary
+         * @description Aggregate accounting — equity, PnL, fees, allocated vs idle capital.
+         */
+        get: operations["summary_api_portfolio_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/trades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trades
+         * @description Most-recent executed trades.
+         */
+        get: operations["trades_api_portfolio_trades_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -280,6 +360,29 @@ export interface components {
             /** Volume */
             volume: string;
         };
+        /**
+         * EquitySnapshot
+         * @description A point-in-time snapshot of portfolio equity — powers the equity curve.
+         */
+        EquitySnapshot: {
+            /** Equity */
+            equity: string;
+            /** Fees */
+            fees: string;
+            /** Id */
+            id?: number | null;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+            /** Unrealized Pnl */
+            unrealized_pnl: string;
+        };
         /** FundingRate */
         FundingRate: {
             /** Funding Rate */
@@ -325,6 +428,76 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** PortfolioSummary */
+        PortfolioSummary: {
+            /** Deployed Capital */
+            deployed_capital: string;
+            /** Equity */
+            equity: string;
+            /** Idle Capital */
+            idle_capital: string;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Open Positions */
+            open_positions: number;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /** Strategies */
+            strategies: components["schemas"]["StrategySummary"][];
+            /** Total Allocated */
+            total_allocated: string;
+            /** Total Fees */
+            total_fees: string;
+            /** Unrealized Pnl */
+            unrealized_pnl: string;
+        };
+        /**
+         * Position
+         * @description One strategy's position in one symbol/market — the attribution row.
+         *
+         *     `qty` is always >= 0; `side` gives the direction. `realized_pnl` and
+         *     `fees_paid` accumulate over the position's lifetime (the row is kept after
+         *     a position goes flat so cumulative PnL is preserved).
+         */
+        Position: {
+            /**
+             * Entry Price
+             * @default 0
+             */
+            entry_price: string;
+            /**
+             * Fees Paid
+             * @default 0
+             */
+            fees_paid: string;
+            /** Id */
+            id?: number | null;
+            /** Market */
+            market: string;
+            /** Opened At */
+            opened_at?: string | null;
+            /**
+             * Qty
+             * @default 0
+             */
+            qty: string;
+            /**
+             * Realized Pnl
+             * @default 0
+             */
+            realized_pnl: string;
+            /**
+             * Side
+             * @default flat
+             */
+            side: string;
+            /** Strategy */
+            strategy: string;
+            /** Symbol */
+            symbol: string;
+            /** Updated At */
+            updated_at?: string | null;
+        };
         /** RefreshRequest */
         RefreshRequest: {
             /** Refresh Token */
@@ -337,6 +510,23 @@ export interface components {
          * @enum {string}
          */
         Role: "admin" | "user";
+        /** StrategySummary */
+        StrategySummary: {
+            /** Allocated */
+            allocated: string;
+            /** Fees */
+            fees: string;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Open Positions */
+            open_positions: number;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /** Strategy */
+            strategy: string;
+            /** Unrealized Pnl */
+            unrealized_pnl: string;
+        };
         /** Ticker */
         Ticker: {
             /** Change Pct 24H */
@@ -359,6 +549,49 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+        };
+        /**
+         * Trade
+         * @description An executed fill — the transaction-log row, attributed to a strategy.
+         *
+         *     `realized_pnl` is the PnL booked *by this fill* (0 for opening/adding fills,
+         *     non-zero when it reduces or closes a position).
+         */
+        Trade: {
+            /**
+             * Executed At
+             * Format: date-time
+             */
+            executed_at: string;
+            /**
+             * Fee
+             * @default 0
+             */
+            fee: string;
+            /** Id */
+            id?: number | null;
+            /** Market */
+            market: string;
+            /**
+             * Mode
+             * @default sim
+             */
+            mode: string;
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: string;
+            /**
+             * Realized Pnl
+             * @default 0
+             */
+            realized_pnl: string;
+            /** Side */
+            side: string;
+            /** Strategy */
+            strategy: string;
+            /** Symbol */
+            symbol: string;
         };
         /** UserCreate */
         UserCreate: {
@@ -617,6 +850,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ticker"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    equity_api_portfolio_equity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquitySnapshot"][];
+                };
+            };
+        };
+    };
+    positions_api_portfolio_positions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Position"][];
+                };
+            };
+        };
+    };
+    summary_api_portfolio_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioSummary"];
+                };
+            };
+        };
+    };
+    trades_api_portfolio_trades_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trade"][];
                 };
             };
             /** @description Validation Error */

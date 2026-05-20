@@ -5,17 +5,6 @@
 import { I } from "../components/icons";
 import { ScreenStub } from "./ScreenStub";
 
-export function Dashboard() {
-  return (
-    <ScreenStub
-      title="Dashboard"
-      phase="Phase 2"
-      icon={<I.Dashboard size={22} />}
-      summary="Portfolio value, equity curve, open positions, live PnL net of fees, total fees and allocated-vs-idle capital."
-    />
-  );
-}
-
 export function Strategies() {
   return (
     <ScreenStub
