@@ -9,6 +9,7 @@ engine).
 
 import logging
 from collections.abc import Callable
+from decimal import Decimal
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session
@@ -16,6 +17,7 @@ from sqlmodel import Session
 from exchange.client import BinanceClient
 from marketdata.cache import refresh_candles
 from strategies.base import BaseStrategy, StrategyContext
+from trading.accounting import record_equity_snapshot
 from trading.executors.base import BaseExecutor
 from trading.portfolio import get_allocation, get_or_create_position
 
@@ -42,6 +44,9 @@ class TradingEngine:
         self._tick_seconds = tick_seconds
         self._candle_limit = candle_limit
         self._scheduler: BackgroundScheduler | None = None
+        # Latest price seen per symbol — used to mark positions for the
+        # equity snapshot recorded at the end of each tick.
+        self._last_prices: dict[str, Decimal] = {}
 
     def register(self, strategy: BaseStrategy) -> None:
         self._strategies.append(strategy)
@@ -51,12 +56,20 @@ class TradingEngine:
         return list(self._strategies)
 
     def tick(self) -> None:
-        """Evaluate every strategy once. A failing strategy never aborts the tick."""
+        """Evaluate every strategy once, then record an equity snapshot.
+
+        A failing strategy never aborts the tick.
+        """
         for strat in list(self._strategies):
             try:
                 self._tick_strategy(strat)
             except Exception:  # noqa: BLE001 — isolate per-strategy failures
                 log.exception("strategy %r tick failed", strat.name)
+        try:
+            with self._session_factory() as session:
+                record_equity_snapshot(session, dict(self._last_prices))
+        except Exception:  # noqa: BLE001 — accounting must not abort the loop
+            log.exception("equity snapshot failed")
 
     def _tick_strategy(self, strat: BaseStrategy) -> None:
         with self._session_factory() as session:
@@ -71,6 +84,7 @@ class TradingEngine:
             if not candles:
                 return
             price = candles[-1].close
+            self._last_prices[strat.symbol] = price
             position = get_or_create_position(
                 session, strat.name, strat.market.value, strat.symbol
             )
