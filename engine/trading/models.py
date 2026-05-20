@@ -83,3 +83,17 @@ class Trade(SQLModel, table=True):
     realized_pnl: Decimal = Field(default=Decimal(0), **_AMT)
     mode: str = Field(default="sim", max_length=8)
     executed_at: datetime = Field(index=True)
+
+
+class EquitySnapshot(SQLModel, table=True):
+    """A point-in-time snapshot of portfolio equity — powers the equity curve."""
+
+    __tablename__ = "equity_snapshot"
+
+    id: int | None = Field(default=None, primary_key=True)
+    ts: datetime = Field(index=True)
+    equity: Decimal = Field(**_AMT)
+    realized_pnl: Decimal = Field(**_AMT)
+    unrealized_pnl: Decimal = Field(**_AMT)
+    fees: Decimal = Field(**_AMT)
+    net_pnl: Decimal = Field(**_AMT)
