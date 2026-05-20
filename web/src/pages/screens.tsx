@@ -5,17 +5,6 @@
 import { I } from "../components/icons";
 import { ScreenStub } from "./ScreenStub";
 
-export function Backtest() {
-  return (
-    <ScreenStub
-      title="Backtest"
-      phase="Phase 4"
-      icon={<I.Backtest size={22} />}
-      summary="Replay a strategy over historical data with a realistic slippage & fee model; view the equity curve and metrics."
-    />
-  );
-}
-
 export function History() {
   return (
     <ScreenStub

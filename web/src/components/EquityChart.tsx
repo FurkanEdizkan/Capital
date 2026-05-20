@@ -2,20 +2,21 @@
 import { createChart, type IChartApi, type UTCTimestamp } from "lightweight-charts";
 import { useEffect, useRef } from "react";
 
-import type { EquitySnapshot } from "../lib/api/portfolio";
+/** A single point on an equity curve — `time` is an ISO string or epoch ms. */
+export type EquityPoint = { time: string | number; value: number };
 
 export function EquityChart({
-  snapshots,
+  points,
   height = 280,
 }: {
-  snapshots: EquitySnapshot[];
+  points: EquityPoint[];
   height?: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = container.current;
-    if (!el || snapshots.length === 0) return;
+    if (!el || points.length === 0) return;
 
     const chart: IChartApi = createChart(el, {
       width: el.clientWidth,
@@ -43,10 +44,12 @@ export function EquityChart({
     // De-dup by timestamp — lightweight-charts requires strictly increasing time.
     const seen = new Set<number>();
     series.setData(
-      snapshots
-        .map((s) => ({
-          time: Math.floor(Date.parse(s.ts) / 1000) as UTCTimestamp,
-          value: Number(s.equity),
+      points
+        .map((p) => ({
+          time: Math.floor(
+            (typeof p.time === "number" ? p.time : Date.parse(p.time)) / 1000,
+          ) as UTCTimestamp,
+          value: p.value,
         }))
         .filter((p) => !seen.has(p.time) && seen.add(p.time)),
     );
@@ -58,9 +61,9 @@ export function EquityChart({
       ro.disconnect();
       chart.remove();
     };
-  }, [snapshots, height]);
+  }, [points, height]);
 
-  if (snapshots.length === 0) {
+  if (points.length === 0) {
     return (
       <div
         style={{
@@ -72,7 +75,7 @@ export function EquityChart({
           fontSize: 13,
         }}
       >
-        No equity history yet — the engine records a snapshot each tick.
+        No equity data to plot yet.
       </div>
     );
   }
