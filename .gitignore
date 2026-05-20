@@ -8,6 +8,9 @@
 # PostgreSQL data volume + backups (see Deployment plan)
 data/
 
+# Node (root tooling — husky/commitlint)
+node_modules/
+
 # Python
 __pycache__/
 *.py[cod]
