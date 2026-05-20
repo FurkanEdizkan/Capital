@@ -12,6 +12,14 @@ web/      React + Vite + TypeScript dashboard
 
 ## Local setup
 
+To run the whole stack in Docker with one command, use the installer:
+
+```bash
+scripts/install.sh
+```
+
+To develop a single service directly (hot reload, native tooling):
+
 ```bash
 # 1. PostgreSQL
 docker compose up -d postgres
