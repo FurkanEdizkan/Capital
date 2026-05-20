@@ -140,6 +140,62 @@
         "title": "Candle",
         "type": "object"
       },
+      "EquitySnapshot": {
+        "description": "A point-in-time snapshot of portfolio equity \u2014 powers the equity curve.",
+        "properties": {
+          "equity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Equity",
+            "type": "string"
+          },
+          "fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Fees",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "net_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Net Pnl",
+            "type": "string"
+          },
+          "realized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "ts": {
+            "format": "date-time",
+            "title": "Ts",
+            "type": "string"
+          },
+          "unrealized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Unrealized Pnl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ts",
+          "equity",
+          "realized_pnl",
+          "unrealized_pnl",
+          "fees",
+          "net_pnl"
+        ],
+        "title": "EquitySnapshot",
+        "type": "object"
+      },
       "FundingRate": {
         "properties": {
           "funding_rate": {
@@ -256,6 +312,167 @@
         "title": "PasswordReset",
         "type": "object"
       },
+      "PortfolioSummary": {
+        "properties": {
+          "deployed_capital": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Deployed Capital",
+            "type": "string"
+          },
+          "equity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Equity",
+            "type": "string"
+          },
+          "idle_capital": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Idle Capital",
+            "type": "string"
+          },
+          "net_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pnl",
+            "type": "string"
+          },
+          "open_positions": {
+            "title": "Open Positions",
+            "type": "integer"
+          },
+          "realized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "strategies": {
+            "items": {
+              "$ref": "#/components/schemas/StrategySummary"
+            },
+            "title": "Strategies",
+            "type": "array"
+          },
+          "total_allocated": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Allocated",
+            "type": "string"
+          },
+          "total_fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Fees",
+            "type": "string"
+          },
+          "unrealized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized Pnl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "total_allocated",
+          "realized_pnl",
+          "unrealized_pnl",
+          "total_fees",
+          "net_pnl",
+          "equity",
+          "deployed_capital",
+          "idle_capital",
+          "open_positions",
+          "strategies"
+        ],
+        "title": "PortfolioSummary",
+        "type": "object"
+      },
+      "Position": {
+        "description": "One strategy's position in one symbol/market \u2014 the attribution row.\n\n`qty` is always >= 0; `side` gives the direction. `realized_pnl` and\n`fees_paid` accumulate over the position's lifetime (the row is kept after\na position goes flat so cumulative PnL is preserved).",
+        "properties": {
+          "entry_price": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Entry Price",
+            "type": "string"
+          },
+          "fees_paid": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Fees Paid",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "market": {
+            "maxLength": 8,
+            "title": "Market",
+            "type": "string"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "qty": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Qty",
+            "type": "string"
+          },
+          "realized_pnl": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "side": {
+            "default": "flat",
+            "maxLength": 8,
+            "title": "Side",
+            "type": "string"
+          },
+          "strategy": {
+            "maxLength": 64,
+            "title": "Strategy",
+            "type": "string"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "strategy",
+          "market",
+          "symbol"
+        ],
+        "title": "Position",
+        "type": "object"
+      },
       "RefreshRequest": {
         "properties": {
           "refresh_token": {
@@ -277,6 +494,54 @@
         ],
         "title": "Role",
         "type": "string"
+      },
+      "StrategySummary": {
+        "properties": {
+          "allocated": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Allocated",
+            "type": "string"
+          },
+          "fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fees",
+            "type": "string"
+          },
+          "net_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pnl",
+            "type": "string"
+          },
+          "open_positions": {
+            "title": "Open Positions",
+            "type": "integer"
+          },
+          "realized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "strategy": {
+            "title": "Strategy",
+            "type": "string"
+          },
+          "unrealized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized Pnl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy",
+          "allocated",
+          "realized_pnl",
+          "unrealized_pnl",
+          "fees",
+          "net_pnl",
+          "open_positions"
+        ],
+        "title": "StrategySummary",
+        "type": "object"
       },
       "Ticker": {
         "properties": {
@@ -330,6 +595,86 @@
           "refresh_token"
         ],
         "title": "TokenPair",
+        "type": "object"
+      },
+      "Trade": {
+        "description": "An executed fill \u2014 the transaction-log row, attributed to a strategy.\n\n`realized_pnl` is the PnL booked *by this fill* (0 for opening/adding fills,\nnon-zero when it reduces or closes a position).",
+        "properties": {
+          "executed_at": {
+            "format": "date-time",
+            "title": "Executed At",
+            "type": "string"
+          },
+          "fee": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Fee",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "market": {
+            "maxLength": 8,
+            "title": "Market",
+            "type": "string"
+          },
+          "mode": {
+            "default": "sim",
+            "maxLength": 8,
+            "title": "Mode",
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Price",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "side": {
+            "maxLength": 8,
+            "title": "Side",
+            "type": "string"
+          },
+          "strategy": {
+            "maxLength": 64,
+            "title": "Strategy",
+            "type": "string"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy",
+          "market",
+          "symbol",
+          "side",
+          "quantity",
+          "price",
+          "executed_at"
+        ],
+        "title": "Trade",
         "type": "object"
       },
       "UserCreate": {
@@ -853,6 +1198,148 @@
         "summary": "List Tickers",
         "tags": [
           "market"
+        ]
+      }
+    },
+    "/api/portfolio/equity": {
+      "get": {
+        "description": "Equity-curve history, oldest-first.",
+        "operationId": "equity_api_portfolio_equity_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EquitySnapshot"
+                  },
+                  "title": "Response Equity Api Portfolio Equity Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Equity",
+        "tags": [
+          "portfolio"
+        ]
+      }
+    },
+    "/api/portfolio/positions": {
+      "get": {
+        "description": "Currently open positions across all strategies.",
+        "operationId": "positions_api_portfolio_positions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Position"
+                  },
+                  "title": "Response Positions Api Portfolio Positions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Positions",
+        "tags": [
+          "portfolio"
+        ]
+      }
+    },
+    "/api/portfolio/summary": {
+      "get": {
+        "description": "Aggregate accounting \u2014 equity, PnL, fees, allocated vs idle capital.",
+        "operationId": "summary_api_portfolio_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Summary",
+        "tags": [
+          "portfolio"
+        ]
+      }
+    },
+    "/api/portfolio/trades": {
+      "get": {
+        "description": "Most-recent executed trades.",
+        "operationId": "trades_api_portfolio_trades_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Trade"
+                  },
+                  "title": "Response Trades Api Portfolio Trades Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Trades",
+        "tags": [
+          "portfolio"
         ]
       }
     },

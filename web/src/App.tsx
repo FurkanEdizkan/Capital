@@ -1,16 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, RequireAuth } from "./lib/auth";
 import { Shell } from "./components/shell/Shell";
+import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Markets } from "./pages/Markets";
-import {
-  Backtest,
-  Dashboard,
-  History,
-  Settings,
-  Strategies,
-  Users,
-} from "./pages/screens";
+import { Backtest, History, Settings, Strategies, Users } from "./pages/screens";
 
 export function App() {
   return (
