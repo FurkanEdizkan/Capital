@@ -88,6 +88,9 @@ class Trade(SQLModel, table=True):
     fee: Decimal = Field(default=Decimal(0), **_AMT)
     realized_pnl: Decimal = Field(default=Decimal(0), **_AMT)
     mode: str = Field(default="sim", max_length=8)
+    # Exchange clientOrderId for live/testnet fills — lets restart
+    # reconciliation match a placed order back to its recorded trade.
+    client_order_id: str | None = Field(default=None, max_length=40)
     executed_at: datetime = Field(index=True)
 
 

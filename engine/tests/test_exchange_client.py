@@ -54,6 +54,40 @@ class FakeBinanceLib:
 
     futures_order_book = get_order_book
 
+    def get_symbol_info(self, symbol: str, **_: Any) -> dict[str, Any]:
+        return {
+            "symbol": symbol,
+            "filters": [
+                {"filterType": "PRICE_FILTER", "tickSize": "0.01"},
+                {"filterType": "LOT_SIZE", "stepSize": "0.001"},
+                {"filterType": "NOTIONAL", "minNotional": "10"},
+            ],
+        }
+
+    def futures_exchange_info(self, **_: Any) -> dict[str, Any]:
+        return {
+            "symbols": [
+                {
+                    "symbol": "BTCUSDT",
+                    "filters": [
+                        {"filterType": "PRICE_FILTER", "tickSize": "0.1"},
+                        {"filterType": "LOT_SIZE", "stepSize": "0.01"},
+                        {"filterType": "MIN_NOTIONAL", "minNotional": "5"},
+                    ],
+                }
+            ]
+        }
+
+    def futures_income_history(self, **_: Any) -> list[dict[str, Any]]:
+        return [
+            {
+                "symbol": "BTCUSDT",
+                "income": "-0.5",
+                "asset": "USDT",
+                "time": 1716192000000,
+            }
+        ]
+
 
 @pytest.fixture
 def bc() -> BinanceClient:
@@ -87,6 +121,26 @@ def test_get_historical_klines(bc: BinanceClient) -> None:
     )
     assert len(klines) == 1
     assert klines[0].close == Decimal("67320.0")
+
+
+def test_get_symbol_filters_spot(bc: BinanceClient) -> None:
+    f = bc.get_symbol_filters("BTCUSDT", Market.spot)
+    assert f.tick_size == Decimal("0.01")
+    assert f.step_size == Decimal("0.001")
+    assert f.min_notional == Decimal("10")
+
+
+def test_get_symbol_filters_futures(bc: BinanceClient) -> None:
+    f = bc.get_symbol_filters("BTCUSDT", Market.futures)
+    assert f.step_size == Decimal("0.01")
+    assert f.min_notional == Decimal("5")  # futures uses MIN_NOTIONAL
+
+
+def test_get_funding_payments(bc: BinanceClient) -> None:
+    payments = bc.get_funding_payments("BTCUSDT")
+    assert len(payments) == 1
+    assert payments[0].amount == Decimal("-0.5")  # a funding fee paid
+    assert payments[0].symbol == "BTCUSDT"
 
 
 def test_get_funding(bc: BinanceClient) -> None:

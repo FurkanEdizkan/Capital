@@ -13,6 +13,7 @@ not the executor logic.
 import logging
 from decimal import Decimal
 from typing import Any
+from uuid import uuid4
 
 from binance.exceptions import BinanceAPIException
 from sqlmodel import Session
@@ -86,15 +87,23 @@ class LiveExecutor(BaseExecutor):
 
     # -- order placement -----------------------------------------------------
 
-    def _place(self, order: Order, qty: Decimal) -> dict[str, Any]:
+    def _place(self, order: Order, qty: Decimal, client_order_id: str) -> dict[str, Any]:
         side = "BUY" if order.side is FillSide.buy else "SELL"
         if order.market == "futures":
             self._configure_futures(order.symbol)
             return self._client.futures_create_order(
-                symbol=order.symbol, side=side, type="MARKET", quantity=str(qty)
+                symbol=order.symbol,
+                side=side,
+                type="MARKET",
+                quantity=str(qty),
+                newClientOrderId=client_order_id,
             )
         return self._client.create_order(
-            symbol=order.symbol, side=side, type="MARKET", quantity=str(qty)
+            symbol=order.symbol,
+            side=side,
+            type="MARKET",
+            quantity=str(qty),
+            newClientOrderId=client_order_id,
         )
 
     def _parse(self, response: dict[str, Any], market: str) -> tuple[Decimal, Decimal, Decimal]:
@@ -129,19 +138,26 @@ class LiveExecutor(BaseExecutor):
     ) -> Fill:
         """Submit `order` to Binance and record the resulting fill.
 
-        `reference_price` is unused — the exchange determines the fill price —
-        but kept for the shared executor interface.
+        `reference_price` is used only to pre-validate the order against the
+        symbol's MIN_NOTIONAL — the exchange sets the actual fill price.
         """
-        del reference_price
         filt = self.filters_for(order.symbol)
         qty = filt.round_quantity(order.quantity)
         if qty <= 0:
             raise ExecutionError(
                 f"quantity {order.quantity} rounds to zero at step {filt.step_size}"
             )
+        ref = Decimal(reference_price)
+        if ref > 0 and qty * ref < filt.min_notional:
+            raise ExecutionError(
+                f"notional {qty * ref} below MIN_NOTIONAL {filt.min_notional}"
+            )
 
+        # A unique clientOrderId lets restart reconciliation (#30) match a
+        # placed order back to its recorded trade.
+        client_order_id = uuid4().hex
         try:
-            response = self._place(order, qty)
+            response = self._place(order, qty, client_order_id)
         except BinanceAPIException as exc:
             raise ExecutionError(f"exchange rejected order: {exc}") from exc
 
@@ -150,5 +166,11 @@ class LiveExecutor(BaseExecutor):
             raise ExecutionError("order returned no fill")
 
         return record_fill(
-            session, mode=self.mode, order=order, qty=filled, price=price, fee=fee
+            session,
+            mode=self.mode,
+            order=order,
+            qty=filled,
+            price=price,
+            fee=fee,
+            client_order_id=client_order_id,
         )
