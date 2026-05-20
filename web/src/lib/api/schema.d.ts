@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+    "/api/market/funding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Funding
+         * @description Current futures funding rate for a symbol.
+         */
+        get: operations["get_funding_api_market_funding_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/klines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Klines
+         * @description Candle history — served from the cache, refreshed from Binance.
+         */
+        get: operations["get_klines_api_market_klines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/orderbook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Orderbook
+         * @description Order-book depth for a symbol.
+         */
+        get: operations["get_orderbook_api_market_orderbook_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/market/tickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tickers
+         * @description Latest 24h tickers — from the live snapshot, or REST as a fallback.
+         */
+        get: operations["list_tickers_api_market_tickers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -166,10 +246,79 @@ export interface components {
             /** Username */
             username: string;
         };
+        /**
+         * Candle
+         * @description A single OHLCV bar for one symbol/interval/market.
+         */
+        Candle: {
+            /** Close */
+            close: string;
+            /**
+             * Close Time
+             * Format: date-time
+             */
+            close_time: string;
+            /** High */
+            high: string;
+            /** Id */
+            id?: number | null;
+            /** Interval */
+            interval: string;
+            /** Low */
+            low: string;
+            /** Market */
+            market: string;
+            /** Open */
+            open: string;
+            /**
+             * Open Time
+             * Format: date-time
+             */
+            open_time: string;
+            /** Symbol */
+            symbol: string;
+            /** Volume */
+            volume: string;
+        };
+        /** FundingRate */
+        FundingRate: {
+            /** Funding Rate */
+            funding_rate: string;
+            /** Mark Price */
+            mark_price: string;
+            /**
+             * Next Funding Time
+             * Format: date-time
+             */
+            next_funding_time: string;
+            /** Symbol */
+            symbol: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * Market
+         * @enum {string}
+         */
+        Market: "spot" | "futures";
+        /** OrderBook */
+        OrderBook: {
+            /** Asks */
+            asks: components["schemas"]["OrderBookLevel"][];
+            /** Bids */
+            bids: components["schemas"]["OrderBookLevel"][];
+            /** Symbol */
+            symbol: string;
+        };
+        /** OrderBookLevel */
+        OrderBookLevel: {
+            /** Price */
+            price: string;
+            /** Qty */
+            qty: string;
         };
         /** PasswordReset */
         PasswordReset: {
@@ -188,6 +337,17 @@ export interface components {
          * @enum {string}
          */
         Role: "admin" | "user";
+        /** Ticker */
+        Ticker: {
+            /** Change Pct 24H */
+            change_pct_24h: string;
+            /** Price */
+            price: string;
+            /** Quote Volume 24H */
+            quote_volume_24h: string;
+            /** Symbol */
+            symbol: string;
+        };
         /** TokenPair */
         TokenPair: {
             /** Access Token */
@@ -255,6 +415,135 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get_funding_api_market_funding_get: {
+        parameters: {
+            query: {
+                symbol: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundingRate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_klines_api_market_klines_get: {
+        parameters: {
+            query: {
+                symbol: string;
+                interval?: string;
+                market?: components["schemas"]["Market"];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candle"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_orderbook_api_market_orderbook_get: {
+        parameters: {
+            query: {
+                symbol: string;
+                market?: components["schemas"]["Market"];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderBook"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tickers_api_market_tickers_get: {
+        parameters: {
+            query?: {
+                market?: components["schemas"]["Market"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ticker"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_users_get: {
         parameters: {
             query?: never;

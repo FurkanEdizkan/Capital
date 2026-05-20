@@ -10,6 +10,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from api.market import router as market_router
+from api.market import ws_router as market_ws_router
 from api.users import router as users_router
 from auth.routes import router as auth_router
 from auth.seed import seed_admin
@@ -46,6 +48,8 @@ app = FastAPI(
 
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(market_router)
+app.include_router(market_ws_router)
 
 
 @app.get("/health", tags=["system"])
