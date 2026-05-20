@@ -14,18 +14,27 @@ from api.users import router as users_router
 from auth.routes import router as auth_router
 from auth.seed import seed_admin
 from config import settings
+from marketdata.stream import StreamManager
 
 log = logging.getLogger("capital")
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup/shutdown hooks."""
     try:
         seed_admin()
     except Exception:  # noqa: BLE001 — never let seeding crash startup
         log.exception("Admin seeding skipped (run `alembic upgrade head` first?)")
-    yield
+
+    # Live market-data streams — self-healing Binance WebSocket consumers.
+    streams = StreamManager()
+    app.state.streams = streams
+    streams.start()
+    try:
+        yield
+    finally:
+        await streams.stop()
 
 
 app = FastAPI(
