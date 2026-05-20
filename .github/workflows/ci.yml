@@ -38,6 +38,11 @@ jobs:
         run: uv run alembic upgrade head
       - name: Test (pytest)
         run: uv run pytest
+      - name: OpenAPI schema is in sync
+        run: |
+          uv run python export_openapi.py
+          git diff --exit-code ../web/openapi.json \
+            || { echo "::error::web/openapi.json is stale — run 'uv run python export_openapi.py'"; exit 1; }
 
   web:
     name: web — lint, typecheck, build
@@ -53,6 +58,11 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - name: Generated API types are in sync
+        run: |
+          npm run gen:api
+          git diff --exit-code src/lib/api/schema.d.ts \
+            || { echo "::error::schema.d.ts is stale — run 'npm run gen:api'"; exit 1; }
       - name: Lint (eslint)
         run: npm run lint
       - name: Build (tsc + vite)
