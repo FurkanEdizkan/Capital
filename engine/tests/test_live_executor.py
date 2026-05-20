@@ -20,9 +20,11 @@ class FakeBinance:
         self.reject = reject
         self.margin_clash = margin_clash
         self.calls: list[str] = []
+        self.kwargs: dict[str, dict[str, Any]] = {}  # last kwargs per method
 
-    def create_order(self, **_: Any) -> dict[str, Any]:
+    def create_order(self, **kw: Any) -> dict[str, Any]:
         self.calls.append("create_order")
+        self.kwargs["create_order"] = kw
         if self.reject:
             raise BinanceAPIException(None, 400, '{"code":-2010,"msg":"rejected"}')
         return {
@@ -33,8 +35,9 @@ class FakeBinance:
             ],
         }
 
-    def futures_create_order(self, **_: Any) -> dict[str, Any]:
+    def futures_create_order(self, **kw: Any) -> dict[str, Any]:
         self.calls.append("futures_create_order")
+        self.kwargs["futures_create_order"] = kw
         return {"avgPrice": "200.0", "executedQty": "2.0"}
 
     def futures_change_leverage(self, **_: Any) -> dict[str, Any]:
@@ -93,6 +96,23 @@ def test_margin_type_clash_is_tolerated(session: Session) -> None:
     # The -4046 "no need to change" error must not abort the order.
     fill = executor.execute(session, _order(market="futures"), reference_price=Decimal("0"))
     assert fill.quantity == Decimal("2.0")
+
+
+def test_client_order_id_is_sent_and_recorded(session: Session) -> None:
+    fake = FakeBinance()
+    LiveExecutor(fake).execute(session, _order(), reference_price=Decimal("0"))
+    sent = fake.kwargs["create_order"].get("newClientOrderId")
+    assert sent  # a clientOrderId was passed to Binance
+    trade = session.exec(select(Trade)).first()
+    assert trade is not None
+    assert trade.client_order_id == sent
+
+
+def test_below_min_notional_is_rejected(session: Session) -> None:
+    # qty 1 * reference 1 = 1, below the default MIN_NOTIONAL of 5.
+    executor = LiveExecutor(FakeBinance())
+    with pytest.raises(ExecutionError):
+        executor.execute(session, _order(qty="1"), reference_price=Decimal("1"))
 
 
 def test_exchange_rejection_raises_execution_error(session: Session) -> None:

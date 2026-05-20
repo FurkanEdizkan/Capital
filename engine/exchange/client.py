@@ -16,6 +16,8 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from pydantic import BaseModel
 
+from trading.executors.base import SymbolFilters
+
 T = TypeVar("T")
 
 _MAX_RETRIES = 3
@@ -51,6 +53,15 @@ class FundingRate(BaseModel):
     next_funding_time: datetime
 
 
+class FundingPayment(BaseModel):
+    """A historical funding fee paid or received on a futures position."""
+
+    symbol: str
+    amount: Decimal  # signed — positive received, negative paid
+    asset: str
+    time: datetime
+
+
 class OrderBookLevel(BaseModel):
     price: Decimal
     qty: Decimal
@@ -68,6 +79,21 @@ def _ms_to_dt(ms: int | str) -> datetime:
 
 def _levels(side: list[list[Any]]) -> list[OrderBookLevel]:
     return [OrderBookLevel(price=Decimal(str(p)), qty=Decimal(str(q))) for p, q in side]
+
+
+def _parse_filters(symbol_info: dict[str, Any]) -> SymbolFilters:
+    """Build `SymbolFilters` from a Binance exchangeInfo symbol entry."""
+    by_type = {f["filterType"]: f for f in symbol_info.get("filters", [])}
+    defaults = SymbolFilters()
+    price = by_type.get("PRICE_FILTER", {})
+    lot = by_type.get("LOT_SIZE", {})
+    # Spot uses NOTIONAL; some futures symbols use MIN_NOTIONAL.
+    notional = by_type.get("NOTIONAL") or by_type.get("MIN_NOTIONAL") or {}
+    return SymbolFilters(
+        tick_size=Decimal(str(price.get("tickSize", defaults.tick_size))),
+        step_size=Decimal(str(lot.get("stepSize", defaults.step_size))),
+        min_notional=Decimal(str(notional.get("minNotional", defaults.min_notional))),
+    )
 
 
 class BinanceClient:
@@ -173,6 +199,44 @@ class BinanceClient:
             mark_price=Decimal(str(raw["markPrice"])),
             next_funding_time=_ms_to_dt(raw["nextFundingTime"]),
         )
+
+    def get_funding_payments(
+        self, symbol: str, start: datetime | None = None
+    ) -> list[FundingPayment]:
+        """Historical funding fees for a futures symbol (signed amounts)."""
+        kwargs: dict[str, Any] = {"symbol": symbol, "incomeType": "FUNDING_FEE"}
+        if start is not None:
+            kwargs["startTime"] = int(start.timestamp() * 1000)
+        raw = self._call(self._c.futures_income_history, **kwargs)
+        return [
+            FundingPayment(
+                symbol=r["symbol"],
+                amount=Decimal(str(r["income"])),
+                asset=r["asset"],
+                time=_ms_to_dt(r["time"]),
+            )
+            for r in raw
+        ]
+
+    # -- symbol filters ---------------------------------------------------
+    def get_symbol_filters(
+        self, symbol: str, market: Market = Market.spot
+    ) -> SymbolFilters:
+        """Live trading filters (tick size, lot size, min notional) for a symbol.
+
+        Orders are validated against these before submission so the engine
+        never sends an order Binance would reject.
+        """
+        if market is Market.futures:
+            info = self._call(self._c.futures_exchange_info)
+            entry = next(
+                (s for s in info.get("symbols", []) if s["symbol"] == symbol), None
+            )
+        else:
+            entry = self._call(self._c.get_symbol_info, symbol)
+        if not entry:
+            raise ValueError(f"unknown symbol: {symbol}")
+        return _parse_filters(entry)
 
     # -- order book -------------------------------------------------------
     def get_order_book(

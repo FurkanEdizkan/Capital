@@ -991,6 +991,18 @@
       "Trade": {
         "description": "An executed fill \u2014 the transaction-log row, attributed to a strategy.\n\n`realized_pnl` is the PnL booked *by this fill* (0 for opening/adding fills,\nnon-zero when it reduces or closes a position).",
         "properties": {
+          "client_order_id": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Order Id"
+          },
           "executed_at": {
             "format": "date-time",
             "title": "Executed At",

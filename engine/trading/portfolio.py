@@ -161,12 +161,13 @@ def record_fill(
     qty: Decimal,
     price: Decimal,
     fee: Decimal,
+    client_order_id: str | None = None,
 ) -> Fill:
     """Attribute a fill to the strategy sub-ledger and append the Trade row.
 
     Shared by every executor — the bookkeeping is identical whether the fill
     came from the simulator, Binance Testnet or live trading; only `mode`
-    (recorded on the Trade) differs.
+    (recorded on the Trade) and the optional `client_order_id` differ.
     """
     realized_before = get_or_create_position(
         session, order.strategy, order.market, order.symbol
@@ -192,6 +193,7 @@ def record_fill(
         fee=fee,
         realized_pnl=realized,
         mode=mode,
+        client_order_id=client_order_id,
         executed_at=_utcnow(),
     )
     session.add(trade)
