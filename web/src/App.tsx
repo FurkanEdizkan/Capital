@@ -2,11 +2,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, RequireAuth } from "./lib/auth";
 import { Shell } from "./components/shell/Shell";
 import { Login } from "./pages/Login";
+import { Markets } from "./pages/Markets";
 import {
   Backtest,
   Dashboard,
   History,
-  Markets,
   Settings,
   Strategies,
   Users,

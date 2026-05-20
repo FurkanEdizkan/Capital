@@ -16,17 +16,6 @@ export function Dashboard() {
   );
 }
 
-export function Markets() {
-  return (
-    <ScreenStub
-      title="Markets"
-      phase="Phase 1"
-      icon={<I.Markets size={22} />}
-      summary="Live spot & futures prices, candlestick charts, coin price history, funding rates and order-book depth."
-    />
-  );
-}
-
 export function Strategies() {
   return (
     <ScreenStub

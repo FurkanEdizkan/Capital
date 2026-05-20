@@ -36,7 +36,7 @@ def test_jwt_wrong_type_rejected() -> None:
 
 def test_login_success(client: TestClient) -> None:
     resp = client.post(
-        "/auth/login", data={"username": "admin", "password": ADMIN_PASSWORD}
+        "/api/auth/login", data={"username": "admin", "password": ADMIN_PASSWORD}
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -46,24 +46,24 @@ def test_login_success(client: TestClient) -> None:
 
 def test_login_wrong_password(client: TestClient) -> None:
     resp = client.post(
-        "/auth/login", data={"username": "admin", "password": "nope"}
+        "/api/auth/login", data={"username": "admin", "password": "nope"}
     )
     assert resp.status_code == 401
 
 
 def test_me_returns_current_user(client: TestClient) -> None:
     token = login(client, "bob", USER_PASSWORD)
-    resp = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    resp = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     assert resp.json() == {"username": "bob", "role": "user"}
 
 
 def test_rate_limit_locks_out(client: TestClient) -> None:
     for _ in range(settings.login_max_attempts):
-        client.post("/auth/login", data={"username": "admin", "password": "bad"})
+        client.post("/api/auth/login", data={"username": "admin", "password": "bad"})
     # Next attempt — even with the CORRECT password — is locked out.
     resp = client.post(
-        "/auth/login", data={"username": "admin", "password": ADMIN_PASSWORD}
+        "/api/auth/login", data={"username": "admin", "password": ADMIN_PASSWORD}
     )
     assert resp.status_code == 429
 

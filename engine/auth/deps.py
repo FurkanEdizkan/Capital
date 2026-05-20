@@ -12,7 +12,7 @@ from auth.models import Role, User
 from auth.security import decode_token
 from db import get_session
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 SessionDep = Annotated[Session, Depends(get_session)]
 

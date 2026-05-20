@@ -18,7 +18,7 @@ from auth.security import (
     verify_password,
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 class TokenPair(BaseModel):

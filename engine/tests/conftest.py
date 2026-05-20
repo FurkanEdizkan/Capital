@@ -63,6 +63,6 @@ def client(session: Session) -> Iterator[TestClient]:
 
 def login(client: TestClient, username: str, password: str) -> str:
     """Helper: log in and return the access token."""
-    resp = client.post("/auth/login", data={"username": username, "password": password})
+    resp = client.post("/api/auth/login", data={"username": username, "password": password})
     assert resp.status_code == 200, resp.text
     return resp.json()["access_token"]

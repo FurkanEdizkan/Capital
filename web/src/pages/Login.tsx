@@ -1,6 +1,6 @@
 /**
  * Login screen — ported from the design bundle (screens/login.jsx).
- * Phase 0: authenticates against the mock auth context (no engine yet).
+ * Authenticates against the engine via the auth context (/api/auth/login).
  */
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,20 +11,25 @@ import { useAuth } from "../lib/auth";
 export function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("ada");
-  const [password, setPassword] = useState("demo-password");
+  // Prefilled with the seeded admin credentials for the local dev build.
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("changeme");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const submit = (e?: FormEvent) => {
+  const submit = async (e?: FormEvent) => {
     if (e) e.preventDefault();
+    setError(null);
     setBusy(true);
-    // Mock latency, then sign in. Real auth posts to the engine in a later phase.
-    setTimeout(() => {
-      setBusy(false);
-      signIn(username);
+    try {
+      await signIn(username, password);
       navigate("/", { replace: true });
-    }, 500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -175,6 +180,22 @@ export function Login() {
               Trust this device for 14 days
             </label>
           </div>
+
+          {error && (
+            <div
+              style={{
+                marginTop: 14,
+                padding: "8px 10px",
+                borderRadius: 6,
+                background: "var(--red-bg)",
+                border: "1px solid rgba(239,68,68,.30)",
+                color: "#F87171",
+                fontSize: 12,
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           <div style={{ height: 18 }} />
           <Button kind="primary" size="lg" full type="submit" disabled={busy}>
