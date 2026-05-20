@@ -113,6 +113,18 @@ class BinanceClient:
         return self._parse_ticker(raw)
 
     # -- klines -----------------------------------------------------------
+    @staticmethod
+    def _parse_kline(k: list[Any]) -> Kline:
+        return Kline(
+            open_time=_ms_to_dt(k[0]),
+            open=Decimal(str(k[1])),
+            high=Decimal(str(k[2])),
+            low=Decimal(str(k[3])),
+            close=Decimal(str(k[4])),
+            volume=Decimal(str(k[5])),
+            close_time=_ms_to_dt(k[6]),
+        )
+
     def get_klines(
         self,
         symbol: str,
@@ -120,20 +132,35 @@ class BinanceClient:
         market: Market = Market.spot,
         limit: int = 200,
     ) -> list[Kline]:
+        """The most-recent `limit` klines for a symbol."""
         fn = self._c.futures_klines if market is Market.futures else self._c.get_klines
         raw = self._call(fn, symbol=symbol, interval=interval, limit=limit)
-        return [
-            Kline(
-                open_time=_ms_to_dt(k[0]),
-                open=Decimal(str(k[1])),
-                high=Decimal(str(k[2])),
-                low=Decimal(str(k[3])),
-                close=Decimal(str(k[4])),
-                volume=Decimal(str(k[5])),
-                close_time=_ms_to_dt(k[6]),
-            )
-            for k in raw
-        ]
+        return [self._parse_kline(k) for k in raw]
+
+    def get_historical_klines(
+        self,
+        symbol: str,
+        interval: str = "1h",
+        *,
+        start: datetime,
+        end: datetime | None = None,
+        market: Market = Market.spot,
+    ) -> list[Kline]:
+        """Download every kline in the range ``[start, end]``.
+
+        Pagination across Binance's per-request limit is handled by
+        python-binance. `end` defaults to "now". Backs the backtest history
+        downloader (see marketdata/cache.py).
+        """
+        fn = (
+            self._c.futures_historical_klines
+            if market is Market.futures
+            else self._c.get_historical_klines
+        )
+        start_ms = int(start.timestamp() * 1000)
+        end_ms = int(end.timestamp() * 1000) if end is not None else None
+        raw = self._call(fn, symbol, interval, start_ms, end_ms)
+        return [self._parse_kline(k) for k in raw]
 
     # -- funding (futures only) ------------------------------------------
     def get_funding(self, symbol: str) -> FundingRate:
