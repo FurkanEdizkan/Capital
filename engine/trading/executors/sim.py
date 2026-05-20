@@ -5,7 +5,6 @@ trading filters, so paper results are not optimistic and the *same* sizing
 logic works unchanged once a live executor is plugged in (Phase 5).
 """
 
-from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlmodel import Session
@@ -18,8 +17,8 @@ from trading.executors.base import (
     Order,
     SymbolFilters,
 )
-from trading.models import FillSide, Trade
-from trading.portfolio import apply_fill, get_or_create_position
+from trading.models import FillSide
+from trading.portfolio import record_fill
 
 # Binance-like defaults: 0.04% taker fee, ~2 bps slippage.
 DEFAULT_FEE_RATE = Decimal("0.0004")
@@ -71,45 +70,7 @@ class SimExecutor(BaseExecutor):
             )
         fee = notional * self.fee_rate
 
-        # Attribute the fill to the strategy's position (the sub-ledger).
-        realized_before = get_or_create_position(
-            session, order.strategy, order.market, order.symbol
-        ).realized_pnl
-        pos = apply_fill(
-            session,
-            strategy=order.strategy,
-            market=order.market,
-            symbol=order.symbol,
-            side=order.side,
-            qty=qty,
-            price=price,
-            fee=fee,
-        )
-        realized = pos.realized_pnl - realized_before
-
-        trade = Trade(
-            strategy=order.strategy,
-            market=order.market,
-            symbol=order.symbol,
-            side=order.side.value,
-            quantity=qty,
-            price=price,
-            fee=fee,
-            realized_pnl=realized,
-            mode=self.mode,
-            executed_at=datetime.now(UTC).replace(tzinfo=None),
-        )
-        session.add(trade)
-        session.commit()
-        session.refresh(trade)
-
-        return Fill(
-            strategy=order.strategy,
-            market=order.market,
-            symbol=order.symbol,
-            side=order.side,
-            quantity=qty,
-            price=price,
-            fee=fee,
-            realized_pnl=realized,
+        # Attribute the fill to the strategy sub-ledger and record the trade.
+        return record_fill(
+            session, mode=self.mode, order=order, qty=qty, price=price, fee=fee
         )

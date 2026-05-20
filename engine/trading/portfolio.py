@@ -11,8 +11,8 @@ from decimal import Decimal
 
 from sqlmodel import Session, select
 
-from trading.executors.base import Order
-from trading.models import FillSide, Position, PositionSide, StrategyAllocation
+from trading.executors.base import Fill, Order
+from trading.models import FillSide, Position, PositionSide, StrategyAllocation, Trade
 
 
 def _utcnow() -> datetime:
@@ -151,6 +151,62 @@ def set_allocation(
 
 def list_allocations(session: Session) -> list[StrategyAllocation]:
     return list(session.exec(select(StrategyAllocation)).all())
+
+
+def record_fill(
+    session: Session,
+    *,
+    mode: str,
+    order: Order,
+    qty: Decimal,
+    price: Decimal,
+    fee: Decimal,
+) -> Fill:
+    """Attribute a fill to the strategy sub-ledger and append the Trade row.
+
+    Shared by every executor — the bookkeeping is identical whether the fill
+    came from the simulator, Binance Testnet or live trading; only `mode`
+    (recorded on the Trade) differs.
+    """
+    realized_before = get_or_create_position(
+        session, order.strategy, order.market, order.symbol
+    ).realized_pnl
+    pos = apply_fill(
+        session,
+        strategy=order.strategy,
+        market=order.market,
+        symbol=order.symbol,
+        side=order.side,
+        qty=qty,
+        price=price,
+        fee=fee,
+    )
+    realized = pos.realized_pnl - realized_before
+    trade = Trade(
+        strategy=order.strategy,
+        market=order.market,
+        symbol=order.symbol,
+        side=order.side.value,
+        quantity=qty,
+        price=price,
+        fee=fee,
+        realized_pnl=realized,
+        mode=mode,
+        executed_at=_utcnow(),
+    )
+    session.add(trade)
+    session.commit()
+    session.refresh(trade)
+    return Fill(
+        strategy=order.strategy,
+        market=order.market,
+        symbol=order.symbol,
+        side=order.side,
+        quantity=qty,
+        price=price,
+        fee=fee,
+        realized_pnl=realized,
+    )
 
 
 def enforce_allocation(
