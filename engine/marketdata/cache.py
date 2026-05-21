@@ -4,12 +4,14 @@ Closed candles are immutable, so the cache is insert-only: a refresh fetches
 the latest bars and inserts only those not already stored.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlmodel import Session, select
 
 from exchange.client import BinanceClient, Market
+from marketdata.freshness import interval_seconds
 from marketdata.models import Candle
+from venues.base import Venue
 
 
 def _naive_utc(dt: datetime) -> datetime:
@@ -113,6 +115,53 @@ def refresh_candles(
         for k in fetched
         if _naive_utc(k.open_time) not in existing
     ]
+    if new_rows:
+        session.add_all(new_rows)
+        session.commit()
+
+    return get_cached_candles(
+        session, market=market, symbol=symbol, interval=interval, limit=limit
+    )
+
+
+def refresh_venue_candles(
+    session: Session,
+    venue: Venue,
+    *,
+    market: Market,
+    symbol: str,
+    interval: str,
+    limit: int = 200,
+) -> list[Candle]:
+    """Fetch the latest candles from a `Venue`, cache new ones, return the series.
+
+    The venue-neutral equivalent of `refresh_candles`. `VenueCandle` carries no
+    close time, so it is derived from the open time plus the interval length.
+    """
+    fetched = venue.candles(symbol, interval, limit)
+    existing = _existing_open_times(
+        session, market=market, symbol=symbol, interval=interval
+    )
+    span = timedelta(seconds=interval_seconds(interval))
+    new_rows: list[Candle] = []
+    for bar in fetched:
+        open_time = _naive_utc(bar.open_time)
+        if open_time in existing:
+            continue
+        new_rows.append(
+            Candle(
+                market=market.value,
+                symbol=symbol,
+                interval=interval,
+                open_time=open_time,
+                open=bar.open,
+                high=bar.high,
+                low=bar.low,
+                close=bar.close,
+                volume=bar.volume,
+                close_time=open_time + span - timedelta(milliseconds=1),
+            )
+        )
     if new_rows:
         session.add_all(new_rows)
         session.commit()

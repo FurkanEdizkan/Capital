@@ -9,36 +9,54 @@ import pytest
 from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
-from exchange.client import Kline, Market
+from exchange.client import Market
 from strategies.base import BaseStrategy, StrategyContext
 from trading.engine import TradingEngine
 from trading.executors.base import Order
 from trading.models import FillSide, PositionSide, Trade
 from trading.portfolio import list_positions, set_allocation
+from venues.base import Instrument, OrderResult, Venue, VenueCandle
 
 
-def _klines(n: int) -> list[Kline]:
+def _venue_candles(n: int) -> list[VenueCandle]:
     # End at the current hour so the newest candle passes the staleness check.
     base = datetime.now(UTC).replace(
         minute=0, second=0, microsecond=0
     ) - timedelta(hours=n - 1)
     return [
-        Kline(
+        VenueCandle(
             open_time=base + timedelta(hours=i),
             open=Decimal("100"),
             high=Decimal("105"),
             low=Decimal("95"),
             close=Decimal("100"),
             volume=Decimal("10"),
-            close_time=base + timedelta(hours=i, minutes=59),
         )
         for i in range(n)
     ]
 
 
-class FakeClient:
-    def get_klines(self, *_: Any, **__: Any) -> list[Kline]:
-        return _klines(30)
+class FakeVenue(Venue):
+    """A venue that serves canned recent candles; the engine only reads data."""
+
+    name = "fake"
+
+    def instrument(self, symbol: str) -> Instrument:
+        raise NotImplementedError
+
+    def candles(
+        self, symbol: str, interval: str, limit: int = 200
+    ) -> list[VenueCandle]:
+        return _venue_candles(30)
+
+    def price(self, symbol: str) -> Decimal:
+        return Decimal("100")
+
+    def place_order(self, request: Any) -> OrderResult:
+        raise NotImplementedError
+
+    def positions(self) -> dict[str, Decimal]:
+        return {}
 
 
 class BuyWhenFlat(BaseStrategy):
@@ -87,7 +105,7 @@ def _engine(factory: Any, strategies: list[BaseStrategy]) -> TradingEngine:
             set_allocation(session, strat.name, Decimal("100000"))
     return TradingEngine(
         session_factory=factory,
-        client=FakeClient(),  # type: ignore[arg-type]
+        venue=FakeVenue(),
         strategies=strategies,  # default ExecutorRouter — Sim mode
     )
 

@@ -14,8 +14,7 @@ from decimal import Decimal
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session
 
-from exchange.client import BinanceClient
-from marketdata.cache import refresh_candles
+from marketdata.cache import refresh_venue_candles
 from marketdata.freshness import feed_is_stale
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
@@ -33,6 +32,7 @@ from trading.portfolio import (
     list_positions,
 )
 from trading.risk import RiskManager
+from venues.base import Venue
 
 log = logging.getLogger("capital.trading.engine")
 
@@ -44,7 +44,7 @@ class TradingEngine:
         self,
         *,
         session_factory: Callable[[], Session],
-        client: BinanceClient,
+        venue: Venue,
         router: ExecutorRouter | None = None,
         strategies: list[BaseStrategy] | None = None,
         risk: RiskManager | None = None,
@@ -55,7 +55,7 @@ class TradingEngine:
         retention_equity_days: int = 0,
     ) -> None:
         self._session_factory = session_factory
-        self._client = client
+        self._venue = venue
         # Resolves Sim / Testnet / Live executor from the stored mode per tick.
         self._router = router or ExecutorRouter()
         self._risk = risk or RiskManager()  # all limits disabled by default
@@ -102,9 +102,9 @@ class TradingEngine:
 
     def _tick_strategy(self, strat: BaseStrategy) -> None:
         with self._session_factory() as session:
-            candles = refresh_candles(
+            candles = refresh_venue_candles(
                 session,
-                self._client,
+                self._venue,
                 market=strat.market,
                 symbol=strat.symbol,
                 interval=strat.timeframe,

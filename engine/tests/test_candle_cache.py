@@ -12,7 +12,9 @@ from marketdata.cache import (
     get_cached_candles,
     get_candle_range,
     refresh_candles,
+    refresh_venue_candles,
 )
+from venues.base import Instrument, OrderResult, Venue, VenueCandle
 
 
 def _klines(n: int, start_hour: int = 0) -> list[Kline]:
@@ -43,6 +45,43 @@ class FakeClient:
 
     def get_historical_klines(self, *_: Any, **__: Any) -> list[Kline]:
         return self._k
+
+
+class FakeVenue(Venue):
+    """A venue serving canned candles — for refresh_venue_candles tests."""
+
+    name = "fake"
+
+    def __init__(self, count: int) -> None:
+        self._count = count
+
+    def instrument(self, symbol: str) -> Instrument:
+        raise NotImplementedError
+
+    def candles(
+        self, symbol: str, interval: str, limit: int = 200
+    ) -> list[VenueCandle]:
+        base = datetime(2024, 5, 20, tzinfo=UTC)
+        return [
+            VenueCandle(
+                open_time=base + timedelta(hours=i),
+                open=Decimal("100"),
+                high=Decimal("110"),
+                low=Decimal("90"),
+                close=Decimal("105"),
+                volume=Decimal("1000"),
+            )
+            for i in range(self._count)
+        ]
+
+    def price(self, symbol: str) -> Decimal:
+        return Decimal("105")
+
+    def place_order(self, request: Any) -> OrderResult:
+        raise NotImplementedError
+
+    def positions(self) -> dict[str, Decimal]:
+        return {}
 
 
 def test_refresh_stores_and_returns_ordered(session: Session) -> None:
@@ -124,6 +163,30 @@ def test_get_candle_range_filters_by_time(session: Session) -> None:
     )
     assert len(rows) == 4  # hours 3, 4, 5, 6 inclusive
     assert [r.open_time for r in rows] == sorted(r.open_time for r in rows)
+
+
+def test_refresh_venue_candles_caches_and_derives_close_time(session: Session) -> None:
+    candles = refresh_venue_candles(
+        session, FakeVenue(6), market=Market.spot, symbol="BTCUSDT", interval="1h"
+    )
+    assert len(candles) == 6
+    # VenueCandle carries no close time — it is derived from the 1h interval.
+    first = candles[0]
+    assert first.close_time - first.open_time == timedelta(hours=1, milliseconds=-1)
+
+
+def test_refresh_venue_candles_is_idempotent(session: Session) -> None:
+    venue = FakeVenue(8)
+    refresh_venue_candles(
+        session, venue, market=Market.spot, symbol="ETHUSDT", interval="1h"
+    )
+    refresh_venue_candles(
+        session, venue, market=Market.spot, symbol="ETHUSDT", interval="1h"
+    )
+    cached = get_cached_candles(
+        session, market=Market.spot, symbol="ETHUSDT", interval="1h"
+    )
+    assert len(cached) == 8  # no duplicates
 
 
 def test_markets_are_isolated(session: Session) -> None:
