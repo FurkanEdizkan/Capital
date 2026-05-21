@@ -346,6 +346,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Ai Settings
+         * @description Configure the AI provider. The API key is encrypted at rest.
+         */
+        put: operations["update_ai_settings_api_settings_ai_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/binance-keys": {
         parameters: {
             query?: never;
@@ -606,6 +626,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AiSettingsUpdate */
+        AiSettingsUpdate: {
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
+            /**
+             * Base Url
+             * @default
+             */
+            base_url: string;
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /** Provider */
+            provider: string;
+        };
         /** AllocationUpdate */
         AllocationUpdate: {
             /** Allocated */
@@ -1041,6 +1081,14 @@ export interface components {
         Role: "admin" | "user";
         /** SettingsRead */
         SettingsRead: {
+            /** Ai Base Url */
+            ai_base_url: string;
+            /** Ai Key Configured */
+            ai_key_configured: boolean;
+            /** Ai Model */
+            ai_model: string;
+            /** Ai Provider */
+            ai_provider: string;
             /** Binance Keys Configured */
             binance_keys_configured: boolean;
             mode: components["schemas"]["TradingMode"];
@@ -1723,6 +1771,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+        };
+    };
+    update_ai_settings_api_settings_ai_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

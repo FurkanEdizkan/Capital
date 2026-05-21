@@ -1,6 +1,39 @@
 {
   "components": {
     "schemas": {
+      "AiSettingsUpdate": {
+        "properties": {
+          "api_key": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Api Key",
+            "type": "string"
+          },
+          "base_url": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "AiSettingsUpdate",
+        "type": "object"
+      },
       "AllocationUpdate": {
         "properties": {
           "allocated": {
@@ -1079,6 +1112,22 @@
       },
       "SettingsRead": {
         "properties": {
+          "ai_base_url": {
+            "title": "Ai Base Url",
+            "type": "string"
+          },
+          "ai_key_configured": {
+            "title": "Ai Key Configured",
+            "type": "boolean"
+          },
+          "ai_model": {
+            "title": "Ai Model",
+            "type": "string"
+          },
+          "ai_provider": {
+            "title": "Ai Provider",
+            "type": "string"
+          },
           "binance_keys_configured": {
             "title": "Binance Keys Configured",
             "type": "boolean"
@@ -1089,7 +1138,11 @@
         },
         "required": [
           "mode",
-          "binance_keys_configured"
+          "binance_keys_configured",
+          "ai_provider",
+          "ai_model",
+          "ai_base_url",
+          "ai_key_configured"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -2419,6 +2472,53 @@
           }
         ],
         "summary": "Read Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/ai": {
+      "put": {
+        "description": "Configure the AI provider. The API key is encrypted at rest.",
+        "operationId": "update_ai_settings_api_settings_ai_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Ai Settings",
         "tags": [
           "settings"
         ]

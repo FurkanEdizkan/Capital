@@ -13,18 +13,19 @@ from pydantic import BaseModel, Field
 from ai.analyze import analyze
 from ai.providers import LLMError, get_provider
 from ai.providers.base import Decision, LLMProvider
-from auth.deps import CurrentUser
-from config import settings
+from appsettings.store import get_ai_api_key, get_ai_settings
+from auth.deps import CurrentUser, SessionDep
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 
-def get_llm_provider() -> LLMProvider:
-    """The LLM provider built from configuration (overridable in tests)."""
+def get_llm_provider(session: SessionDep) -> LLMProvider:
+    """The LLM provider built from the stored AI settings (overridable)."""
+    ai = get_ai_settings(session)
     return get_provider(
-        settings.ai_provider,
-        api_key=settings.ai_api_key,
-        base_url=settings.ai_base_url,
+        ai["provider"],
+        api_key=get_ai_api_key(session),
+        base_url=ai["base_url"],
     )
 
 
@@ -37,11 +38,15 @@ class AnalyzeRequest(BaseModel):
 
 @router.post("/analyze", response_model=Decision)
 def analyze_and_decide(
-    body: AnalyzeRequest, _: CurrentUser, provider: ProviderDep
+    body: AnalyzeRequest,
+    _: CurrentUser,
+    session: SessionDep,
+    provider: ProviderDep,
 ) -> Decision:
     """Run a free-form analyze-and-decide task through the configured LLM."""
+    model = get_ai_settings(session)["model"] or None
     try:
-        return analyze(provider, task=body.task, model=settings.ai_model or None)
+        return analyze(provider, task=body.task, model=model)
     except LLMError as exc:
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY, f"AI analysis failed: {exc}"

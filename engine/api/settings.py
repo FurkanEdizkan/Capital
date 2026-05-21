@@ -12,8 +12,11 @@ from pydantic import BaseModel, Field
 
 from appsettings.store import (
     TradingMode,
+    ai_key_configured,
     binance_keys_configured,
+    get_ai_settings,
     get_mode,
+    set_ai_settings,
     set_binance_keys,
     set_mode,
 )
@@ -30,6 +33,10 @@ AdminUser = Annotated[User, Depends(require_admin)]
 class SettingsRead(BaseModel):
     mode: TradingMode
     binance_keys_configured: bool
+    ai_provider: str
+    ai_model: str
+    ai_base_url: str
+    ai_key_configured: bool
 
 
 class ModeUpdate(BaseModel):
@@ -42,10 +49,23 @@ class BinanceKeysUpdate(BaseModel):
     api_secret: str = Field(min_length=1, max_length=256)
 
 
+class AiSettingsUpdate(BaseModel):
+    provider: str = Field(min_length=1, max_length=32)
+    model: str = Field(default="", max_length=64)
+    base_url: str = Field(default="", max_length=256)
+    # Optional — the stored key is kept when this is omitted/blank.
+    api_key: str = Field(default="", max_length=256)
+
+
 def _read(session: SessionDep) -> SettingsRead:
+    ai = get_ai_settings(session)
     return SettingsRead(
         mode=get_mode(session),
         binance_keys_configured=binance_keys_configured(session),
+        ai_provider=ai["provider"],
+        ai_model=ai["model"],
+        ai_base_url=ai["base_url"],
+        ai_key_configured=ai_key_configured(session),
     )
 
 
@@ -92,3 +112,24 @@ def update_binance_keys(
     set_binance_keys(session, body.api_key, body.api_secret)
     # The key values themselves are never written to the audit log.
     record_audit(session, actor=admin.username, action="settings.binance_keys")
+
+
+@router.put("/ai", response_model=SettingsRead)
+def update_ai_settings(
+    body: AiSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure the AI provider. The API key is encrypted at rest."""
+    set_ai_settings(
+        session,
+        provider=body.provider,
+        model=body.model,
+        base_url=body.base_url,
+        api_key=body.api_key or None,
+    )
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.ai",
+        detail={"provider": body.provider, "model": body.model},
+    )
+    return _read(session)

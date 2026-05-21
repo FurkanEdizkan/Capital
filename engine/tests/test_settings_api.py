@@ -98,6 +98,19 @@ def test_store_binance_keys(settings_client: TestClient) -> None:
     assert read.json()["binance_keys_configured"] is True
 
 
+def test_update_ai_settings(settings_client: TestClient) -> None:
+    resp = settings_client.put(
+        "/api/settings/ai",
+        json={"provider": "openai", "model": "gpt-4o", "base_url": "", "api_key": "sk-x"},
+        headers=_auth(settings_client),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ai_provider"] == "openai"
+    assert body["ai_model"] == "gpt-4o"
+    assert body["ai_key_configured"] is True
+
+
 def test_mode_change_is_audited(settings_client: TestClient, session: Session) -> None:
     settings_client.put(
         "/api/settings/mode", json={"mode": "testnet"}, headers=_auth(settings_client)
