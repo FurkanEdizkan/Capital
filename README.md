@@ -131,15 +131,21 @@ and the [`_example.py`](engine/strategies/plugins/_example.py) template.
 ```text
 Capital/
 ├── engine/            Python trading engine + API
+│   ├── ai/            LLM provider adapters + AI strategy support
 │   ├── api/           REST + WebSocket endpoints
-│   ├── auth/          JWT login, roles, audit log
+│   ├── auth/          JWT login, roles, API tokens, audit log
+│   ├── backtest/      historical backtest runner
 │   ├── exchange/      Binance REST/WebSocket client
 │   ├── marketdata/    candle cache + streaming
+│   ├── notify/        Telegram notifications
+│   ├── ops/           boot recovery, watchdog, retention
 │   ├── strategies/    strategy framework, built-ins, plugin loader
-│   ├── trading/       engine loop, executors, portfolio, accounting
+│   ├── trading/       engine loop, executors, portfolio, risk, accounting
+│   ├── mcp_server.py  MCP server — the API as agent tools
 │   └── tests/         pytest suite
 ├── web/               React + Vite + TypeScript dashboard
-├── scripts/           install.sh and operational scripts
+├── scripts/           install.sh, deploy.sh, backup/restore
+├── caddy/             reverse-proxy config for production
 ├── docker-compose.yml base service definitions
 └── .github/           CI workflows, issue & PR templates
 ```
@@ -168,8 +174,8 @@ Capital is designed to be navigable and contributable by AI agents:
 - **Conventions** — Conventional Commit messages, `ruff`-clean Python, hermetic
   tests. CI enforces all three, so a green build means the change is contract-
   compliant.
-- An **MCP server** exposing read/manage/trade tools for external agents is
-  planned (Phase 7).
+- An **MCP server** (`mcp_server.py`) exposes read / manage / trade tools for
+  external agents, authenticated with role-scoped API tokens.
 
 ## Roadmap
 
@@ -178,11 +184,11 @@ Capital is designed to be navigable and contributable by AI agents:
 | 0     | Scaffold, CI/CD, auth & roles                 | Done        |
 | 1     | Live market data + Markets page               | Done        |
 | 2     | Paper-trading engine + accounting + Dashboard | Done        |
-| 3     | Strategy system + risk management             | In progress |
-| 4     | Backtesting                                   | Planned     |
-| 5     | Live trading (Testnet → real)                 | Planned     |
-| 6     | 24/7 hardening, resilience, deployment        | Planned     |
-| 7     | AI strategies + agent/MCP integration         | Planned     |
+| 3     | Strategy system + risk management             | Done        |
+| 4     | Backtesting                                   | Done        |
+| 5     | Live trading (Testnet → real)                 | Done        |
+| 6     | 24/7 hardening, resilience, deployment        | Done        |
+| 7     | AI strategies + agent/MCP integration         | Done        |
 | 8     | Multi-venue expansion (stocks, Polymarket)    | Future      |
 
 ## License
