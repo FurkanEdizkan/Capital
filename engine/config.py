@@ -78,5 +78,14 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
+    # --- AI / LLM ---------------------------------------------------------
+    # Provider for AI strategies: claude | openai | codex | deepseek |
+    # ollama | gemini. `ai_base_url` points the OpenAI-compatible adapter at
+    # Codex / DeepSeek / Ollama; `ai_model` blank uses the adapter default.
+    ai_provider: str = "claude"
+    ai_model: str = ""
+    ai_api_key: str = ""
+    ai_base_url: str = ""
+
 
 settings = Settings()

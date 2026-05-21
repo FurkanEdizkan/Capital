@@ -18,6 +18,9 @@ dependencies = [
     "websockets>=14.0",
     "apscheduler>=3.11.0",
     "cryptography>=48.0.0",
+    "anthropic>=0.103.1",
+    "openai>=2.37.0",
+    "google-genai>=2.5.0",
 ]
 
 [dependency-groups]
