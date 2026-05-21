@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from sqlmodel import Session
 
 from api.backtest import router as backtest_router
+from api.history import router as history_router
 from api.market import router as market_router
 from api.market import ws_router as market_ws_router
 from api.portfolio import router as portfolio_router
@@ -102,6 +103,7 @@ app.include_router(strategies_router)
 app.include_router(backtest_router)
 app.include_router(settings_router)
 app.include_router(system_router)
+app.include_router(history_router)
 
 
 @app.get("/health", tags=["system"])
