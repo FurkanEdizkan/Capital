@@ -27,7 +27,6 @@ from auth.routes import router as auth_router
 from auth.seed import seed_admin
 from config import settings
 from db import engine as db_engine
-from exchange.client import BinanceClient
 from logging_config import setup_logging
 from marketdata.stream import StreamManager
 from notify.telegram import TelegramNotifier
@@ -36,6 +35,7 @@ from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
 from trading.executor_router import ExecutorRouter
 from trading.risk import RiskManager
+from venues.binance import BinanceVenue
 
 setup_logging(settings.log_level)
 log = logging.getLogger("capital")
@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         log.exception("Strategy allocation seeding skipped")
     trading = TradingEngine(
         session_factory=session_factory,
-        client=BinanceClient(),
+        venue=BinanceVenue(),
         router=ExecutorRouter(),
         strategies=strategies,
         risk=RiskManager.from_settings(settings),
