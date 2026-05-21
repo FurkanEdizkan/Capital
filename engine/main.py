@@ -22,6 +22,7 @@ from api.strategies import router as strategies_router
 from api.system import router as system_router
 from api.tokens import router as tokens_router
 from api.users import router as users_router
+from api.venues import router as venues_router
 from auth.routes import router as auth_router
 from auth.seed import seed_admin
 from config import settings
@@ -108,6 +109,7 @@ app.include_router(system_router)
 app.include_router(history_router)
 app.include_router(ai_router)
 app.include_router(tokens_router)
+app.include_router(venues_router)
 
 
 @app.get("/health", tags=["system"])
