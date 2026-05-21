@@ -46,7 +46,7 @@ class FakeVenue(Venue):
         raise NotImplementedError
 
     def candles(
-        self, symbol: str, interval: str, limit: int = 200
+        self, symbol: str, interval: str, limit: int = 200, *, market: str | None = None
     ) -> list[VenueCandle]:
         return _venue_candles(30)
 

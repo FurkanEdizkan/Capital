@@ -93,8 +93,9 @@ class AlpacaVenue(Venue):
         )
 
     def candles(
-        self, symbol: str, interval: str, limit: int = 200
+        self, symbol: str, interval: str, limit: int = 200, *, market: str | None = None
     ) -> list[VenueCandle]:
+        del market  # single market — accepted for interface parity, ignored
         timeframe = _TIMEFRAMES.get(interval)
         if timeframe is None:
             raise VenueError(f"Alpaca: unsupported interval {interval!r}")

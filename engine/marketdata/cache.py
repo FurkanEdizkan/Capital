@@ -137,8 +137,9 @@ def refresh_venue_candles(
 
     The venue-neutral equivalent of `refresh_candles`. `VenueCandle` carries no
     close time, so it is derived from the open time plus the interval length.
+    `market` selects the venue sub-market and is also the cache key.
     """
-    fetched = venue.candles(symbol, interval, limit)
+    fetched = venue.candles(symbol, interval, limit, market=market.value)
     existing = _existing_open_times(
         session, market=market, symbol=symbol, interval=interval
     )

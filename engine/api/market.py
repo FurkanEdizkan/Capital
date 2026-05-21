@@ -29,9 +29,10 @@ from exchange.client import (
     OrderBook,
     Ticker,
 )
-from marketdata.cache import refresh_candles
+from marketdata.cache import refresh_venue_candles
 from marketdata.models import Candle
 from marketdata.stream import StreamManager
+from trading.venue_router import VenueRouter
 
 log = logging.getLogger("capital.api.market")
 
@@ -54,8 +55,20 @@ def get_stream_manager(request: Request) -> StreamManager:
     return request.app.state.streams
 
 
+_venue_router: VenueRouter | None = None
+
+
+def get_venue_router() -> VenueRouter:
+    """Lazily-constructed shared venue router (overridable in tests)."""
+    global _venue_router
+    if _venue_router is None:
+        _venue_router = VenueRouter.default()
+    return _venue_router
+
+
 ClientDep = Annotated[BinanceClient, Depends(get_binance_client)]
 StreamsDep = Annotated[StreamManager, Depends(get_stream_manager)]
+VenueRouterDep = Annotated[VenueRouter, Depends(get_venue_router)]
 
 
 @router.get("/tickers", response_model=list[Ticker])
@@ -73,16 +86,21 @@ def list_tickers(
 @router.get("/klines", response_model=list[Candle])
 def get_klines(
     _: CurrentUser,
-    client: ClientDep,
+    venues: VenueRouterDep,
     session: SessionDep,
     symbol: str = Query(min_length=3, max_length=24),
     interval: str = "1h",
     market: Market = Market.spot,
     limit: int = Query(default=200, ge=1, le=1000),
 ) -> list[Candle]:
-    """Candle history — served from the cache, refreshed from Binance."""
-    return refresh_candles(
-        session, client, market=market, symbol=symbol, interval=interval, limit=limit
+    """Candle history — served from the cache, refreshed from the active venue."""
+    return refresh_venue_candles(
+        session,
+        venues.resolve(session),
+        market=market,
+        symbol=symbol,
+        interval=interval,
+        limit=limit,
     )
 
 

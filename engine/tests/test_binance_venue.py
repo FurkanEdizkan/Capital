@@ -29,6 +29,7 @@ class FakeMarketData:
     def get_klines(
         self, symbol: str, interval: str, market: Market, limit: int
     ) -> list[Kline]:
+        self.last_klines_market = market
         t = datetime(2026, 1, 1, tzinfo=UTC)
         return [
             Kline(
@@ -101,6 +102,18 @@ def test_candles_map_to_venue_candles() -> None:
     candles = _venue().candles("BTCUSDT", "1h")
     assert len(candles) == 1
     assert candles[0].close == Decimal("102")
+
+
+def test_candles_default_to_the_venue_market() -> None:
+    venue = _venue(futures=True)
+    venue.candles("BTCUSDT", "1h")
+    assert venue._client.last_klines_market is Market.futures  # type: ignore[union-attr]
+
+
+def test_candles_market_override_selects_the_klines_market() -> None:
+    venue = _venue()  # spot venue
+    venue.candles("BTCUSDT", "1h", market="futures")
+    assert venue._client.last_klines_market is Market.futures  # type: ignore[union-attr]
 
 
 def test_price() -> None:
