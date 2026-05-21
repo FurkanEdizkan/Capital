@@ -67,7 +67,8 @@ class PolymarketVenue(Venue):
             )
         return response.json()
 
-    def instrument(self, symbol: str) -> Instrument:
+    def instrument(self, symbol: str, *, market: str | None = None) -> Instrument:
+        del market  # single market — accepted for interface parity, ignored
         # Every Polymarket outcome token is uniform: 1-cent ticks, USDC
         # collateral, prices in 0..1.
         return Instrument(
