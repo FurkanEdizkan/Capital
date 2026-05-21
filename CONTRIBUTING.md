@@ -86,7 +86,8 @@ cd web && npm run lint && npm run build
 
 PRs are merged with a **merge commit** — *not* squashed — so each feature's
 branch and its individual commits stay visible in the history graph
-(`git log --graph`). Feature branches are kept after merge for the same reason.
+(`git log --graph`). The merged branch is then deleted; the merge commit
+already preserves the branching topology, so the graph is unaffected.
 
 ## Workflow
 
