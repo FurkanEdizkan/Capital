@@ -101,11 +101,16 @@ All configuration lives in `.env` (gitignored). Copy
 | `CAPITAL_ADMIN_USERNAME` / `_PASSWORD`  | Seeded admin operator                     |
 | `CAPITAL_STRATEGY_PLUGINS_DIR`          | Where custom strategy plugins are scanned |
 
-## Connecting to Binance
+## Connecting a venue
 
 Market data needs no API key — Sim-mode paper trading works out of the box.
-Placing orders on Testnet or Live needs Binance API keys, entered (encrypted)
-through the Settings page. See [docs/binance-setup.md](docs/binance-setup.md).
+Placing orders on Testnet or Live needs venue credentials, entered (encrypted)
+through the Settings page.
+
+- [docs/binance-setup.md](docs/binance-setup.md) — Binance (crypto; the active venue today)
+- [docs/alpaca-setup.md](docs/alpaca-setup.md) — Alpaca (US stocks)
+- [docs/polymarket-setup.md](docs/polymarket-setup.md) — Polymarket (prediction markets)
+- [docs/venue-api-features.md](docs/venue-api-features.md) — what each venue API offers vs. what Capital uses
 
 ## Manual setup (without Docker)
 

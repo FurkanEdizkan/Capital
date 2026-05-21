@@ -62,12 +62,23 @@ In **Settings → Trading mode**, pick Sim, Testnet or Live.
 
 ## Current status
 
-> ⚠ **Order routing is simulated for now.** The Testnet and Live executors,
-> encrypted key storage and the mode toggle are all built and tested, but the
-> running engine still executes every tick through the **simulator** — the
-> live executor is not yet wired into the trading loop. Setting Testnet/Live
-> stores the mode and keys but does not yet place real orders. Connecting the
-> executor selection to the stored mode is a tracked follow-up.
+Order routing **is** wired to the stored mode. Each tick the engine resolves an
+executor through the `ExecutorRouter`: Sim runs the simulator, Testnet/Live run
+a `VenueExecutor` that places real orders through an authenticated
+`BinanceVenue` (see [venue-abstraction.md](venue-abstraction.md)). Switching to
+Testnet/Live with keys configured therefore places real orders on the next tick.
+
+> ⚠ **Testnet/Live is code-complete but not yet exercised against real
+> Binance.** The executor, encrypted key storage and reconciliation are
+> unit-tested with fakes, but no run has been done against Binance Testnet or a
+> live account. Before trusting real capital, follow the Phase 5 verification:
+> switch to Testnet, place a spot and a futures order, and confirm the fills
+> reconcile in the database.
+
+Capital uses a deliberately small slice of the Binance API — spot and USDⓈ-M
+futures market data plus **MARKET** orders. See
+[venue-api-features.md](venue-api-features.md) for the full picture of what each
+venue's API offers versus what Capital currently uses.
 
 ## Security notes
 
