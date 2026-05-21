@@ -9,8 +9,19 @@ from trading.models import FillSide, Position, PositionSide, Trade
 from trading.reconcile import (
     engine_positions,
     reconcile_positions,
+    reconcile_with_venue,
     untracked_order_ids,
 )
+
+
+class FakeVenue:
+    """Stand-in venue exposing only `positions()`."""
+
+    def __init__(self, positions: dict[str, Decimal]) -> None:
+        self._positions = positions
+
+    def positions(self) -> dict[str, Decimal]:
+        return self._positions
 
 
 def _position(session: Session, strategy: str, symbol: str, side: PositionSide, qty: str) -> None:
@@ -99,3 +110,20 @@ def test_untracked_order_ids_finds_unrecorded(session: Session) -> None:
     _trade(session, None)  # a sim trade — no clientOrderId
     result = untracked_order_ids(session, ["known-id", "missing-1", "missing-2"])
     assert result == ["missing-1", "missing-2"]
+
+
+def test_reconcile_with_venue_attributes_positions_to_a_market(
+    session: Session,
+) -> None:
+    _position(session, "A", "BTCUSDT", PositionSide.long, "2")
+    venue = FakeVenue({"BTCUSDT": Decimal("5")})
+    result = reconcile_with_venue(session, venue)  # type: ignore[arg-type]
+    assert len(result) == 1
+    assert result[0].market == "futures"
+    assert result[0].drift == Decimal("3")
+
+
+def test_reconcile_with_venue_no_drift(session: Session) -> None:
+    _position(session, "A", "BTCUSDT", PositionSide.long, "2")
+    venue = FakeVenue({"BTCUSDT": Decimal("2")})
+    assert reconcile_with_venue(session, venue) == []  # type: ignore[arg-type]
