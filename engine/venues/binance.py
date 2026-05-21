@@ -82,9 +82,12 @@ class BinanceVenue(Venue):
         )
 
     def candles(
-        self, symbol: str, interval: str, limit: int = 200
+        self, symbol: str, interval: str, limit: int = 200, *, market: str | None = None
     ) -> list[VenueCandle]:
-        klines = self._client.get_klines(symbol, interval, self._market, limit)
+        # `market` overrides the venue's default market for this fetch — so a
+        # single Binance venue serves both spot and futures candle requests.
+        klines_market = Market(market) if market is not None else self._market
+        klines = self._client.get_klines(symbol, interval, klines_market, limit)
         return [
             VenueCandle(
                 open_time=k.open_time,

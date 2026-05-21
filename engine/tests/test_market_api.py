@@ -10,11 +10,13 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 from starlette.websockets import WebSocketDisconnect
 
-from api.market import get_binance_client, get_stream_manager
+from api.market import get_binance_client, get_stream_manager, get_venue_router
 from db import get_session
 from exchange.client import FundingRate, Kline, Market, OrderBook, OrderBookLevel, Ticker
 from main import app
 from tests.conftest import ADMIN_PASSWORD, login
+from trading.venue_router import VenueRouter
+from venues.base import Instrument, OrderResult, Venue, VenueCandle
 
 
 def _ticker(sym: str, price: str) -> Ticker:
@@ -77,11 +79,51 @@ class FakeBinance:
         )
 
 
+class FakeVenue(Venue):
+    """A venue whose `candles` records the market it was asked for."""
+
+    name = "binance"
+
+    def __init__(self) -> None:
+        self.last_market: str | None = None
+
+    def instrument(self, symbol: str) -> Instrument:
+        raise NotImplementedError
+
+    def candles(
+        self, symbol: str, interval: str, limit: int = 200, *, market: str | None = None
+    ) -> list[VenueCandle]:
+        self.last_market = market
+        base = datetime(2024, 5, 20, tzinfo=UTC)
+        return [
+            VenueCandle(
+                open_time=base,
+                open=Decimal("100"),
+                high=Decimal("110"),
+                low=Decimal("90"),
+                close=Decimal("105"),
+                volume=Decimal("1000"),
+            )
+        ]
+
+    def price(self, symbol: str) -> Decimal:
+        return Decimal("105")
+
+    def place_order(self, request: Any) -> OrderResult:
+        raise NotImplementedError
+
+    def positions(self) -> dict[str, Decimal]:
+        return {}
+
+
 @pytest.fixture
 def market_client(session: Session) -> Iterator[TestClient]:
     fake_streams = FakeStreams()
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[get_binance_client] = lambda: FakeBinance()
+    app.dependency_overrides[get_venue_router] = lambda: VenueRouter(
+        {"binance": FakeVenue()}
+    )
     app.dependency_overrides[get_stream_manager] = lambda: fake_streams
     app.state.streams = fake_streams  # the WS endpoint reads app.state directly
     yield TestClient(app)
@@ -122,6 +164,19 @@ def test_klines(market_client: TestClient) -> None:
     )
     assert resp.status_code == 200
     assert len(resp.json()) == 1
+
+
+def test_klines_futures_routes_market_through_the_venue(
+    market_client: TestClient,
+) -> None:
+    token = login(market_client, "admin", ADMIN_PASSWORD)
+    resp = market_client.get(
+        "/api/market/klines?symbol=BTCUSDT&interval=1h&market=futures",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    # The cached candle is stored under the requested market.
+    assert resp.json()[0]["market"] == "futures"
 
 
 def test_funding_and_orderbook(market_client: TestClient) -> None:

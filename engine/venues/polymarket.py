@@ -80,8 +80,9 @@ class PolymarketVenue(Venue):
         )
 
     def candles(
-        self, symbol: str, interval: str, limit: int = 200
+        self, symbol: str, interval: str, limit: int = 200, *, market: str | None = None
     ) -> list[VenueCandle]:
+        del market  # single market — accepted for interface parity, ignored
         poly_interval = _INTERVALS.get(interval)
         if poly_interval is None:
             raise VenueError(f"Polymarket: unsupported interval {interval!r}")

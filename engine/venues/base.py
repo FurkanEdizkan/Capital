@@ -93,9 +93,14 @@ class Venue(ABC):
 
     @abstractmethod
     def candles(
-        self, symbol: str, interval: str, limit: int = 200
+        self, symbol: str, interval: str, limit: int = 200, *, market: str | None = None
     ) -> list[VenueCandle]:
-        """Recent OHLCV bars for `symbol`, oldest-first."""
+        """Recent OHLCV bars for `symbol`, oldest-first.
+
+        `market` selects a venue sub-market when the venue has more than one
+        (Binance: `"spot"` / `"futures"`); `None` uses the venue's default.
+        Venues with a single market ignore it.
+        """
 
     @abstractmethod
     def price(self, symbol: str) -> Decimal:

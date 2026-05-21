@@ -195,7 +195,7 @@ export interface paths {
         };
         /**
          * Get Klines
-         * @description Candle history — served from the cache, refreshed from Binance.
+         * @description Candle history — served from the cache, refreshed from the active venue.
          */
         get: operations["get_klines_api_market_klines_get"];
         put?: never;
