@@ -24,6 +24,7 @@ from config import settings
 from db import engine as db_engine
 from exchange.client import BinanceClient
 from marketdata.stream import StreamManager
+from ops.recovery import recover_on_boot
 from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
 from trading.executors.sim import SimExecutor
@@ -48,6 +49,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Paper-trading engine — ticks the built-in strategies on a schedule.
     def session_factory() -> Session:
         return Session(db_engine)
+
+    # Boot recovery — reconcile open positions with Binance before trading.
+    try:
+        with session_factory() as session:
+            recover_on_boot(session)
+    except Exception:  # noqa: BLE001 — recovery must not block startup
+        log.exception("Boot recovery skipped")
 
     strategies = all_strategies()
     try:
