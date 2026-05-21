@@ -1,0 +1,26 @@
+# Capital — systemd unit. Brings the stack up on boot as a belt-and-suspenders
+# guarantee alongside the containers' own `restart: unless-stopped` policy.
+#
+# Install:
+#   sudo cp capital.service /etc/systemd/system/capital.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now capital.service
+#
+# Adjust WorkingDirectory to wherever the repository is checked out.
+
+[Unit]
+Description=Capital trading platform
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/capital
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

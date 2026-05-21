@@ -1,0 +1,28 @@
+# Capital — reverse proxy and single entry point.
+#
+# Caddy serves the dashboard and proxies the API + WebSocket to the engine,
+# so the browser sees one origin (no CORS). Reached privately over Tailscale.
+
+{
+	# Caddy's internal CA issues the TLS certificate — valid for a private,
+	# Tailscale-only deployment with no public DNS. To use Tailscale's own
+	# certificates instead, run Caddy with the Tailscale cert source.
+	auto_https disable_redirects
+}
+
+{$CAPITAL_HOSTNAME:localhost} {
+	tls internal
+
+	encode gzip
+
+	# API and WebSocket traffic → the trading engine.
+	@engine path /api/* /ws /ws/*
+	handle @engine {
+		reverse_proxy engine:8000
+	}
+
+	# Everything else → the web dashboard.
+	handle {
+		reverse_proxy web:80
+	}
+}

@@ -1,0 +1,46 @@
+# Capital — production overrides. Used WITHOUT the dev override:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Caddy is the single entry point; only it binds a host port, and only on the
+# Tailscale interface — nothing is exposed to the public internet. Every
+# service restarts unless explicitly stopped, so the stack self-recovers on
+# reboot (with the Docker daemon enabled at boot).
+
+services:
+  postgres:
+    ports: !reset []  # internal only — reached over the compose network
+    restart: unless-stopped
+
+  engine:
+    ports: !reset []
+    environment:
+      CAPITAL_ENVIRONMENT: production
+    restart: unless-stopped
+
+  web:
+    ports: !reset []
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: capital-caddy
+    depends_on:
+      - engine
+      - web
+    environment:
+      CAPITAL_HOSTNAME: ${CAPITAL_HOSTNAME:-localhost}
+    ports:
+      # Bind only to the Tailscale interface. TAILSCALE_HOST defaults to
+      # localhost so a misconfigured deploy is never publicly reachable.
+      - "${TAILSCALE_HOST:-127.0.0.1}:80:80"
+      - "${TAILSCALE_HOST:-127.0.0.1}:443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
