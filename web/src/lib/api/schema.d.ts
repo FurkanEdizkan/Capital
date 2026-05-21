@@ -386,6 +386,26 @@ export interface paths {
         patch: operations["update_enabled_api_strategies__name__enabled_patch"];
         trace?: never;
     };
+    "/api/system/watchdog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Watchdog
+         * @description Engine liveness — heartbeat age and whether an alert is warranted.
+         */
+        get: operations["get_watchdog_api_system_watchdog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -975,6 +995,24 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * WatchdogStatus
+         * @description Engine liveness assessed from the heartbeat and open-position count.
+         */
+        WatchdogStatus: {
+            /** Age Seconds */
+            age_seconds: number | null;
+            /** Alert */
+            alert: boolean;
+            /** Alive */
+            alive: boolean;
+            /** Last Beat */
+            last_beat: string | null;
+            /** Open Positions */
+            open_positions: number;
+            /** Stale */
+            stale: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -1524,6 +1562,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_watchdog_api_system_watchdog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchdogStatus"];
                 };
             };
         };

@@ -41,6 +41,17 @@ def _put(session: Session, key: str, value: str, *, is_secret: bool = False) -> 
     session.commit()
 
 
+def get_setting(session: Session, key: str) -> str | None:
+    """Read a plain (non-secret) setting value, or None if unset."""
+    row = _get(session, key)
+    return row.value if row is not None else None
+
+
+def set_setting(session: Session, key: str, value: str) -> None:
+    """Write a plain (non-secret) setting value."""
+    _put(session, key, value)
+
+
 def get_mode(session: Session) -> TradingMode:
     """The active trading mode — defaults to Sim until explicitly changed."""
     row = _get(session, _MODE_KEY)
