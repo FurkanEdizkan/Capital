@@ -32,6 +32,25 @@ class User(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=_utcnow)
 
 
+class ApiToken(SQLModel, table=True):
+    """A revocable, role-scoped token for programmatic / agent access.
+
+    Used instead of an interactive login by the MCP server and external
+    agents. The token is shown once on creation; only its SHA-256 hash is
+    stored (see auth/api_tokens.py).
+    """
+
+    __tablename__ = "api_token"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(max_length=64)
+    token_hash: str = Field(unique=True, index=True)
+    role: str = Field(default=Role.user.value, max_length=16)
+    revoked: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=_utcnow)
+    last_used_at: datetime | None = None
+
+
 class AuditLog(SQLModel, table=True):
     """Append-only record of every config-changing action — who, when, what.
 

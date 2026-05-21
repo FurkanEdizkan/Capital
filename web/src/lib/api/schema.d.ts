@@ -486,6 +486,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tokens
+         * @description Every API token, newest-first. The secret is never returned.
+         */
+        get: operations["list_tokens_api_tokens_get"];
+        put?: never;
+        /**
+         * Create Token
+         * @description Create a token. The plaintext is in the response and shown only here.
+         */
+        post: operations["create_token_api_tokens_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke Token
+         * @description Revoke a token by id — it can no longer authenticate.
+         */
+        delete: operations["revoke_token_api_tokens__token_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -571,6 +615,51 @@ export interface components {
         AnalyzeRequest: {
             /** Task */
             task: string;
+        };
+        /** ApiTokenCreate */
+        ApiTokenCreate: {
+            /** Name */
+            name: string;
+            /** @default user */
+            role: components["schemas"]["Role"];
+        };
+        /** ApiTokenCreated */
+        ApiTokenCreated: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Name */
+            name: string;
+            /** Revoked */
+            revoked: boolean;
+            /** Role */
+            role: string;
+            /** Token */
+            token: string;
+        };
+        /** ApiTokenRead */
+        ApiTokenRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Name */
+            name: string;
+            /** Revoked */
+            revoked: boolean;
+            /** Role */
+            role: string;
         };
         /**
          * AuditLog
@@ -1839,6 +1928,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WatchdogStatus"];
+                };
+            };
+        };
+    };
+    list_tokens_api_tokens_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenRead"][];
+                };
+            };
+        };
+    };
+    create_token_api_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiTokenCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_token_api_tokens__token_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

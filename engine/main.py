@@ -20,6 +20,7 @@ from api.portfolio import router as portfolio_router
 from api.settings import router as settings_router
 from api.strategies import router as strategies_router
 from api.system import router as system_router
+from api.tokens import router as tokens_router
 from api.users import router as users_router
 from auth.routes import router as auth_router
 from auth.seed import seed_admin
@@ -106,6 +107,7 @@ app.include_router(settings_router)
 app.include_router(system_router)
 app.include_router(history_router)
 app.include_router(ai_router)
+app.include_router(tokens_router)
 
 
 @app.get("/health", tags=["system"])
