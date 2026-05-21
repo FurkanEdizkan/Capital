@@ -3,7 +3,6 @@
 from decimal import Decimal
 from typing import Any
 
-import pytest
 from sqlmodel import Session
 
 from appsettings.store import set_active_venue
@@ -15,7 +14,7 @@ class _FakeVenue(Venue):
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def instrument(self, symbol: str) -> Instrument:
+    def instrument(self, symbol: str, *, market: str | None = None) -> Instrument:
         raise NotImplementedError
 
     def candles(
@@ -33,30 +32,37 @@ class _FakeVenue(Venue):
         return {}
 
 
+def _builder(venues: dict[str, _FakeVenue]):
+    """A venue builder over a fixed map — raises KeyError for unknown names."""
+
+    def build(session: Session, name: str, mode: Any) -> Venue:
+        return venues[name]
+
+    return build
+
+
 def test_resolves_the_default_venue(session: Session) -> None:
     binance = _FakeVenue("binance")
     # The active-venue setting defaults to binance.
-    assert VenueRouter({"binance": binance}).resolve(session) is binance
+    router = VenueRouter(builder=_builder({"binance": binance}))
+    assert router.resolve(session) is binance
 
 
 def test_resolves_the_active_venue(session: Session) -> None:
     binance, alpaca = _FakeVenue("binance"), _FakeVenue("alpaca")
-    router = VenueRouter({"binance": binance, "alpaca": alpaca})
+    router = VenueRouter(builder=_builder({"binance": binance, "alpaca": alpaca}))
     set_active_venue(session, "alpaca")
     assert router.resolve(session) is alpaca
 
 
 def test_unwired_active_venue_falls_back_to_default(session: Session) -> None:
     binance = _FakeVenue("binance")
-    router = VenueRouter({"binance": binance})
-    set_active_venue(session, "polymarket")  # selected but not wired
+    # The builder only knows binance — an unknown active venue raises KeyError.
+    router = VenueRouter(builder=_builder({"binance": binance}))
+    set_active_venue(session, "polymarket")
     assert router.resolve(session) is binance
 
 
-def test_default_must_be_in_the_venue_map() -> None:
-    with pytest.raises(ValueError):
-        VenueRouter({"alpaca": _FakeVenue("alpaca")})  # default "binance" absent
-
-
-def test_default_factory_wires_binance(session: Session) -> None:
+def test_default_factory_resolves_binance(session: Session) -> None:
+    # The production router builds a real Binance venue out of the box.
     assert VenueRouter.default().resolve(session).name == "binance"

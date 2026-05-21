@@ -104,9 +104,10 @@ def _engine(factory: Any, strategies: list[BaseStrategy]) -> TradingEngine:
     with factory() as session:
         for strat in strategies:
             set_allocation(session, strat.name, Decimal("100000"))
+    venue = FakeVenue()
     return TradingEngine(
         session_factory=factory,
-        venue_router=VenueRouter({"binance": FakeVenue()}),
+        venue_router=VenueRouter(builder=lambda *_: venue),
         strategies=strategies,  # default ExecutorRouter — Sim mode
     )
 

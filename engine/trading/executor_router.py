@@ -1,80 +1,84 @@
-"""Executor routing — pick the executor for the active trading mode.
+"""Executor routing — pick the executor for the active venue and mode.
 
-The trading mode (Sim / Testnet / Live) is a runtime setting an operator
-changes from the Settings page. The engine resolves the executor through an
-`ExecutorRouter` on every tick, so a mode switch takes effect without a
-restart:
+The active venue and the trading mode (Sim / Testnet / Live) are runtime
+settings an operator changes from the Settings page. The engine resolves the
+executor through an `ExecutorRouter` on every tick, so a change takes effect
+without a restart:
 
-- **Sim** — the `SimExecutor` (paper fills); always available, no keys.
-- **Testnet / Live** — a `VenueExecutor` wrapping a `Venue` built lazily from
-  the stored, encrypted Binance keys and cached per mode. The venue places the
-  actual orders; the executor only sizes, validates and records them.
+- **Sim** — the `SimExecutor` (paper fills); always available, no credentials.
+- **Testnet / Live** — a `VenueExecutor` wrapping the active venue, built from
+  its stored, encrypted credentials and cached per `(venue, mode)`.
 
-If keys are missing the router falls back to Sim with a warning — a
-misconfigured live mode must never halt trading.
+If the active venue's credentials are missing the router falls back to Sim
+with a warning — a misconfigured live mode must never halt trading.
 """
 
 import logging
-from collections.abc import Callable
 
-from binance.client import Client
 from sqlmodel import Session
 
-from appsettings.store import TradingMode, get_binance_keys, get_mode
-from exchange.client import BinanceClient
+from appsettings.store import (
+    TradingMode,
+    get_active_venue,
+    get_mode,
+    venue_credentials_configured,
+)
 from trading.executors.base import BaseExecutor
 from trading.executors.sim import SimExecutor
 from trading.executors.venue import VenueExecutor
-from venues.base import Venue
-from venues.binance import BinanceVenue
+from trading.venue_router import VenueBuilder
+from venues.factory import build_venue
+from venues.registry import get_venue
 
 log = logging.getLogger("capital.trading.executor_router")
 
-#: Builds an order-capable `Venue`: `(api_key, api_secret, testnet) -> Venue`.
-VenueFactory = Callable[[str, str, bool], Venue]
-
-
-def _default_venue_factory(api_key: str, api_secret: str, testnet: bool) -> Venue:
-    """Build a Binance venue with an authenticated order client."""
-    client = Client(api_key, api_secret, testnet=testnet)
-    return BinanceVenue(client=BinanceClient(client), order_client=client)
-
 
 class ExecutorRouter:
-    """Resolves the `BaseExecutor` for the current trading mode."""
+    """Resolves the `BaseExecutor` for the active venue and trading mode."""
 
     def __init__(
         self,
         *,
         sim: BaseExecutor | None = None,
-        venue_factory: VenueFactory = _default_venue_factory,
+        builder: VenueBuilder = build_venue,
     ) -> None:
         self._sim = sim or SimExecutor()
-        self._venue_factory = venue_factory
-        # Testnet/Live executors are cached per mode — rebuilding each tick
-        # would drop the venue's futures setup cache and re-ping it.
-        self._cache: dict[TradingMode, BaseExecutor] = {}
+        self._builder = builder
+        # Executors are cached per (venue, mode) — rebuilding each tick would
+        # drop the venue's connection and per-symbol setup caches.
+        self._cache: dict[tuple[str, TradingMode], BaseExecutor] = {}
 
     def resolve(self, session: Session) -> BaseExecutor:
-        """The executor for the mode stored in `session`'s database."""
+        """The executor for the active venue and mode stored in the database."""
         mode = get_mode(session)
         if mode is TradingMode.sim:
             return self._sim
-        if mode in self._cache:
-            return self._cache[mode]
 
-        keys = get_binance_keys(session)
-        if keys is None:
+        venue_name = get_active_venue(session)
+        cached = self._cache.get((venue_name, mode))
+        if cached is not None:
+            return cached
+
+        info = get_venue(venue_name)
+        required = info.credential_fields if info is not None else ()
+        if not venue_credentials_configured(session, venue_name, required):
             log.warning(
-                "trading mode is %s but Binance keys are not configured — "
+                "mode is %s but %s credentials are not configured — "
                 "falling back to Sim",
                 mode.value,
+                venue_name,
             )
             return self._sim
 
-        api_key, api_secret = keys
-        venue = self._venue_factory(api_key, api_secret, mode is TradingMode.testnet)
+        try:
+            venue = self._builder(session, venue_name, mode)
+        except KeyError:
+            log.warning("venue %r is not wired — falling back to Sim", venue_name)
+            return self._sim
+
         executor = VenueExecutor(venue, mode=mode.value)
-        self._cache[mode] = executor
-        log.info("routing orders through the %s executor (%s)", mode.value, venue.name)
+        self._cache[(venue_name, mode)] = executor
+        log.info(
+            "routing orders through the %s executor (%s)", mode.value, venue_name
+        )
         return executor

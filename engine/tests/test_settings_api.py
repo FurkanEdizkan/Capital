@@ -152,6 +152,20 @@ def test_venue_credentials_reject_wrong_fields(settings_client: TestClient) -> N
     assert resp.status_code == 400
 
 
+def test_testnet_blocked_when_active_venue_has_no_sandbox(
+    settings_client: TestClient,
+) -> None:
+    headers = _auth(settings_client)
+    settings_client.put(
+        "/api/venues/active", json={"venue": "polymarket"}, headers=headers
+    )
+    # Polymarket has no sandbox — switching to Testnet is rejected.
+    resp = settings_client.put(
+        "/api/settings/mode", json={"mode": "testnet"}, headers=headers
+    )
+    assert resp.status_code == 409
+
+
 def test_venue_credentials_audited_without_values(
     settings_client: TestClient, session: Session
 ) -> None:

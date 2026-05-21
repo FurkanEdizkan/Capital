@@ -10,12 +10,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from appsettings.store import get_active_venue, set_active_venue
+from appsettings.store import (
+    TradingMode,
+    get_active_venue,
+    get_mode,
+    set_active_venue,
+)
 from auth.audit import record_audit
 from auth.deps import CurrentUser, SessionDep, require_admin
 from auth.models import User
 from trading.portfolio import list_positions
-from venues.registry import VENUE_NAMES, list_venues
+from venues.registry import VENUE_NAMES, get_venue, list_venues
 
 router = APIRouter(prefix="/api/venues", tags=["venues"])
 
@@ -68,6 +73,18 @@ def set_active(
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "Close all open positions before switching venue",
+        )
+    # A venue with no sandbox cannot be used in Testnet mode.
+    info = get_venue(body.venue)
+    if (
+        get_mode(session) is TradingMode.testnet
+        and info is not None
+        and not info.supports_sandbox
+    ):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"{body.venue} has no testnet — switch to Sim or Live before "
+            "selecting it",
         )
     set_active_venue(session, body.venue)
     record_audit(

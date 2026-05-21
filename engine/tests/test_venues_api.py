@@ -85,3 +85,22 @@ def test_set_active_requires_auth(venues_client: TestClient) -> None:
         venues_client.put("/api/venues/active", json={"venue": "alpaca"}).status_code
         == 401
     )
+
+
+def test_venue_read_exposes_credential_fields(venues_client: TestClient) -> None:
+    resp = venues_client.get("/api/venues", headers=_auth(venues_client))
+    venues = {v["name"]: v for v in resp.json()}
+    assert venues["binance"]["credential_fields"] == ["api_key", "api_secret"]
+    assert "wallet_private_key" in venues["polymarket"]["credential_fields"]
+
+
+def test_no_sandbox_venue_blocked_in_testnet_mode(
+    venues_client: TestClient,
+) -> None:
+    headers = _auth(venues_client)
+    venues_client.put("/api/settings/mode", json={"mode": "testnet"}, headers=headers)
+    # Polymarket has no sandbox — selecting it in Testnet mode is rejected.
+    resp = venues_client.put(
+        "/api/venues/active", json={"venue": "polymarket"}, headers=headers
+    )
+    assert resp.status_code == 409
