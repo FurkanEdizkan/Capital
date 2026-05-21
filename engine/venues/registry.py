@@ -1,9 +1,10 @@
 """Venue registry — the catalogue of venues the platform supports.
 
-Each `Venue` implementation (Binance, Alpaca, Polymarket) is registered here
-with its asset class and capabilities. Which venue is *active* — the one the
-engine trades through — is a runtime setting (`appsettings.store`), not a
-fixed property, so it is not stored on the catalogue entry.
+Each `Venue` implementation (Binance, Alpaca, Polymarket, Binance Alpha) is
+registered here with its asset class and capabilities. Which venue is *active*
+— the one the engine trades through — is a runtime setting
+(`appsettings.store`), not a fixed property, so it is not stored on the
+catalogue entry.
 """
 
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ class VenueInfo:
     """Catalogue entry for one supported venue."""
 
     name: str
-    asset_class: str  # crypto | stocks | prediction-markets
+    asset_class: str  # crypto | stocks | prediction-markets | tokenized-stocks
     supports_sandbox: bool
     #: Credential field names the venue needs to place orders. Stored
     #: encrypted, per-venue, in `appsettings` (see store.set_venue_credentials).
@@ -33,6 +34,12 @@ AVAILABLE_VENUES: tuple[VenueInfo, ...] = (
     VenueInfo(
         "polymarket", "prediction-markets", supports_sandbox=False,
         credential_fields=("wallet_private_key", "wallet_address"),
+    ),
+    VenueInfo(
+        # Binance Alpha tokenized stocks (Ondo) — read-only market data; no
+        # confirmed order API yet, so no credentials and no sandbox.
+        "binance-alpha", "tokenized-stocks", supports_sandbox=False,
+        credential_fields=(),
     ),
 )
 

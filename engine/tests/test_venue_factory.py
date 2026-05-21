@@ -6,6 +6,7 @@ from sqlmodel import Session
 from appsettings.store import TradingMode, set_venue_credentials
 from venues.alpaca import AlpacaVenue
 from venues.binance import BinanceVenue
+from venues.binance_alpha import BinanceAlphaVenue
 from venues.factory import build_venue
 from venues.polymarket import PolymarketVenue
 
@@ -35,6 +36,11 @@ def test_polymarket_is_read_only(session: Session) -> None:
     venue = build_venue(session, "polymarket", TradingMode.live)
     assert isinstance(venue, PolymarketVenue)
     assert venue._order_client is None
+
+
+def test_binance_alpha_is_built(session: Session) -> None:
+    venue = build_venue(session, "binance-alpha", TradingMode.sim)
+    assert isinstance(venue, BinanceAlphaVenue)
 
 
 def test_unknown_venue_raises_key_error(session: Session) -> None:

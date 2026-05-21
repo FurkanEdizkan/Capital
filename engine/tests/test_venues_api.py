@@ -48,10 +48,11 @@ def test_lists_venues_with_binance_active_by_default(venues_client: TestClient) 
     resp = venues_client.get("/api/venues", headers=_auth(venues_client))
     assert resp.status_code == 200
     venues = {v["name"]: v for v in resp.json()}
-    assert set(venues) == {"binance", "alpaca", "polymarket"}
+    assert set(venues) == {"binance", "alpaca", "polymarket", "binance-alpha"}
     assert venues["binance"]["active"] is True
     assert venues["alpaca"]["active"] is False
     assert venues["polymarket"]["supports_sandbox"] is False
+    assert venues["binance-alpha"]["asset_class"] == "tokenized-stocks"
 
 
 def test_set_active_venue(venues_client: TestClient) -> None:
@@ -60,7 +61,12 @@ def test_set_active_venue(venues_client: TestClient) -> None:
     )
     assert resp.status_code == 200
     venues = {v["name"]: v["active"] for v in resp.json()}
-    assert venues == {"binance": False, "alpaca": True, "polymarket": False}
+    assert venues == {
+        "binance": False,
+        "alpaca": True,
+        "polymarket": False,
+        "binance-alpha": False,
+    }
 
 
 def test_set_active_unknown_venue_returns_404(venues_client: TestClient) -> None:

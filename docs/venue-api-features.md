@@ -27,7 +27,7 @@ lines:
 | **COIN-M Futures** | Coin-margined futures | ❌ |
 | **Margin** | Borrow to trade spot with leverage | ❌ |
 | **Options** | European-style crypto options | ❌ |
-| **Tokenized stocks** | On-chain tokens tracking real equities — AAPLon, TSLAon, NVDAon, QQQon… via the Ondo Finance partnership on **Binance Alpha** (2026; not US-available) | ❌ — see roadmap |
+| **Tokenized stocks** | On-chain tokens tracking real equities — AAPLon, TSLAon, NVDAon, QQQon… via the Ondo Finance partnership on **Binance Alpha** (2026; not US-available) | ⚠ market data only — `BinanceAlphaVenue` is read-only (Sim-mode tradeable; no order API yet) |
 | **Convert / Buy Crypto** | One-click swaps, card purchases | ❌ |
 | **Earn / Staking / Sub-accounts / Withdrawals** | Account & yield features | ❌ |
 
@@ -84,7 +84,7 @@ A Polymarket "symbol" is an outcome **token id**; prices are probabilities in
 | Binance spot & USDⓈ-M futures, MARKET orders | ✅ in use |
 | LIMIT / STOP / bracket orders (all venues) | ❌ roadmap |
 | Binance margin, options, COIN-M | ❌ not planned |
-| Binance tokenized stocks (Ondo / Alpha) | ❌ roadmap — a path to equities without Alpaca |
+| Binance tokenized stocks (Ondo / Alpha) | ⚠ read-only `BinanceAlphaVenue` — Sim-mode only; live order API not yet wired |
 | Manual spot buy + self-custody withdrawal | ❌ roadmap |
 | Alpaca / Polymarket as a selectable active venue | ❌ implemented but not wired into routing |
 
