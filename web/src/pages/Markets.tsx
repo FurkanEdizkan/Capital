@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CandleChart } from "../components/CandleChart";
 import { I } from "../components/icons";
+import { VenueBadge } from "../components/VenueBadge";
 import {
   Badge,
   Card,
@@ -143,6 +144,7 @@ export function Markets() {
             style={{ flex: 1, minWidth: 200 }}
           />
           <Pill>{rows.length} pairs</Pill>
+          <VenueBadge />
           <Badge tone={stream.connected ? "green" : "muted"}>
             {stream.connected ? "Live" : "Connecting"}
           </Badge>
