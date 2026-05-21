@@ -13,7 +13,6 @@ from exchange.client import Kline, Market
 from strategies.base import BaseStrategy, StrategyContext
 from trading.engine import TradingEngine
 from trading.executors.base import Order
-from trading.executors.sim import SimExecutor
 from trading.models import FillSide, PositionSide, Trade
 from trading.portfolio import list_positions, set_allocation
 
@@ -89,8 +88,7 @@ def _engine(factory: Any, strategies: list[BaseStrategy]) -> TradingEngine:
     return TradingEngine(
         session_factory=factory,
         client=FakeClient(),  # type: ignore[arg-type]
-        executor=SimExecutor(),
-        strategies=strategies,
+        strategies=strategies,  # default ExecutorRouter — Sim mode
     )
 
 

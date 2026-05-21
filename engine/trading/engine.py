@@ -22,7 +22,8 @@ from ops.retention import prune_all
 from ops.watchdog import record_heartbeat
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
-from trading.executors.base import BaseExecutor, ExecutionError, Order
+from trading.executor_router import ExecutorRouter
+from trading.executors.base import ExecutionError, Order
 from trading.lifecycle import is_enabled
 from trading.models import FillSide, PositionSide
 from trading.portfolio import (
@@ -44,7 +45,7 @@ class TradingEngine:
         *,
         session_factory: Callable[[], Session],
         client: BinanceClient,
-        executor: BaseExecutor,
+        router: ExecutorRouter | None = None,
         strategies: list[BaseStrategy] | None = None,
         risk: RiskManager | None = None,
         notifier: TelegramNotifier | None = None,
@@ -55,7 +56,8 @@ class TradingEngine:
     ) -> None:
         self._session_factory = session_factory
         self._client = client
-        self._executor = executor
+        # Resolves Sim / Testnet / Live executor from the stored mode per tick.
+        self._router = router or ExecutorRouter()
         self._risk = risk or RiskManager()  # all limits disabled by default
         self._notifier = notifier or TelegramNotifier()  # disabled by default
         self._strategies: list[BaseStrategy] = list(strategies or [])
@@ -124,12 +126,14 @@ class TradingEngine:
             position = get_or_create_position(
                 session, strat.name, strat.market.value, strat.symbol
             )
+            # Route orders through the executor for the active trading mode.
+            executor = self._router.resolve(session)
             # Risk: force-close a position that breached its stop-loss or
             # take-profit. This runs regardless of lifecycle state — a stop is
             # a safety net, not a strategy-driven entry.
             stop = self._risk.stop_order(position, price)
             if stop is not None:
-                self._executor.execute(session, stop, reference_price=price)
+                executor.execute(session, stop, reference_price=price)
                 log.info("risk: stopped out %r position on %s", strat.name, strat.symbol)
                 return
             # Lifecycle: a disabled strategy is skipped — no new entries — but
@@ -158,7 +162,7 @@ class TradingEngine:
                 log.info("strategy %r order blocked by risk manager", strat.name)
                 return
             try:
-                fill = self._executor.execute(session, order, reference_price=price)
+                fill = executor.execute(session, order, reference_price=price)
             except ExecutionError as exc:
                 log.info("strategy %r order skipped: %s", strat.name, exc)
                 return
@@ -221,6 +225,7 @@ class TradingEngine:
         """
         closed = 0
         with self._session_factory() as session:
+            executor = self._router.resolve(session)
             for pos in list_positions(session, strategy=strategy, open_only=True):
                 price = self._last_prices.get(pos.symbol, pos.entry_price)
                 side = (
@@ -236,7 +241,7 @@ class TradingEngine:
                     quantity=pos.qty,
                 )
                 try:
-                    self._executor.execute(session, order, reference_price=price)
+                    executor.execute(session, order, reference_price=price)
                     closed += 1
                 except ExecutionError:
                     log.warning(

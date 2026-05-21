@@ -33,7 +33,7 @@ from notify.telegram import TelegramNotifier
 from ops.recovery import recover_on_boot
 from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
-from trading.executors.sim import SimExecutor
+from trading.executor_router import ExecutorRouter
 from trading.risk import RiskManager
 
 setup_logging(settings.log_level)
@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     trading = TradingEngine(
         session_factory=session_factory,
         client=BinanceClient(),
-        executor=SimExecutor(),
+        router=ExecutorRouter(),
         strategies=strategies,
         risk=RiskManager.from_settings(settings),
         notifier=TelegramNotifier.from_settings(settings),
