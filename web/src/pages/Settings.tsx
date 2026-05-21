@@ -32,6 +32,7 @@ import {
   fetchTokens,
   revokeToken,
 } from "../lib/api/tokens";
+import { fetchVenues, type Venue } from "../lib/api/venues";
 
 const MODES: { value: TradingMode; label: string }[] = [
   { value: "sim", label: "Simulation" },
@@ -61,6 +62,7 @@ const selectStyle = {
 export function Settings() {
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [tokens, setTokens] = useState<ApiToken[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,9 +93,14 @@ export function Settings() {
 
   const load = useCallback(async () => {
     try {
-      const [s, t] = await Promise.all([fetchSettings(), fetchTokens()]);
+      const [s, t, v] = await Promise.all([
+        fetchSettings(),
+        fetchTokens(),
+        fetchVenues(),
+      ]);
       applySettings(s);
       setTokens(t);
+      setVenues(v);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load settings");
@@ -218,6 +225,30 @@ export function Settings() {
     },
   ];
 
+  const venueCols: Column<Venue>[] = [
+    { key: "name", label: "Venue" },
+    { key: "asset_class", label: "Asset class" },
+    {
+      key: "supports_sandbox",
+      label: "Sandbox",
+      render: (r) => (
+        <Badge tone={r.supports_sandbox ? "green" : "muted"}>
+          {r.supports_sandbox ? "Yes" : "No"}
+        </Badge>
+      ),
+    },
+    {
+      key: "active",
+      label: "Status",
+      render: (r) =>
+        r.active ? (
+          <Badge tone="green">Active</Badge>
+        ) : (
+          <Badge tone="muted">Available</Badge>
+        ),
+    },
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Card>
@@ -230,6 +261,16 @@ export function Settings() {
           <span style={{ fontSize: 12, color: "var(--text-2)" }}>
             {MODE_NOTE[settings.mode]}
           </span>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="Trading venues"
+          subtitle="Venues the platform supports. Binance is the engine's active venue today."
+        />
+        <div style={{ padding: 14 }}>
+          <DataTable columns={venueCols} rows={venues} rowKey={(r) => r.name} dense />
         </div>
       </Card>
 

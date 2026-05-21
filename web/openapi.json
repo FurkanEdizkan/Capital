@@ -1564,6 +1564,34 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VenueRead": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "asset_class": {
+            "title": "Asset Class",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "supports_sandbox": {
+            "title": "Supports Sandbox",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "asset_class",
+          "supports_sandbox",
+          "active"
+        ],
+        "title": "VenueRead",
+        "type": "object"
+      },
       "WatchdogStatus": {
         "description": "Engine liveness assessed from the heartbeat and open-position count.",
         "properties": {
@@ -3128,6 +3156,37 @@
         "summary": "Reset Password",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/venues": {
+      "get": {
+        "description": "Every supported venue, with its asset class and capabilities.",
+        "operationId": "get_venues_api_venues_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VenueRead"
+                  },
+                  "title": "Response Get Venues Api Venues Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Venues",
+        "tags": [
+          "venues"
         ]
       }
     },

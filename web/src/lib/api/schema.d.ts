@@ -602,6 +602,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/venues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Venues
+         * @description Every supported venue, with its asset class and capabilities.
+         */
+        get: operations["get_venues_api_venues_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1259,6 +1279,17 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VenueRead */
+        VenueRead: {
+            /** Active */
+            active: boolean;
+            /** Asset Class */
+            asset_class: string;
+            /** Name */
+            name: string;
+            /** Supports Sandbox */
+            supports_sandbox: boolean;
         };
         /**
          * WatchdogStatus
@@ -2212,6 +2243,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_venues_api_venues_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueRead"][];
                 };
             };
         };
