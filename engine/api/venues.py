@@ -1,16 +1,25 @@
-"""Venues API — the catalogue of supported trading venues.
+"""Venues API — the supported-venue catalogue and the active venue.
 
-Read-only: lists every venue the platform supports and which one the engine
-currently trades through. Any authenticated operator may read it.
+`GET` lists every venue and marks the active one. `PUT /active` changes the
+active venue (admin only) — blocked while positions are open, the same guard
+as a trading-mode switch.
 """
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from auth.deps import CurrentUser
-from venues.registry import list_venues
+from appsettings.store import get_active_venue, set_active_venue
+from auth.audit import record_audit
+from auth.deps import CurrentUser, SessionDep, require_admin
+from auth.models import User
+from trading.portfolio import list_positions
+from venues.registry import VENUE_NAMES, list_venues
 
 router = APIRouter(prefix="/api/venues", tags=["venues"])
+
+AdminUser = Annotated[User, Depends(require_admin)]
 
 
 class VenueRead(BaseModel):
@@ -20,15 +29,47 @@ class VenueRead(BaseModel):
     active: bool
 
 
-@router.get("", response_model=list[VenueRead])
-def get_venues(_: CurrentUser) -> list[VenueRead]:
-    """Every supported venue, with its asset class and capabilities."""
+class ActiveVenueUpdate(BaseModel):
+    venue: str
+
+
+def _read(session: SessionDep) -> list[VenueRead]:
+    active = get_active_venue(session)
     return [
         VenueRead(
             name=v.name,
             asset_class=v.asset_class,
             supports_sandbox=v.supports_sandbox,
-            active=v.active,
+            active=v.name == active,
         )
         for v in list_venues()
     ]
+
+
+@router.get("", response_model=list[VenueRead])
+def get_venues(_: CurrentUser, session: SessionDep) -> list[VenueRead]:
+    """Every supported venue, with the active one flagged."""
+    return _read(session)
+
+
+@router.put("/active", response_model=list[VenueRead])
+def set_active(
+    body: ActiveVenueUpdate, admin: AdminUser, session: SessionDep
+) -> list[VenueRead]:
+    """Change the active trading venue."""
+    if body.venue not in VENUE_NAMES:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown venue: {body.venue}")
+    current = get_active_venue(session)
+    if body.venue != current and list_positions(session, open_only=True):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Close all open positions before switching venue",
+        )
+    set_active_venue(session, body.venue)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="venue.active",
+        detail={"from": current, "to": body.venue},
+    )
+    return _read(session)

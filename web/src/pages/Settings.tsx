@@ -32,7 +32,7 @@ import {
   fetchTokens,
   revokeToken,
 } from "../lib/api/tokens";
-import { fetchVenues, type Venue } from "../lib/api/venues";
+import { fetchVenues, setActiveVenue, type Venue } from "../lib/api/venues";
 
 const MODES: { value: TradingMode; label: string }[] = [
   { value: "sim", label: "Simulation" },
@@ -173,6 +173,12 @@ export function Settings() {
       setTokens(await fetchTokens());
     });
 
+  const switchVenue = (name: string) =>
+    run(async () => {
+      setVenues(await setActiveVenue(name));
+      setNotice(`Active venue set to ${name}.`);
+    });
+
   if (!settings) {
     return error ? (
       <EmptyState icon={<I.Warn />} title="Couldn't load settings" body={error} />
@@ -245,6 +251,22 @@ export function Settings() {
           <Badge tone="green">Active</Badge>
         ) : (
           <Badge tone="muted">Available</Badge>
+        ),
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      render: (r) =>
+        r.active ? null : (
+          <Button
+            size="sm"
+            kind="outline"
+            disabled={busy}
+            onClick={() => void switchVenue(r.name)}
+          >
+            Set active
+          </Button>
         ),
     },
   ];

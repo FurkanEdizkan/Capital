@@ -21,6 +21,7 @@ class TradingMode(StrEnum):
 
 
 _MODE_KEY = "trading_mode"
+_ACTIVE_VENUE_KEY = "active_venue"
 _BINANCE_KEY = "binance_api_key"
 _BINANCE_SECRET = "binance_api_secret"
 _AI_PROVIDER = "ai_provider"
@@ -64,6 +65,16 @@ def get_mode(session: Session) -> TradingMode:
 
 def set_mode(session: Session, mode: TradingMode) -> None:
     _put(session, _MODE_KEY, mode.value)
+
+
+def get_active_venue(session: Session) -> str:
+    """The venue the engine trades through — defaults to Binance."""
+    return get_setting(session, _ACTIVE_VENUE_KEY) or "binance"
+
+
+def set_active_venue(session: Session, venue: str) -> None:
+    """Set the active trading venue."""
+    set_setting(session, _ACTIVE_VENUE_KEY, venue)
 
 
 def set_binance_keys(session: Session, api_key: str, api_secret: str) -> None:
