@@ -5,17 +5,6 @@
 import { I } from "../components/icons";
 import { ScreenStub } from "./ScreenStub";
 
-export function History() {
-  return (
-    <ScreenStub
-      title="History"
-      phase="Phase 6"
-      icon={<I.History size={22} />}
-      summary="The full transaction log, order log, engine events and config audit trail — with CSV/Excel export."
-    />
-  );
-}
-
 export function Users() {
   return (
     <ScreenStub
