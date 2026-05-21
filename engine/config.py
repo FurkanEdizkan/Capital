@@ -65,5 +65,18 @@ class Settings(BaseSettings):
     risk_daily_loss_limit: Decimal = Decimal(0)
     risk_max_drawdown_pct: Decimal = Decimal(0)
 
+    # --- Logging ----------------------------------------------------------
+    log_level: str = "INFO"
+
+    # --- Retention --------------------------------------------------------
+    # Days of history to keep; 0 disables pruning of that table.
+    retention_candle_days: int = 90
+    retention_equity_days: int = 90
+
+    # --- Telegram notifications ------------------------------------------
+    # Both must be set to enable notifications (trades, errors, watchdog).
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
 
 settings = Settings()
