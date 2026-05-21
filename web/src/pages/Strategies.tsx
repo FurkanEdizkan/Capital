@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { I } from "../components/icons";
+import { VenueBadge } from "../components/VenueBadge";
 import {
   Badge,
   Button,
@@ -196,6 +197,7 @@ export function Strategies() {
         <SectionHeader
           title="Strategies"
           subtitle="Set capital allocation, enable or disable, and close open positions."
+          right={<VenueBadge />}
         />
         {strategies.length === 0 ? (
           <EmptyState

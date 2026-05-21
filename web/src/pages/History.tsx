@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { I } from "../components/icons";
+import { VenueBadge } from "../components/VenueBadge";
 import {
   Button,
   Card,
@@ -129,6 +130,7 @@ export function History() {
         <SectionHeader
           title="Filter & export"
           subtitle="Filter the transaction log by date range, or export it as CSV."
+          right={<VenueBadge />}
         />
         <div
           style={{
