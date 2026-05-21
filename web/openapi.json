@@ -272,6 +272,28 @@
         "title": "BacktestTradeRead",
         "type": "object"
       },
+      "BinanceKeysUpdate": {
+        "properties": {
+          "api_key": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Api Key",
+            "type": "string"
+          },
+          "api_secret": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Api Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "api_key",
+          "api_secret"
+        ],
+        "title": "BinanceKeysUpdate",
+        "type": "object"
+      },
       "Body_login_api_auth_login_post": {
         "properties": {
           "client_id": {
@@ -565,6 +587,23 @@
         "title": "Market",
         "type": "string"
       },
+      "ModeUpdate": {
+        "properties": {
+          "confirm": {
+            "default": false,
+            "title": "Confirm",
+            "type": "boolean"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/TradingMode"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "ModeUpdate",
+        "type": "object"
+      },
       "OrderBook": {
         "properties": {
           "asks": {
@@ -811,6 +850,23 @@
         ],
         "title": "Role",
         "type": "string"
+      },
+      "SettingsRead": {
+        "properties": {
+          "binance_keys_configured": {
+            "title": "Binance Keys Configured",
+            "type": "boolean"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/TradingMode"
+          }
+        },
+        "required": [
+          "mode",
+          "binance_keys_configured"
+        ],
+        "title": "SettingsRead",
+        "type": "object"
       },
       "StrategyRead": {
         "description": "A strategy's identity, lifecycle state and accounting summary.",
@@ -1079,6 +1135,16 @@
         ],
         "title": "Trade",
         "type": "object"
+      },
+      "TradingMode": {
+        "description": "Where orders are routed. Sim is the safe default.",
+        "enum": [
+          "sim",
+          "testnet",
+          "live"
+        ],
+        "title": "TradingMode",
+        "type": "string"
       },
       "UserCreate": {
         "properties": {
@@ -1790,6 +1856,120 @@
         "summary": "Trades",
         "tags": [
           "portfolio"
+        ]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "description": "Current trading mode and whether Binance keys are stored.",
+        "operationId": "read_settings_api_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Read Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/binance-keys": {
+      "put": {
+        "description": "Store the Binance API credentials (encrypted at rest).",
+        "operationId": "update_binance_keys_api_settings_binance_keys_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BinanceKeysUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Binance Keys",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/mode": {
+      "put": {
+        "description": "Switch the trading mode (Sim / Testnet / Live).",
+        "operationId": "update_mode_api_settings_mode_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Mode",
+        "tags": [
+          "settings"
         ]
       }
     },

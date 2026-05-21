@@ -11,6 +11,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from appsettings import models as _settings_models  # noqa: F401 — register tables
 from auth import models as _auth_models  # noqa: F401 — register tables on metadata
 from config import settings
 from db import SQLModel

@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     # JWT signing secret. MUST be overridden in any real deployment via
     # CAPITAL_JWT_SECRET — the default is for local development only.
     jwt_secret: str = "dev-insecure-jwt-secret-change-me-in-production"
+
+    # Secret-encryption key — encrypts Binance/LLM API keys stored in the DB.
+    # MUST be overridden via CAPITAL_SECRET_KEY; without the exact key a DB
+    # restore cannot decrypt the stored credentials. Any string works (it is
+    # hashed into a Fernet key).
+    secret_key: str = "dev-insecure-secret-key-change-me-in-production"
     jwt_algorithm: str = "HS256"
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 14
