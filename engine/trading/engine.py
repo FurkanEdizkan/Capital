@@ -16,6 +16,7 @@ from sqlmodel import Session
 
 from exchange.client import BinanceClient
 from marketdata.cache import refresh_candles
+from marketdata.freshness import feed_is_stale
 from ops.watchdog import record_heartbeat
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
@@ -95,6 +96,15 @@ class TradingEngine:
                 limit=self._candle_limit,
             )
             if not candles:
+                return
+            # Stale-data safeguard — freeze trading if the feed has stalled,
+            # rather than acting (or marking) on frozen prices.
+            if feed_is_stale(candles[-1], strat.timeframe):
+                log.warning(
+                    "feed stale for %s %s — trading frozen this tick",
+                    strat.symbol,
+                    strat.timeframe,
+                )
                 return
             price = candles[-1].close
             self._last_prices[strat.symbol] = price

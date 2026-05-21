@@ -19,7 +19,10 @@ from trading.portfolio import list_positions, set_allocation
 
 
 def _klines(n: int) -> list[Kline]:
-    base = datetime(2024, 5, 20, tzinfo=UTC)
+    # End at the current hour so the newest candle passes the staleness check.
+    base = datetime.now(UTC).replace(
+        minute=0, second=0, microsecond=0
+    ) - timedelta(hours=n - 1)
     return [
         Kline(
             open_time=base + timedelta(hours=i),
