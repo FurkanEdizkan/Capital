@@ -1,6 +1,19 @@
 {
   "components": {
     "schemas": {
+      "ActiveVenueUpdate": {
+        "properties": {
+          "venue": {
+            "title": "Venue",
+            "type": "string"
+          }
+        },
+        "required": [
+          "venue"
+        ],
+        "title": "ActiveVenueUpdate",
+        "type": "object"
+      },
       "AiSettingsUpdate": {
         "properties": {
           "api_key": {
@@ -3161,7 +3174,7 @@
     },
     "/api/venues": {
       "get": {
-        "description": "Every supported venue, with its asset class and capabilities.",
+        "description": "Every supported venue, with the active one flagged.",
         "operationId": "get_venues_api_venues_get",
         "responses": {
           "200": {
@@ -3185,6 +3198,57 @@
           }
         ],
         "summary": "Get Venues",
+        "tags": [
+          "venues"
+        ]
+      }
+    },
+    "/api/venues/active": {
+      "put": {
+        "description": "Change the active trading venue.",
+        "operationId": "set_active_api_venues_active_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveVenueUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VenueRead"
+                  },
+                  "title": "Response Set Active Api Venues Active Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Set Active",
         "tags": [
           "venues"
         ]
