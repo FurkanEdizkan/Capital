@@ -1284,6 +1284,60 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WatchdogStatus": {
+        "description": "Engine liveness assessed from the heartbeat and open-position count.",
+        "properties": {
+          "age_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Seconds"
+          },
+          "alert": {
+            "title": "Alert",
+            "type": "boolean"
+          },
+          "alive": {
+            "title": "Alive",
+            "type": "boolean"
+          },
+          "last_beat": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Beat"
+          },
+          "open_positions": {
+            "title": "Open Positions",
+            "type": "integer"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "alive",
+          "stale",
+          "alert",
+          "last_beat",
+          "age_seconds",
+          "open_positions"
+        ],
+        "title": "WatchdogStatus",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -2165,6 +2219,33 @@
         "summary": "Update Enabled",
         "tags": [
           "strategies"
+        ]
+      }
+    },
+    "/api/system/watchdog": {
+      "get": {
+        "description": "Engine liveness \u2014 heartbeat age and whether an alert is warranted.",
+        "operationId": "get_watchdog_api_system_watchdog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchdogStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Watchdog",
+        "tags": [
+          "system"
         ]
       }
     },

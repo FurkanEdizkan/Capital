@@ -16,6 +16,7 @@ from sqlmodel import Session
 
 from exchange.client import BinanceClient
 from marketdata.cache import refresh_candles
+from ops.watchdog import record_heartbeat
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
 from trading.executors.base import BaseExecutor, ExecutionError, Order
@@ -78,6 +79,8 @@ class TradingEngine:
         try:
             with self._session_factory() as session:
                 record_equity_snapshot(session, dict(self._last_prices))
+                # Heartbeat — the watchdog uses this to detect a stalled loop.
+                record_heartbeat(session)
         except Exception:  # noqa: BLE001 — accounting must not abort the loop
             log.exception("equity snapshot failed")
 
