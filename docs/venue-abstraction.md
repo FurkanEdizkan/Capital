@@ -63,18 +63,29 @@ The venue survey surfaced three things the interface deliberately accounts for:
   The realised fee rides on `OrderResult.fee`; backtest fee *estimation* stays
   the backtest runner's separate `FeeModel`.
 
-## Migration plan
+## Migration plan — complete
 
-1. **Land the `Venue` interface** — this issue (#46).
-2. **`BinanceVenue`** — implement `Venue` by wrapping the existing
-   `BinanceClient` and live executors. No behaviour change; Binance just
-   becomes the first venue.
-3. **Rewire the engine** — the trading engine, reconciliation and market-data
-   API depend on a `Venue` instead of `BinanceClient` + executors directly.
-4. **Add venues** — `AlpacaVenue` (stocks) and a `PolymarketVenue`
-   (prediction markets), per the research recommendation.
-5. **UI** — a venue selector; Markets / Strategies / History become
-   venue-aware.
+1. ✅ **`Venue` interface** — landed (#46).
+2. ✅ **`BinanceVenue`** — Binance wrapped as the first venue, no behaviour
+   change.
+3. ✅ **Rewire the engine** — the trading engine, market-data `/klines` API,
+   reconciliation and order execution all depend on a `Venue` rather than
+   `BinanceClient` + executors directly (#110).
+4. ✅ **Add venues** — `AlpacaVenue` (stocks) and `PolymarketVenue` (prediction
+   markets) are implemented behind the interface.
+5. ✅ **UI** — a venue selector on Settings; Markets / Strategies / History show
+   the active venue.
 
-Steps 2–5 are separate issues. Keeping each venue behind this interface is
-what makes the expansion additive rather than a rewrite.
+Keeping each venue behind this interface is what made the expansion additive
+rather than a rewrite.
+
+### Known follow-ups
+
+- **Routing is Binance-only.** `VenueRouter` and `ExecutorRouter` wire only
+  Binance — selecting Alpaca or Polymarket as the active venue falls back to
+  Binance with a warning. Wiring those venues (with their credential handling)
+  is tracked separately.
+- **Market-data API:** only `/klines` is venue-routed; tickers, funding and
+  order-book endpoints are still Binance-specific.
+- **Testnet/Live execution** is code-complete but not yet exercised against a
+  real venue. See [venue-api-features.md](venue-api-features.md).
