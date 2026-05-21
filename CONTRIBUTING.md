@@ -5,7 +5,7 @@ how to set up, branch, commit and open PRs.
 
 ## Project layout
 
-```
+```text
 engine/   Python trading engine + API (uv, FastAPI, PostgreSQL)
 web/      React + Vite + TypeScript dashboard
 ```
@@ -42,7 +42,7 @@ npm run dev                          # http://localhost:5173
 
 Branch off `main` with a typed, issue-numbered name:
 
-```
+```text
 <type>/<issue#>-<short-slug>     e.g. feat/12-binance-client
 ```
 
@@ -52,7 +52,7 @@ Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`.
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org):
 
-```
+```text
 <type>(<scope>): <summary>        e.g. feat(engine): add binance client wrapper
 ```
 
@@ -71,6 +71,14 @@ cd web && npm run lint && npm run build
 ```
 
 - Include an Alembic migration for any DB schema change.
+- After changing an engine API endpoint or model, regenerate the API schema
+  so CI's drift check passes:
+
+  ```bash
+  cd engine && uv run python export_openapi.py   # updates web/openapi.json
+  cd web && npm run gen:api                       # updates src/lib/api/schema.d.ts
+  ```
+
 - Open the PR against `main`, fill in the template, and add `Closes #<issue>`.
 - CI must pass; a review is required (the repo admin may self-merge solo work).
 
