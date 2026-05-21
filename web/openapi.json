@@ -2145,7 +2145,7 @@
     },
     "/api/market/klines": {
       "get": {
-        "description": "Candle history \u2014 served from the cache, refreshed from Binance.",
+        "description": "Candle history \u2014 served from the cache, refreshed from the active venue.",
         "operationId": "get_klines_api_market_klines_get",
         "parameters": [
           {
