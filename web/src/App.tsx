@@ -5,8 +5,9 @@ import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Backtest } from "./pages/Backtest";
 import { Markets } from "./pages/Markets";
+import { Settings } from "./pages/Settings";
 import { Strategies } from "./pages/Strategies";
-import { History, Settings, Users } from "./pages/screens";
+import { History, Users } from "./pages/screens";
 
 export function App() {
   return (

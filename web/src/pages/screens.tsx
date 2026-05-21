@@ -16,17 +16,6 @@ export function History() {
   );
 }
 
-export function Settings() {
-  return (
-    <ScreenStub
-      title="Settings"
-      phase="Phase 5"
-      icon={<I.Settings size={22} />}
-      summary="Binance API keys, risk limits, the Sim/Testnet/Live mode toggle, AI provider config and API tokens."
-    />
-  );
-}
-
 export function Users() {
   return (
     <ScreenStub

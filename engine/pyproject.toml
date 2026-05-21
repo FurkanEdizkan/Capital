@@ -17,6 +17,7 @@ dependencies = [
     "python-binance>=1.0.19",
     "websockets>=14.0",
     "apscheduler>=3.11.0",
+    "cryptography>=48.0.0",
 ]
 
 [dependency-groups]

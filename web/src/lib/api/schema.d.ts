@@ -246,6 +246,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Settings
+         * @description Current trading mode and whether Binance keys are stored.
+         */
+        get: operations["read_settings_api_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/binance-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Binance Keys
+         * @description Store the Binance API credentials (encrypted at rest).
+         */
+        put: operations["update_binance_keys_api_settings_binance_keys_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Mode
+         * @description Switch the trading mode (Sim / Testnet / Live).
+         */
+        put: operations["update_mode_api_settings_mode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/strategies": {
         parameters: {
             query?: never;
@@ -498,6 +558,13 @@ export interface components {
              */
             time: string;
         };
+        /** BinanceKeysUpdate */
+        BinanceKeysUpdate: {
+            /** Api Key */
+            api_key: string;
+            /** Api Secret */
+            api_secret: string;
+        };
         /** Body_login_api_auth_login_post */
         Body_login_api_auth_login_post: {
             /** Client Id */
@@ -623,6 +690,15 @@ export interface components {
          * @enum {string}
          */
         Market: "spot" | "futures";
+        /** ModeUpdate */
+        ModeUpdate: {
+            /**
+             * Confirm
+             * @default false
+             */
+            confirm: boolean;
+            mode: components["schemas"]["TradingMode"];
+        };
         /** OrderBook */
         OrderBook: {
             /** Asks */
@@ -726,6 +802,12 @@ export interface components {
          * @enum {string}
          */
         Role: "admin" | "user";
+        /** SettingsRead */
+        SettingsRead: {
+            /** Binance Keys Configured */
+            binance_keys_configured: boolean;
+            mode: components["schemas"]["TradingMode"];
+        };
         /**
          * StrategyRead
          * @description A strategy's identity, lifecycle state and accounting summary.
@@ -841,6 +923,12 @@ export interface components {
             /** Symbol */
             symbol: string;
         };
+        /**
+         * TradingMode
+         * @description Where orders are routed. Sim is the safe default.
+         * @enum {string}
+         */
+        TradingMode: "sim" | "testnet" | "live";
         /** UserCreate */
         UserCreate: {
             /** Password */
@@ -1222,6 +1310,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Trade"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_settings_api_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+        };
+    };
+    update_binance_keys_api_settings_binance_keys_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BinanceKeysUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_mode_api_settings_mode_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
                 };
             };
             /** @description Validation Error */
