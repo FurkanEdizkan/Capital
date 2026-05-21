@@ -54,9 +54,17 @@ class BinanceVenue(Venue):
         # `client` serves market data; `order_client` (a python-binance
         # Client built with keys) places orders. A venue with no order
         # client is read-only.
-        self._client = client or BinanceClient()
+        self._client_cache = client  # built lazily on first use if None
         self._order_client = order_client
         self._market = market
+
+    @property
+    def _client(self) -> BinanceClient:
+        # Lazy — constructing a python-binance client touches the network,
+        # so a venue is cheap to build (and unit-testable) until first used.
+        if self._client_cache is None:
+            self._client_cache = BinanceClient()
+        return self._client_cache
 
     def instrument(self, symbol: str) -> Instrument:
         try:
