@@ -56,6 +56,8 @@ class TradingEngine:
         self._tick_seconds = tick_seconds
         self._candle_limit = candle_limit
         self._scheduler: BackgroundScheduler | None = None
+        # Set on stop() so no new tick begins once shutdown is underway.
+        self._stopping = False
         # Latest price seen per symbol — used to mark positions for the
         # equity snapshot recorded at the end of each tick.
         self._last_prices: dict[str, Decimal] = {}
@@ -70,8 +72,11 @@ class TradingEngine:
     def tick(self) -> None:
         """Evaluate every strategy once, then record an equity snapshot.
 
-        A failing strategy never aborts the tick.
+        A failing strategy never aborts the tick. Once shutdown is underway no
+        new tick begins — the in-flight one is drained by `stop()`.
         """
+        if self._stopping:
+            return
         for strat in list(self._strategies):
             try:
                 self._tick_strategy(strat)
@@ -154,6 +159,7 @@ class TradingEngine:
     def start(self) -> None:
         if self._scheduler is not None:
             return
+        self._stopping = False
         self._scheduler = BackgroundScheduler()
         self._scheduler.add_job(
             self.tick,
@@ -165,11 +171,19 @@ class TradingEngine:
         self._scheduler.start()
         log.info("trading engine started — %d strategies", len(self._strategies))
 
-    def stop(self) -> None:
+    def stop(self, *, wait: bool = True) -> None:
+        """Stop the engine.
+
+        With `wait=True` (the default) this blocks until the in-flight tick
+        has finished — a graceful shutdown, so a SIGTERM from a redeploy never
+        interrupts an order mid-flight. Setting `_stopping` first ensures no
+        new tick begins while the current one drains.
+        """
+        self._stopping = True
         if self._scheduler is not None:
-            self._scheduler.shutdown(wait=False)
+            self._scheduler.shutdown(wait=wait)
             self._scheduler = None
-            log.info("trading engine stopped")
+            log.info("trading engine stopped (drained=%s)", wait)
 
     def flatten(self, strategy: str) -> int:
         """Close every open position held by `strategy`. Returns the count closed.

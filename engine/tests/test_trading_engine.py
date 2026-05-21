@@ -137,6 +137,14 @@ def test_start_and_stop(factory: Any) -> None:
     eng.stop()  # must not raise
 
 
+def test_stop_prevents_further_ticks(db_engine: Any, factory: Any) -> None:
+    eng = _engine(factory, [BuyWhenFlat("MA Cross", "BTCUSDT")])
+    eng.stop()  # graceful shutdown — no new tick may begin afterwards
+    eng.tick()
+    with Session(db_engine) as s:
+        assert s.exec(select(Trade)).all() == []
+
+
 def test_flatten_closes_open_positions(db_engine: Any, factory: Any) -> None:
     eng = _engine(factory, [BuyWhenFlat("MA Cross", "BTCUSDT")])
     eng.tick()  # opens a long position
