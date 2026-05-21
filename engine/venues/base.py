@@ -62,6 +62,13 @@ class OrderRequest:
     quantity: Decimal
     order_type: OrderType = OrderType.market
     limit_price: Decimal | None = None
+    # Venue sub-market for the order (Binance: "spot" / "futures"); `None`
+    # uses the venue's default. Single-market venues ignore it.
+    market: str | None = None
+    # A caller-supplied id echoed back on the venue so a crash between
+    # placing and recording an order can be reconciled. Venues that cannot
+    # carry one ignore it.
+    client_order_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -74,6 +81,7 @@ class OrderResult:
     price: Decimal  # average fill price
     fee: Decimal  # venue commission, in the quote currency
     order_id: str  # the venue's order id
+    client_order_id: str = ""  # the caller-supplied id, echoed back if carried
 
 
 class Venue(ABC):
@@ -88,8 +96,12 @@ class Venue(ABC):
     supports_sandbox: bool = False
 
     @abstractmethod
-    def instrument(self, symbol: str) -> Instrument:
-        """Trading metadata for `symbol`. Raises `VenueError` if unknown."""
+    def instrument(self, symbol: str, *, market: str | None = None) -> Instrument:
+        """Trading metadata for `symbol`. Raises `VenueError` if unknown.
+
+        `market` selects a venue sub-market when the venue has more than one;
+        `None` uses the venue's default. Single-market venues ignore it.
+        """
 
     @abstractmethod
     def candles(

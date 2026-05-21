@@ -61,8 +61,10 @@ class FakeOrderClient:
     def __init__(self, *, reject: bool = False) -> None:
         self.reject = reject
         self.calls: list[dict[str, Any]] = []
+        self.methods: list[str] = []  # method names in call order
 
     def create_order(self, **kwargs: Any) -> dict[str, Any]:
+        self.methods.append("create_order")
         self.calls.append(kwargs)
         if self.reject:
             raise BinanceAPIException(None, 400, '{"code":-2010,"msg":"rejected"}')
@@ -73,8 +75,17 @@ class FakeOrderClient:
         }
 
     def futures_create_order(self, **kwargs: Any) -> dict[str, Any]:
+        self.methods.append("futures_create_order")
         self.calls.append(kwargs)
         return {"orderId": 777, "avgPrice": "200", "executedQty": "2"}
+
+    def futures_change_leverage(self, **_: Any) -> dict[str, Any]:
+        self.methods.append("futures_change_leverage")
+        return {}
+
+    def futures_change_margin_type(self, **_: Any) -> dict[str, Any]:
+        self.methods.append("futures_change_margin_type")
+        return {}
 
 
 def _venue(*, futures: bool = False, with_orders: bool = True) -> BinanceVenue:
@@ -173,3 +184,59 @@ def test_exchange_rejection_raises_venue_error() -> None:
         venue.place_order(
             OrderRequest(symbol="BTCUSDT", side=FillSide.buy, quantity=Decimal("1"))
         )
+
+
+def test_client_order_id_is_forwarded_to_binance() -> None:
+    venue = _venue()
+    venue.place_order(
+        OrderRequest(
+            symbol="BTCUSDT",
+            side=FillSide.buy,
+            quantity=Decimal("1"),
+            client_order_id="coid-123",
+        )
+    )
+    sent = venue._order_client.calls[0]  # type: ignore[union-attr]
+    assert sent["newClientOrderId"] == "coid-123"
+
+
+def test_order_result_echoes_the_client_order_id() -> None:
+    result = _venue().place_order(
+        OrderRequest(
+            symbol="BTCUSDT",
+            side=FillSide.buy,
+            quantity=Decimal("1"),
+            client_order_id="coid-xyz",
+        )
+    )
+    assert result.client_order_id == "coid-xyz"
+
+
+def test_order_market_override_selects_the_futures_endpoint() -> None:
+    # A spot-default venue places a futures order when the request says so.
+    venue = _venue()
+    venue.place_order(
+        OrderRequest(
+            symbol="BTCUSDT",
+            side=FillSide.sell,
+            quantity=Decimal("1"),
+            market="futures",
+        )
+    )
+    assert "futures_create_order" in venue._order_client.methods  # type: ignore[union-attr]
+
+
+def test_futures_order_configures_leverage_and_margin_once() -> None:
+    venue = BinanceVenue(
+        client=FakeMarketData(),  # type: ignore[arg-type]
+        order_client=FakeOrderClient(),
+        market=Market.futures,
+        futures_leverage=5,
+        futures_margin_type="ISOLATED",
+    )
+    req = OrderRequest(symbol="BTCUSDT", side=FillSide.buy, quantity=Decimal("1"))
+    venue.place_order(req)
+    venue.place_order(req)
+    methods = venue._order_client.methods  # type: ignore[union-attr]
+    assert methods.count("futures_change_leverage") == 1  # cached after the first
+    assert "futures_change_margin_type" in methods

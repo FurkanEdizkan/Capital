@@ -78,7 +78,8 @@ class AlpacaVenue(Venue):
             raise VenueError(f"Alpaca request failed ({response.status_code}): {url}")
         return response.json()
 
-    def instrument(self, symbol: str) -> Instrument:
+    def instrument(self, symbol: str, *, market: str | None = None) -> Instrument:
+        del market  # single market — accepted for interface parity, ignored
         asset = self._get(f"{self._trading}/v2/assets/{symbol}")
         if not asset.get("tradable", False):
             raise VenueError(f"Alpaca asset {symbol!r} is not tradable")
