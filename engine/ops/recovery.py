@@ -1,6 +1,6 @@
-"""Boot state recovery — reconcile open positions with Binance on startup.
+"""Boot state recovery — reconcile open positions with the venue on startup.
 
-After a restart the engine's sub-ledger may disagree with the exchange — an
+After a restart the engine's sub-ledger may disagree with the venue — an
 order filled while the process was down, or a crash between placing and
 recording one. On boot the engine reconciles and surfaces any drift so the
 operator is not trading on stale state. Recovery never blocks startup.
@@ -12,27 +12,32 @@ from binance.client import Client
 from sqlmodel import Session
 
 from appsettings.store import TradingMode, get_binance_keys, get_mode
-from exchange.client import BinanceClient
-from trading.reconcile import PositionDiscrepancy, reconcile_with_binance
+from exchange.client import BinanceClient, Market
+from trading.reconcile import PositionDiscrepancy, reconcile_with_venue
+from venues.base import Venue
+from venues.binance import BinanceVenue
 
 log = logging.getLogger("capital.ops.recovery")
 
 
 def recover_on_boot(
-    session: Session, *, client: BinanceClient | None = None
+    session: Session, *, venue: Venue | None = None
 ) -> list[PositionDiscrepancy]:
-    """Reconcile the engine sub-ledger against Binance positions at startup.
+    """Reconcile the engine sub-ledger against the venue at startup.
 
     In Sim mode there is nothing to reconcile. In Testnet/Live, compares the
-    sub-ledger to Binance and logs any drift. Never raises — a reconciliation
-    failure must not stop the engine from starting.
+    sub-ledger to the venue's positions and logs any drift. Never raises — a
+    reconciliation failure must not stop the engine from starting.
+
+    `venue` is injectable for tests; otherwise an authenticated Binance venue
+    is built from the stored keys (Binance is the only credentialed venue).
     """
     mode = get_mode(session)
     if mode is TradingMode.sim:
         log.info("boot recovery: sim mode — nothing to reconcile")
         return []
 
-    if client is None:
+    if venue is None:
         keys = get_binance_keys(session)
         if keys is None:
             log.warning("boot recovery: %s mode but Binance keys not configured", mode)
@@ -41,9 +46,10 @@ def recover_on_boot(
         client = BinanceClient(
             Client(api_key, api_secret, testnet=mode is TradingMode.testnet)
         )
+        venue = BinanceVenue(client=client, market=Market.futures)
 
     try:
-        discrepancies = reconcile_with_binance(session, client)
+        discrepancies = reconcile_with_venue(session, venue)
     except Exception:  # noqa: BLE001 — recovery must not block startup
         log.exception("boot recovery: reconciliation failed")
         return []

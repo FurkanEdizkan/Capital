@@ -9,8 +9,8 @@ from ops.recovery import recover_on_boot
 from trading.models import Position, PositionSide
 
 
-class FakeClient:
-    """Stand-in exposing only what reconciliation calls."""
+class FakeVenue:
+    """Stand-in venue exposing only `positions()` — what reconciliation calls."""
 
     def __init__(
         self, positions: dict[str, Decimal] | None = None, *, raises: bool = False
@@ -18,9 +18,9 @@ class FakeClient:
         self._positions = positions or {}
         self._raises = raises
 
-    def get_futures_positions(self) -> dict[str, Decimal]:
+    def positions(self) -> dict[str, Decimal]:
         if self._raises:
-            raise RuntimeError("exchange unreachable")
+            raise RuntimeError("venue unreachable")
         return self._positions
 
 
@@ -52,19 +52,19 @@ def test_live_mode_without_keys_is_a_noop(session: Session) -> None:
 def test_matching_positions_report_no_drift(session: Session) -> None:
     set_mode(session, TradingMode.testnet)
     _position(session, "BTCUSDT", "2")
-    result = recover_on_boot(session, client=FakeClient({"BTCUSDT": Decimal("2")}))  # type: ignore[arg-type]
+    result = recover_on_boot(session, venue=FakeVenue({"BTCUSDT": Decimal("2")}))  # type: ignore[arg-type]
     assert result == []
 
 
 def test_drift_is_detected(session: Session) -> None:
     set_mode(session, TradingMode.live)
     _position(session, "BTCUSDT", "2")
-    result = recover_on_boot(session, client=FakeClient({"BTCUSDT": Decimal("3")}))  # type: ignore[arg-type]
+    result = recover_on_boot(session, venue=FakeVenue({"BTCUSDT": Decimal("3")}))  # type: ignore[arg-type]
     assert len(result) == 1
     assert result[0].drift == Decimal("1")
 
 
 def test_reconciliation_failure_does_not_raise(session: Session) -> None:
     set_mode(session, TradingMode.testnet)
-    # A client that raises must not propagate — startup continues.
-    assert recover_on_boot(session, client=FakeClient(raises=True)) == []  # type: ignore[arg-type]
+    # A venue that raises must not propagate — startup continues.
+    assert recover_on_boot(session, venue=FakeVenue(raises=True)) == []  # type: ignore[arg-type]

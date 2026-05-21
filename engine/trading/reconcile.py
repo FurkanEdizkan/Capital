@@ -1,7 +1,7 @@
-"""Reconciliation — keep the engine's sub-ledger honest against Binance.
+"""Reconciliation — keep the engine's sub-ledger honest against the venue.
 
-The exchange holds one account-level position per symbol; the engine keeps a
-per-strategy `Position` sub-ledger. They can drift — an exchange-side close, a
+The venue holds one account-level position per symbol; the engine keeps a
+per-strategy `Position` sub-ledger. They can drift — a venue-side close, a
 partial fill, or a crash between placing an order and recording it. These
 helpers compare the two so the operator (or a startup hook) can detect and
 surface the mismatch rather than trading on stale state.
@@ -12,8 +12,8 @@ from decimal import Decimal
 
 from sqlmodel import Session, select
 
-from exchange.client import BinanceClient
 from trading.models import Position, PositionSide, Trade
+from venues.base import Venue
 
 # Quantities below this are treated as equal — guards against dust rounding.
 DEFAULT_TOLERANCE = Decimal("0.00000001")
@@ -26,7 +26,7 @@ class PositionDiscrepancy:
     market: str
     symbol: str
     engine_qty: Decimal  # net signed quantity summed across strategies
-    exchange_qty: Decimal  # signed quantity reported by Binance
+    exchange_qty: Decimal  # signed quantity reported by the venue
 
     @property
     def drift(self) -> Decimal:
@@ -79,7 +79,7 @@ def untracked_order_ids(
 ) -> list[str]:
     """Exchange `clientOrderId`s that have no recorded Trade row.
 
-    A non-empty result means an order reached Binance but the engine crashed
+    A non-empty result means an order reached the venue but the engine crashed
     before recording it — the operator must attribute and record it by hand,
     since a bare clientOrderId does not name the strategy.
     """
@@ -91,16 +91,17 @@ def untracked_order_ids(
     return [oid for oid in exchange_order_ids if oid not in known]
 
 
-def reconcile_with_binance(
-    session: Session, client: BinanceClient
+def reconcile_with_venue(
+    session: Session, venue: Venue, *, market: str = "futures"
 ) -> list[PositionDiscrepancy]:
-    """Fetch live futures positions from Binance and reconcile them.
+    """Fetch live positions from a `Venue` and reconcile them.
 
-    Spot holdings are account balances rather than positions, so only the
-    futures sub-ledger is reconciled here.
+    `Venue.positions()` returns `{symbol: signed quantity}`; each is attributed
+    to `market` so it keys the engine sub-ledger. Binance reports only futures
+    positions (spot holdings are balances, not positions), so `market` defaults
+    to "futures".
     """
     exchange = {
-        ("futures", symbol): qty
-        for symbol, qty in client.get_futures_positions().items()
+        (market, symbol): qty for symbol, qty in venue.positions().items()
     }
     return reconcile_positions(session, exchange)
