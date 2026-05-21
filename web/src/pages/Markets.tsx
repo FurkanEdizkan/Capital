@@ -10,6 +10,7 @@ import { I } from "../components/icons";
 import { VenueBadge } from "../components/VenueBadge";
 import {
   Badge,
+  Button,
   Card,
   type Column,
   DataTable,
@@ -30,6 +31,8 @@ import {
   type Ticker,
   useTickerStream,
 } from "../lib/api/market";
+import { type OrderSide, placeManualOrder } from "../lib/api/orders";
+import { useAuth } from "../lib/auth";
 
 const TIMEFRAMES = [
   { value: "1h", label: "1H" },
@@ -39,6 +42,7 @@ const TIMEFRAMES = [
 ];
 
 export function Markets() {
+  const { user } = useAuth();
   const [market, setMarket] = useState<MarketKind>("spot");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>({ key: "quote_volume_24h", dir: "desc" });
@@ -189,6 +193,10 @@ export function Markets() {
           </div>
         </Card>
       )}
+
+      {user?.role === "admin" && (
+        <ManualOrderPanel defaultSymbol={selected} market={market} />
+      )}
     </div>
   );
 }
@@ -228,4 +236,95 @@ function CandleDetail({
     );
   }
   return <CandleChart candles={candles} />;
+}
+
+/**
+ * Manual order — an admin-only panel to place a one-off buy/sell outside any
+ * strategy. Routed through the active executor and the risk manager; the fill
+ * is attributed to the `manual` pseudo-strategy.
+ */
+function ManualOrderPanel({
+  defaultSymbol,
+  market,
+}: {
+  defaultSymbol: string | null;
+  market: MarketKind;
+}) {
+  const [symbol, setSymbol] = useState(defaultSymbol ?? "");
+  const [side, setSide] = useState<OrderSide>("buy");
+  const [qty, setQty] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Follow the symbol the operator selects in the ticker table.
+  useEffect(() => {
+    if (defaultSymbol) setSymbol(defaultSymbol);
+  }, [defaultSymbol]);
+
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const fill = await placeManualOrder(symbol.trim().toUpperCase(), side, qty, market);
+      setResult(
+        `Filled ${fill.side} ${fill.quantity} ${fill.symbol} @ ${fill.price}`,
+      );
+      setQty("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Order failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <SectionHeader
+        title="Manual order"
+        subtitle="Place a one-off order outside any strategy — risk-checked, recorded as `manual`."
+      />
+      <div
+        style={{
+          padding: 14,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "flex-end",
+          gap: 10,
+        }}
+      >
+        <Input
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value)}
+          placeholder="Symbol (e.g. BTCUSDT)"
+          style={{ width: 200 }}
+        />
+        <SegmentedControl
+          size="sm"
+          options={[
+            { value: "buy", label: "Buy" },
+            { value: "sell", label: "Sell" },
+          ]}
+          value={side}
+          onChange={(v) => setSide(v as OrderSide)}
+        />
+        <Input
+          value={qty}
+          onChange={(e) => setQty(e.target.value)}
+          placeholder="Quantity"
+          style={{ width: 140 }}
+        />
+        <Button
+          kind="primary"
+          disabled={busy || !symbol.trim() || !qty.trim()}
+          onClick={() => void submit()}
+        >
+          Place order
+        </Button>
+        {result && <Badge tone="green">{result}</Badge>}
+        {error && <Badge tone="red">{error}</Badge>}
+      </div>
+    </Card>
+  );
 }

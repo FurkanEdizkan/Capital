@@ -807,6 +807,66 @@
         "title": "EquitySnapshot",
         "type": "object"
       },
+      "Fill": {
+        "description": "The result of executing an `Order`.",
+        "properties": {
+          "fee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fee",
+            "type": "string"
+          },
+          "market": {
+            "title": "Market",
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl",
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/FillSide"
+          },
+          "strategy": {
+            "title": "Strategy",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy",
+          "market",
+          "symbol",
+          "side",
+          "quantity",
+          "price",
+          "fee",
+          "realized_pnl"
+        ],
+        "title": "Fill",
+        "type": "object"
+      },
+      "FillSide": {
+        "enum": [
+          "buy",
+          "sell"
+        ],
+        "title": "FillSide",
+        "type": "string"
+      },
       "FundingRate": {
         "properties": {
           "funding_rate": {
@@ -849,6 +909,44 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ManualOrderRequest": {
+        "properties": {
+          "market": {
+            "default": "spot",
+            "title": "Market",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "side": {
+            "$ref": "#/components/schemas/FillSide"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "minLength": 3,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "side",
+          "quantity"
+        ],
+        "title": "ManualOrderRequest",
         "type": "object"
       },
       "Market": {
@@ -2380,6 +2478,53 @@
         "summary": "List Tickers",
         "tags": [
           "market"
+        ]
+      }
+    },
+    "/api/orders/manual": {
+      "post": {
+        "description": "Place a one-off order, risk-checked and recorded as `manual`.",
+        "operationId": "place_manual_order_api_orders_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fill"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Place Manual Order",
+        "tags": [
+          "orders"
         ]
       }
     },
