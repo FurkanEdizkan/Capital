@@ -32,7 +32,7 @@ from trading.portfolio import (
     list_positions,
 )
 from trading.risk import RiskManager
-from venues.base import Venue
+from trading.venue_router import VenueRouter
 
 log = logging.getLogger("capital.trading.engine")
 
@@ -44,7 +44,7 @@ class TradingEngine:
         self,
         *,
         session_factory: Callable[[], Session],
-        venue: Venue,
+        venue_router: VenueRouter | None = None,
         router: ExecutorRouter | None = None,
         strategies: list[BaseStrategy] | None = None,
         risk: RiskManager | None = None,
@@ -55,7 +55,8 @@ class TradingEngine:
         retention_equity_days: int = 0,
     ) -> None:
         self._session_factory = session_factory
-        self._venue = venue
+        # Resolves the market-data venue from the active-venue setting per tick.
+        self._venue_router = venue_router or VenueRouter.default()
         # Resolves Sim / Testnet / Live executor from the stored mode per tick.
         self._router = router or ExecutorRouter()
         self._risk = risk or RiskManager()  # all limits disabled by default
@@ -104,7 +105,7 @@ class TradingEngine:
         with self._session_factory() as session:
             candles = refresh_venue_candles(
                 session,
-                self._venue,
+                self._venue_router.resolve(session),
                 market=strat.market,
                 symbol=strat.symbol,
                 interval=strat.timeframe,

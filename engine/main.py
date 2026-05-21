@@ -35,7 +35,6 @@ from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
 from trading.executor_router import ExecutorRouter
 from trading.risk import RiskManager
-from venues.binance import BinanceVenue
 
 setup_logging(settings.log_level)
 log = logging.getLogger("capital")
@@ -72,7 +71,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         log.exception("Strategy allocation seeding skipped")
     trading = TradingEngine(
         session_factory=session_factory,
-        venue=BinanceVenue(),
         router=ExecutorRouter(),
         strategies=strategies,
         risk=RiskManager.from_settings(settings),
