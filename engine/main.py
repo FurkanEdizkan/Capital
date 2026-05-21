@@ -16,6 +16,7 @@ from api.backtest import router as backtest_router
 from api.history import router as history_router
 from api.market import router as market_router
 from api.market import ws_router as market_ws_router
+from api.orders import router as orders_router
 from api.portfolio import router as portfolio_router
 from api.settings import router as settings_router
 from api.strategies import router as strategies_router
@@ -99,6 +100,7 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(market_router)
 app.include_router(market_ws_router)
+app.include_router(orders_router)
 app.include_router(portfolio_router)
 app.include_router(strategies_router)
 app.include_router(backtest_router)

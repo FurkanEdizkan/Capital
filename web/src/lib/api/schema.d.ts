@@ -246,6 +246,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Place Manual Order
+         * @description Place a one-off order, risk-checked and recorded as `manual`.
+         */
+        post: operations["place_manual_order_api_orders_manual_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portfolio/equity": {
         parameters: {
             query?: never;
@@ -1011,6 +1031,32 @@ export interface components {
             /** Unrealized Pnl */
             unrealized_pnl: string;
         };
+        /**
+         * Fill
+         * @description The result of executing an `Order`.
+         */
+        Fill: {
+            /** Fee */
+            fee: string;
+            /** Market */
+            market: string;
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl */
+            realized_pnl: string;
+            side: components["schemas"]["FillSide"];
+            /** Strategy */
+            strategy: string;
+            /** Symbol */
+            symbol: string;
+        };
+        /**
+         * FillSide
+         * @enum {string}
+         */
+        FillSide: "buy" | "sell";
         /** FundingRate */
         FundingRate: {
             /** Funding Rate */
@@ -1029,6 +1075,19 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ManualOrderRequest */
+        ManualOrderRequest: {
+            /**
+             * Market
+             * @default spot
+             */
+            market: string;
+            /** Quantity */
+            quantity: number | string;
+            side: components["schemas"]["FillSide"];
+            /** Symbol */
+            symbol: string;
         };
         /**
          * Market
@@ -1746,6 +1805,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ticker"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    place_manual_order_api_orders_manual_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Fill"];
                 };
             };
             /** @description Validation Error */
