@@ -8,6 +8,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select
 
+from auth.api_tokens import looks_like_api_token, verify_api_token
 from auth.models import Role, User
 from auth.security import decode_token
 from db import get_session
@@ -21,12 +22,29 @@ def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: SessionDep,
 ) -> User:
-    """Resolve the authenticated operator from a bearer access token."""
+    """Resolve the authenticated operator from a bearer credential.
+
+    The credential is either an interactive JWT access token or an API token
+    (programmatic / agent access). An API token resolves to a synthetic,
+    non-persisted principal carrying the token's role.
+    """
     credentials_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid or expired credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    if looks_like_api_token(token):
+        api_token = verify_api_token(session, token)
+        if api_token is None:
+            raise credentials_error
+        return User(
+            username=f"token:{api_token.name}",
+            password_hash="",  # noqa: S106 — synthetic principal, no password
+            role=api_token.role,
+            is_active=True,
+        )
+
     try:
         payload = decode_token(token, "access")
     except jwt.InvalidTokenError as exc:
