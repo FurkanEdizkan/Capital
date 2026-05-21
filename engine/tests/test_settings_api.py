@@ -119,3 +119,50 @@ def test_mode_change_is_audited(settings_client: TestClient, session: Session) -
         select(AuditLog).where(AuditLog.action == "settings.mode")
     ).all()
     assert len(entries) == 1
+
+
+def test_store_venue_credentials(settings_client: TestClient) -> None:
+    headers = _auth(settings_client)
+    resp = settings_client.put(
+        "/api/settings/venue-credentials/alpaca",
+        json={"fields": {"api_key": "ak-1", "api_secret": "as-2"}},
+        headers=headers,
+    )
+    assert resp.status_code == 204
+    read = settings_client.get("/api/settings", headers=headers)
+    assert read.json()["venue_credentials_configured"]["alpaca"] is True
+    assert read.json()["venue_credentials_configured"]["polymarket"] is False
+
+
+def test_venue_credentials_reject_unknown_venue(settings_client: TestClient) -> None:
+    resp = settings_client.put(
+        "/api/settings/venue-credentials/nasdaq",
+        json={"fields": {"api_key": "x"}},
+        headers=_auth(settings_client),
+    )
+    assert resp.status_code == 404
+
+
+def test_venue_credentials_reject_wrong_fields(settings_client: TestClient) -> None:
+    resp = settings_client.put(
+        "/api/settings/venue-credentials/alpaca",
+        json={"fields": {"api_key": "x"}},  # missing api_secret
+        headers=_auth(settings_client),
+    )
+    assert resp.status_code == 400
+
+
+def test_venue_credentials_audited_without_values(
+    settings_client: TestClient, session: Session
+) -> None:
+    settings_client.put(
+        "/api/settings/venue-credentials/alpaca",
+        json={"fields": {"api_key": "secret-ak", "api_secret": "secret-as"}},
+        headers=_auth(settings_client),
+    )
+    entries = session.exec(
+        select(AuditLog).where(AuditLog.action == "settings.venue_credentials")
+    ).all()
+    assert len(entries) == 1
+    assert "secret-ak" not in (entries[0].detail or "")
+    assert "secret-as" not in (entries[0].detail or "")

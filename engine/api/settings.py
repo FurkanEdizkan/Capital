@@ -19,11 +19,14 @@ from appsettings.store import (
     set_ai_settings,
     set_binance_keys,
     set_mode,
+    set_venue_credentials,
+    venue_credentials_configured,
 )
 from auth.audit import record_audit
 from auth.deps import SessionDep, require_admin
 from auth.models import User
 from trading.portfolio import list_positions
+from venues.registry import AVAILABLE_VENUES, get_venue
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -33,10 +36,18 @@ AdminUser = Annotated[User, Depends(require_admin)]
 class SettingsRead(BaseModel):
     mode: TradingMode
     binance_keys_configured: bool
+    # Per-venue: whether every declared credential field is stored.
+    venue_credentials_configured: dict[str, bool]
     ai_provider: str
     ai_model: str
     ai_base_url: str
     ai_key_configured: bool
+
+
+class VenueCredentialsUpdate(BaseModel):
+    """A venue's credential fields — names validated against the catalogue."""
+
+    fields: dict[str, str] = Field(min_length=1)
 
 
 class ModeUpdate(BaseModel):
@@ -62,6 +73,10 @@ def _read(session: SessionDep) -> SettingsRead:
     return SettingsRead(
         mode=get_mode(session),
         binance_keys_configured=binance_keys_configured(session),
+        venue_credentials_configured={
+            v.name: venue_credentials_configured(session, v.name, v.credential_fields)
+            for v in AVAILABLE_VENUES
+        },
         ai_provider=ai["provider"],
         ai_model=ai["model"],
         ai_base_url=ai["base_url"],
@@ -112,6 +127,41 @@ def update_binance_keys(
     set_binance_keys(session, body.api_key, body.api_secret)
     # The key values themselves are never written to the audit log.
     record_audit(session, actor=admin.username, action="settings.binance_keys")
+
+
+@router.put("/venue-credentials/{venue}", status_code=status.HTTP_204_NO_CONTENT)
+def update_venue_credentials(
+    venue: str,
+    body: VenueCredentialsUpdate,
+    admin: AdminUser,
+    session: SessionDep,
+) -> None:
+    """Store a venue's credentials (encrypted at rest).
+
+    The submitted field names must exactly match the venue's declared
+    `credential_fields`, and every value must be non-empty.
+    """
+    info = get_venue(venue)
+    if info is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown venue {venue!r}")
+    if set(body.fields) != set(info.credential_fields):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"{venue} expects exactly these credential fields: "
+            f"{sorted(info.credential_fields)}",
+        )
+    if any(not value.strip() for value in body.fields.values()):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "credential values must not be empty"
+        )
+    set_venue_credentials(session, venue, body.fields)
+    # Only the venue name is audited — never the credential values.
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.venue_credentials",
+        detail={"venue": venue},
+    )
 
 
 @router.put("/ai", response_model=SettingsRead)

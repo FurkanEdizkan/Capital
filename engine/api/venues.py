@@ -27,6 +27,9 @@ class VenueRead(BaseModel):
     asset_class: str
     supports_sandbox: bool
     active: bool
+    #: Credential field names the venue needs to place orders — drives the
+    #: per-venue credential form on the Settings page.
+    credential_fields: list[str]
 
 
 class ActiveVenueUpdate(BaseModel):
@@ -41,6 +44,7 @@ def _read(session: SessionDep) -> list[VenueRead]:
             asset_class=v.asset_class,
             supports_sandbox=v.supports_sandbox,
             active=v.name == active,
+            credential_fields=list(v.credential_fields),
         )
         for v in list_venues()
     ]

@@ -406,6 +406,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/venue-credentials/{venue}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Venue Credentials
+         * @description Store a venue's credentials (encrypted at rest).
+         *
+         *     The submitted field names must exactly match the venue's declared
+         *     `credential_fields`, and every value must be non-empty.
+         */
+        put: operations["update_venue_credentials_api_settings_venue_credentials__venue__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/strategies": {
         parameters: {
             query?: never;
@@ -1137,6 +1160,10 @@ export interface components {
             /** Binance Keys Configured */
             binance_keys_configured: boolean;
             mode: components["schemas"]["TradingMode"];
+            /** Venue Credentials Configured */
+            venue_credentials_configured: {
+                [key: string]: boolean;
+            };
         };
         /**
          * StrategyRead
@@ -1305,12 +1332,24 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * VenueCredentialsUpdate
+         * @description A venue's credential fields — names validated against the catalogue.
+         */
+        VenueCredentialsUpdate: {
+            /** Fields */
+            fields: {
+                [key: string]: string;
+            };
+        };
         /** VenueRead */
         VenueRead: {
             /** Active */
             active: boolean;
             /** Asset Class */
             asset_class: string;
+            /** Credential Fields */
+            credential_fields: string[];
             /** Name */
             name: string;
             /** Supports Sandbox */
@@ -1916,6 +1955,39 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SettingsRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_venue_credentials_api_settings_venue_credentials__venue__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venue: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueCredentialsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

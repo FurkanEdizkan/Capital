@@ -1,4 +1,4 @@
-/** Settings API helpers — trading mode and Binance credentials. */
+/** Settings API helpers — trading mode and per-venue credentials. */
 import { api } from "./client";
 import type { components } from "./schema";
 
@@ -26,11 +26,15 @@ export async function updateMode(mode: TradingMode, confirm: boolean): Promise<S
   return data;
 }
 
-export async function updateBinanceKeys(apiKey: string, apiSecret: string): Promise<void> {
-  const { error } = await api.PUT("/api/settings/binance-keys", {
-    body: { api_key: apiKey, api_secret: apiSecret },
+export async function updateVenueCredentials(
+  venue: string,
+  fields: Record<string, string>,
+): Promise<void> {
+  const { error } = await api.PUT("/api/settings/venue-credentials/{venue}", {
+    params: { path: { venue } },
+    body: { fields },
   });
-  if (error) throw new Error(errorDetail(error, "Failed to save API keys"));
+  if (error) throw new Error(errorDetail(error, "Failed to save credentials"));
 }
 
 export async function updateAiSettings(
