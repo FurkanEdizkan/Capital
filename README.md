@@ -101,6 +101,12 @@ All configuration lives in `.env` (gitignored). Copy
 | `CAPITAL_ADMIN_USERNAME` / `_PASSWORD`  | Seeded admin operator                     |
 | `CAPITAL_STRATEGY_PLUGINS_DIR`          | Where custom strategy plugins are scanned |
 
+## Connecting to Binance
+
+Market data needs no API key — Sim-mode paper trading works out of the box.
+Placing orders on Testnet or Live needs Binance API keys, entered (encrypted)
+through the Settings page. See [docs/binance-setup.md](docs/binance-setup.md).
+
 ## Manual setup (without Docker)
 
 For working on a single service directly — see
