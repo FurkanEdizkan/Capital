@@ -1,11 +1,16 @@
-"""Tests for the executor router — mode-based executor selection."""
+"""Tests for the executor router — venue + mode executor selection."""
 
 from decimal import Decimal
 from typing import Any
 
 from sqlmodel import Session
 
-from appsettings.store import TradingMode, set_binance_keys, set_mode
+from appsettings.store import (
+    TradingMode,
+    set_active_venue,
+    set_mode,
+    set_venue_credentials,
+)
 from trading.executor_router import ExecutorRouter
 from trading.executors.sim import SimExecutor
 from trading.executors.venue import VenueExecutor
@@ -15,7 +20,7 @@ from venues.base import Instrument, OrderResult, Venue, VenueCandle
 class _FakeVenue(Venue):
     """Minimal stand-in venue for routing tests."""
 
-    name = "binance"
+    name = "fake"
 
     def instrument(self, symbol: str, *, market: str | None = None) -> Instrument:
         raise NotImplementedError
@@ -35,60 +40,73 @@ class _FakeVenue(Venue):
         return {}
 
 
-class _FakeVenueFactory:
-    """Records calls so the test can assert how the venue was built."""
+class _FakeBuilder:
+    """Records (name, mode) so the test can assert how the venue was built."""
 
     def __init__(self) -> None:
-        self.calls: list[tuple[str, str, bool]] = []
+        self.calls: list[tuple[str, TradingMode]] = []
 
-    def __call__(self, api_key: str, api_secret: str, testnet: bool) -> Venue:
-        self.calls.append((api_key, api_secret, testnet))
+    def __call__(self, session: Session, name: str, mode: TradingMode) -> Venue:
+        self.calls.append((name, mode))
         return _FakeVenue()
 
 
+def _binance_keys(session: Session) -> None:
+    set_venue_credentials(
+        session, "binance", {"api_key": "k", "api_secret": "s"}
+    )
+
+
 def test_sim_mode_returns_the_sim_executor(session: Session) -> None:
-    # The default trading mode is Sim — no keys needed.
+    # The default trading mode is Sim — no credentials needed.
     assert isinstance(ExecutorRouter().resolve(session), SimExecutor)
 
 
-def test_testnet_without_keys_falls_back_to_sim(session: Session) -> None:
+def test_testnet_without_credentials_falls_back_to_sim(session: Session) -> None:
     set_mode(session, TradingMode.testnet)
-    # No Binance keys configured — must fall back to Sim, not crash.
+    # No venue credentials configured — must fall back to Sim.
     assert isinstance(ExecutorRouter().resolve(session), SimExecutor)
 
 
-def test_testnet_with_keys_returns_a_testnet_executor(session: Session) -> None:
+def test_testnet_with_keys_returns_a_venue_executor(session: Session) -> None:
     set_mode(session, TradingMode.testnet)
-    set_binance_keys(session, "key", "secret")
-    factory = _FakeVenueFactory()
-    executor = ExecutorRouter(venue_factory=factory).resolve(session)
+    _binance_keys(session)
+    builder = _FakeBuilder()
+    executor = ExecutorRouter(builder=builder).resolve(session)
     assert isinstance(executor, VenueExecutor)
     assert executor.mode == "testnet"
-    assert factory.calls == [("key", "secret", True)]  # testnet=True
+    assert builder.calls == [("binance", TradingMode.testnet)]
 
 
 def test_live_with_keys_returns_a_live_executor(session: Session) -> None:
     set_mode(session, TradingMode.live)
-    set_binance_keys(session, "key", "secret")
-    factory = _FakeVenueFactory()
-    executor = ExecutorRouter(venue_factory=factory).resolve(session)
+    _binance_keys(session)
+    executor = ExecutorRouter(builder=_FakeBuilder()).resolve(session)
     assert isinstance(executor, VenueExecutor)
     assert executor.mode == "live"
-    assert factory.calls[0][2] is False  # live → testnet=False
 
 
 def test_executor_is_cached(session: Session) -> None:
     set_mode(session, TradingMode.live)
-    set_binance_keys(session, "key", "secret")
-    factory = _FakeVenueFactory()
-    router = ExecutorRouter(venue_factory=factory)
+    _binance_keys(session)
+    builder = _FakeBuilder()
+    router = ExecutorRouter(builder=builder)
     assert router.resolve(session) is router.resolve(session)
-    assert len(factory.calls) == 1  # built once, then cached
+    assert len(builder.calls) == 1  # built once, then cached
+
+
+def test_active_venue_is_resolved(session: Session) -> None:
+    set_mode(session, TradingMode.live)
+    set_active_venue(session, "alpaca")
+    set_venue_credentials(session, "alpaca", {"api_key": "k", "api_secret": "s"})
+    builder = _FakeBuilder()
+    ExecutorRouter(builder=builder).resolve(session)
+    assert builder.calls == [("alpaca", TradingMode.live)]
 
 
 def test_mode_switch_changes_the_executor(session: Session) -> None:
-    set_binance_keys(session, "key", "secret")
-    router = ExecutorRouter(venue_factory=_FakeVenueFactory())
+    _binance_keys(session)
+    router = ExecutorRouter(builder=_FakeBuilder())
     set_mode(session, TradingMode.sim)
     assert isinstance(router.resolve(session), SimExecutor)
     set_mode(session, TradingMode.testnet)

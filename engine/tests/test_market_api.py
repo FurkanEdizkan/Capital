@@ -122,7 +122,7 @@ def market_client(session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[get_binance_client] = lambda: FakeBinance()
     app.dependency_overrides[get_venue_router] = lambda: VenueRouter(
-        {"binance": FakeVenue()}
+        builder=lambda *_: FakeVenue()
     )
     app.dependency_overrides[get_stream_manager] = lambda: fake_streams
     app.state.streams = fake_streams  # the WS endpoint reads app.state directly

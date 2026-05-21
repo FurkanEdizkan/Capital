@@ -2,45 +2,53 @@
 
 The active venue is a runtime setting (`appsettings.store`). The trading
 engine resolves its `Venue` through a `VenueRouter` each tick, so switching
-the venue from the Settings page takes effect without a restart. A venue the
-operator selects but which is not wired (e.g. no credentials) falls back to
-the default with a warning, so the engine never stalls on a misconfiguration.
+the venue from the Settings page takes effect without a restart. The venue is
+built fresh from stored credentials via `venues.factory.build_venue`; an
+unknown venue name falls back to the default with a warning, so the engine
+never stalls on a misconfiguration.
 """
 
 import logging
+from collections.abc import Callable
 
 from sqlmodel import Session
 
-from appsettings.store import get_active_venue
+from appsettings.store import get_active_venue, get_mode
 from venues.base import Venue
-from venues.binance import BinanceVenue
+from venues.factory import build_venue
 
 log = logging.getLogger("capital.trading.venue_router")
 
+#: Builds a `Venue`: `(session, name, mode) -> Venue`. Raises KeyError if the
+#: name is unknown. `venues.factory.build_venue` is the production builder;
+#: tests inject a fake.
+VenueBuilder = Callable[..., Venue]
+
 
 class VenueRouter:
-    """Resolves the `Venue` named by the active-venue setting."""
+    """Resolves the market-data `Venue` named by the active-venue setting."""
 
-    def __init__(self, venues: dict[str, Venue], *, default: str = "binance") -> None:
-        if default not in venues:
-            raise ValueError(f"default venue {default!r} must be in the venue map")
-        self._venues = venues
+    def __init__(
+        self, *, builder: VenueBuilder = build_venue, default: str = "binance"
+    ) -> None:
+        self._builder = builder
         self._default = default
 
     @classmethod
     def default(cls) -> "VenueRouter":
-        """A router with Binance wired — the engine's out-of-the-box venue."""
-        return cls({"binance": BinanceVenue()})
+        """The engine's out-of-the-box router (Binance default)."""
+        return cls()
 
     def resolve(self, session: Session) -> Venue:
-        """The `Venue` for the active-venue setting, or the default."""
+        """Build the `Venue` for the active-venue setting, or the default."""
         name = get_active_venue(session)
-        venue = self._venues.get(name)
-        if venue is None:
+        mode = get_mode(session)
+        try:
+            return self._builder(session, name, mode)
+        except KeyError:
             log.warning(
                 "active venue %r is not wired — falling back to %s",
                 name,
                 self._default,
             )
-            return self._venues[self._default]
-        return venue
+            return self._builder(session, self._default, mode)

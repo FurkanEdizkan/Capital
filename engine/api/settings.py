@@ -14,6 +14,7 @@ from appsettings.store import (
     TradingMode,
     ai_key_configured,
     binance_keys_configured,
+    get_active_venue,
     get_ai_settings,
     get_mode,
     set_ai_settings,
@@ -109,6 +110,15 @@ def update_mode(
             status.HTTP_400_BAD_REQUEST,
             "Switching to live trading requires explicit confirmation",
         )
+    # The active venue must have a sandbox to enter Testnet mode.
+    if body.mode is TradingMode.testnet:
+        venue = get_venue(get_active_venue(session))
+        if venue is not None and not venue.supports_sandbox:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                f"the active venue ({venue.name}) has no testnet — "
+                "use Sim or Live",
+            )
     set_mode(session, body.mode)
     record_audit(
         session,
