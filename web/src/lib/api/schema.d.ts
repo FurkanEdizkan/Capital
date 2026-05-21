@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/ai/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze And Decide
+         * @description Run a free-form analyze-and-decide task through the configured LLM.
+         */
+        post: operations["analyze_and_decide_api_ai_analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -547,6 +567,11 @@ export interface components {
             /** Allocated */
             allocated: number | string;
         };
+        /** AnalyzeRequest */
+        AnalyzeRequest: {
+            /** Task */
+            task: string;
+        };
         /**
          * AuditLog
          * @description Append-only record of every config-changing action — who, when, what.
@@ -732,6 +757,25 @@ export interface components {
             /** Closed */
             closed: number;
         };
+        /**
+         * Decision
+         * @description A structured trading decision parsed from an LLM response.
+         */
+        Decision: {
+            action: components["schemas"]["DecisionAction"];
+            /** Confidence */
+            confidence: string;
+            /**
+             * Reasoning
+             * @default
+             */
+            reasoning: string;
+        };
+        /**
+         * DecisionAction
+         * @enum {string}
+         */
+        DecisionAction: "buy" | "sell" | "hold";
         /** EnabledUpdate */
         EnabledUpdate: {
             /** Enabled */
@@ -1106,6 +1150,39 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    analyze_and_decide_api_ai_analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalyzeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Decision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_auth_login_post: {
         parameters: {
             query?: never;

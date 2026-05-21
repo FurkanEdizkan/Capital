@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlmodel import Session
 
+from api.ai import router as ai_router
 from api.backtest import router as backtest_router
 from api.history import router as history_router
 from api.market import router as market_router
@@ -104,6 +105,7 @@ app.include_router(backtest_router)
 app.include_router(settings_router)
 app.include_router(system_router)
 app.include_router(history_router)
+app.include_router(ai_router)
 
 
 @app.get("/health", tags=["system"])

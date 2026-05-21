@@ -23,6 +23,21 @@
         "title": "AllocationUpdate",
         "type": "object"
       },
+      "AnalyzeRequest": {
+        "properties": {
+          "task": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Task",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task"
+        ],
+        "title": "AnalyzeRequest",
+        "type": "object"
+      },
       "AuditLog": {
         "description": "Append-only record of every config-changing action \u2014 who, when, what.\n\nSurfaced read-only on the History page (Phase 6). Write endpoints record\nentries here via `auth.audit.record_audit`.",
         "properties": {
@@ -505,6 +520,39 @@
         ],
         "title": "CloseResult",
         "type": "object"
+      },
+      "Decision": {
+        "description": "A structured trading decision parsed from an LLM response.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/DecisionAction"
+          },
+          "confidence": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "reasoning": {
+            "default": "",
+            "title": "Reasoning",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "confidence"
+        ],
+        "title": "Decision",
+        "type": "object"
+      },
+      "DecisionAction": {
+        "enum": [
+          "buy",
+          "sell",
+          "hold"
+        ],
+        "title": "DecisionAction",
+        "type": "string"
       },
       "EnabledUpdate": {
         "properties": {
@@ -1419,6 +1467,53 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/ai/analyze": {
+      "post": {
+        "description": "Run a free-form analyze-and-decide task through the configured LLM.",
+        "operationId": "analyze_and_decide_api_ai_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Analyze And Decide",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/auth/login": {
       "post": {
         "description": "Exchange operator credentials for an access + refresh token pair.\n\nRate-limited: repeated failures lock the username out (brute-force guard).",
