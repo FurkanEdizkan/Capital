@@ -32,3 +32,16 @@ export async function updateBinanceKeys(apiKey: string, apiSecret: string): Prom
   });
   if (error) throw new Error(errorDetail(error, "Failed to save API keys"));
 }
+
+export async function updateAiSettings(
+  provider: string,
+  model: string,
+  baseUrl: string,
+  apiKey: string,
+): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/ai", {
+    body: { provider, model, base_url: baseUrl, api_key: apiKey },
+  });
+  if (error || !data) throw new Error(errorDetail(error, "Failed to save AI settings"));
+  return data;
+}

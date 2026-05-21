@@ -23,6 +23,10 @@ class TradingMode(StrEnum):
 _MODE_KEY = "trading_mode"
 _BINANCE_KEY = "binance_api_key"
 _BINANCE_SECRET = "binance_api_secret"
+_AI_PROVIDER = "ai_provider"
+_AI_MODEL = "ai_model"
+_AI_BASE_URL = "ai_base_url"
+_AI_API_KEY = "ai_api_key"
 
 
 def _get(session: Session, key: str) -> Setting | None:
@@ -80,3 +84,39 @@ def get_binance_keys(session: Session) -> tuple[str, str] | None:
     if key is None or secret is None:
         return None
     return decrypt(key.value), decrypt(secret.value)
+
+
+def get_ai_settings(session: Session) -> dict[str, str]:
+    """The AI provider, model and base URL — the API key is excluded."""
+    return {
+        "provider": get_setting(session, _AI_PROVIDER) or "claude",
+        "model": get_setting(session, _AI_MODEL) or "",
+        "base_url": get_setting(session, _AI_BASE_URL) or "",
+    }
+
+
+def ai_key_configured(session: Session) -> bool:
+    """Whether an AI API key is stored (without decrypting it)."""
+    return _get(session, _AI_API_KEY) is not None
+
+
+def get_ai_api_key(session: Session) -> str:
+    """The decrypted AI API key, or an empty string if unset."""
+    row = _get(session, _AI_API_KEY)
+    return decrypt(row.value) if row is not None else ""
+
+
+def set_ai_settings(
+    session: Session,
+    *,
+    provider: str,
+    model: str,
+    base_url: str,
+    api_key: str | None = None,
+) -> None:
+    """Store the AI provider config. The key is updated only when supplied."""
+    set_setting(session, _AI_PROVIDER, provider)
+    set_setting(session, _AI_MODEL, model)
+    set_setting(session, _AI_BASE_URL, base_url)
+    if api_key:
+        _put(session, _AI_API_KEY, api_key, is_secret=True)
