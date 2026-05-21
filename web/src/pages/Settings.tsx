@@ -320,7 +320,9 @@ export function Settings() {
           subtitle="API credentials per venue, encrypted at rest. Required for Testnet and Live trading."
         />
         <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 20 }}>
-          {venues.map((venue) => {
+          {venues
+            .filter((venue) => venue.credential_fields.length > 0)
+            .map((venue) => {
             const configured =
               settings.venue_credentials_configured[venue.name] ?? false;
             const inputs = credInputs[venue.name] ?? {};

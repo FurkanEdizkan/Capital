@@ -20,6 +20,7 @@ from exchange.client import BinanceClient
 from venues.alpaca import AlpacaVenue
 from venues.base import Venue
 from venues.binance import BinanceVenue
+from venues.binance_alpha import BinanceAlphaVenue
 from venues.polymarket import PolymarketVenue
 
 log = logging.getLogger("capital.venues.factory")
@@ -57,5 +58,9 @@ def build_venue(session: Session, name: str, mode: TradingMode) -> Venue:
         # which is not yet wired — so this venue is read-only: place_order
         # raises VenueError. Market data works without credentials.
         return PolymarketVenue(wallet_address=creds.get("wallet_address", ""))
+
+    if name == "binance-alpha":
+        # Tokenized stocks — read-only public market data (no order API yet).
+        return BinanceAlphaVenue()
 
     raise KeyError(name)
