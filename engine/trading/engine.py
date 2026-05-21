@@ -17,6 +17,8 @@ from sqlmodel import Session
 from exchange.client import BinanceClient
 from marketdata.cache import refresh_candles
 from marketdata.freshness import feed_is_stale
+from notify.telegram import TelegramNotifier
+from ops.retention import prune_all
 from ops.watchdog import record_heartbeat
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
@@ -45,16 +47,22 @@ class TradingEngine:
         executor: BaseExecutor,
         strategies: list[BaseStrategy] | None = None,
         risk: RiskManager | None = None,
+        notifier: TelegramNotifier | None = None,
         tick_seconds: int = 60,
         candle_limit: int = 200,
+        retention_candle_days: int = 0,
+        retention_equity_days: int = 0,
     ) -> None:
         self._session_factory = session_factory
         self._client = client
         self._executor = executor
         self._risk = risk or RiskManager()  # all limits disabled by default
+        self._notifier = notifier or TelegramNotifier()  # disabled by default
         self._strategies: list[BaseStrategy] = list(strategies or [])
         self._tick_seconds = tick_seconds
         self._candle_limit = candle_limit
+        self._retention_candle_days = retention_candle_days
+        self._retention_equity_days = retention_equity_days
         self._scheduler: BackgroundScheduler | None = None
         # Set on stop() so no new tick begins once shutdown is underway.
         self._stopping = False
@@ -150,11 +158,15 @@ class TradingEngine:
                 log.info("strategy %r order blocked by risk manager", strat.name)
                 return
             try:
-                self._executor.execute(session, order, reference_price=price)
+                fill = self._executor.execute(session, order, reference_price=price)
             except ExecutionError as exc:
                 log.info("strategy %r order skipped: %s", strat.name, exc)
                 return
             log.info("strategy %r executed %s %s", strat.name, order.side, order.symbol)
+            self._notifier.send(
+                f"Trade — {strat.name}: {fill.side.value} "
+                f"{fill.quantity} {fill.symbol} @ {fill.price}"
+            )
 
     def start(self) -> None:
         if self._scheduler is not None:
@@ -168,8 +180,23 @@ class TradingEngine:
             max_instances=1,  # ticks are strictly serialized
             coalesce=True,
         )
+        if self._retention_candle_days > 0 or self._retention_equity_days > 0:
+            # Daily retention prune at 04:00 — keeps the database bounded.
+            self._scheduler.add_job(self._prune, trigger="cron", hour=4, id="retention")
         self._scheduler.start()
         log.info("trading engine started — %d strategies", len(self._strategies))
+
+    def _prune(self) -> None:
+        """Scheduled retention prune of old candles and equity snapshots."""
+        try:
+            with self._session_factory() as session:
+                prune_all(
+                    session,
+                    candle_days=self._retention_candle_days,
+                    equity_days=self._retention_equity_days,
+                )
+        except Exception:  # noqa: BLE001 — retention must not abort the engine
+            log.exception("retention prune failed")
 
     def stop(self, *, wait: bool = True) -> None:
         """Stop the engine.

@@ -24,13 +24,16 @@ from auth.seed import seed_admin
 from config import settings
 from db import engine as db_engine
 from exchange.client import BinanceClient
+from logging_config import setup_logging
 from marketdata.stream import StreamManager
+from notify.telegram import TelegramNotifier
 from ops.recovery import recover_on_boot
 from strategies.builtin import all_strategies, seed_allocations
 from trading.engine import TradingEngine
 from trading.executors.sim import SimExecutor
 from trading.risk import RiskManager
 
+setup_logging(settings.log_level)
 log = logging.getLogger("capital")
 
 
@@ -69,6 +72,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         executor=SimExecutor(),
         strategies=strategies,
         risk=RiskManager.from_settings(settings),
+        notifier=TelegramNotifier.from_settings(settings),
+        retention_candle_days=settings.retention_candle_days,
+        retention_equity_days=settings.retention_equity_days,
     )
     app.state.trading = trading
     trading.start()
