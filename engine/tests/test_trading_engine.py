@@ -15,6 +15,7 @@ from trading.engine import TradingEngine
 from trading.executors.base import Order
 from trading.models import FillSide, PositionSide, Trade
 from trading.portfolio import list_positions, set_allocation
+from trading.venue_router import VenueRouter
 from venues.base import Instrument, OrderResult, Venue, VenueCandle
 
 
@@ -105,7 +106,7 @@ def _engine(factory: Any, strategies: list[BaseStrategy]) -> TradingEngine:
             set_allocation(session, strat.name, Decimal("100000"))
     return TradingEngine(
         session_factory=factory,
-        venue=FakeVenue(),
+        venue_router=VenueRouter({"binance": FakeVenue()}),
         strategies=strategies,  # default ExecutorRouter — Sim mode
     )
 
