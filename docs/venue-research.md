@@ -90,3 +90,60 @@ The survey shows the `Venue` interface must not bake in Binance assumptions:
   — so the fee model is a per-venue strategy object.
 
 These feed directly into the `Venue` interface designed in issue #46.
+
+## Binance tokenized stocks — research spike (issue #118)
+
+Binance revived tokenized US equities in 2026 through an **Ondo Global Markets**
+partnership: on-chain tokens fully backed by shares held with a regulated
+custodian (AAPLon, GOOGLon, TSLAon, NVDAon, AMZNon, METAon, MSFTon, QQQon, …).
+They trade on the **Binance Alpha** platform — a surface integrated into the
+Binance exchange that lets users trade on-chain tokens with funds from their
+Binance account, no separate Web3 wallet.
+
+**Spike question:** do these trade via the standard spot REST API (`/api/v3/`)
+or a separate API? **Answer: a separate API.**
+
+### Findings
+
+1. **Not the spot API.** Tokenized stocks are *not* standard spot symbols on
+   `/api/v3/`. Binance Alpha is a distinct trading surface with its own API.
+2. **Binance Alpha API.** Base path
+   `https://www.binance.com/bapi/defi/v1/public/alpha-trade/…`. Documented
+   market-data endpoints: `token-list`, `get-exchange-info`, `klines`,
+   `24hr-ticker`, plus a WebSocket feed.
+3. **Symbol format.** Not `BASEQUOTE` like spot — it is
+   `ALPHA_<token_id><quote_asset>` (e.g. `ALPHA_173USDT`). A `token-list` call
+   maps human symbols → token IDs first.
+4. **Market data is public, no auth** — read access (prices, candles,
+   instrument info) needs no credentials, like Binance public spot data.
+5. **Order placement is the open risk.** The *public* Alpha docs cover
+   market data only. A documented, public order-placement REST endpoint for
+   Alpha was **not** confirmed — order flow may go through the Binance Wallet
+   or an authenticated endpoint outside the standard developer docs. This must
+   be confirmed before any live order routing is built.
+6. **Settlement.** Tokens are on-chain and balances sit in the Binance account;
+   whether they appear in the standard spot `account` endpoint is unconfirmed —
+   reconciliation/`positions()` handling depends on this.
+7. **Regional.** Not available to US users; select jurisdictions only.
+
+### Recommendation — Outcome B: a separate `BinanceAlphaVenue`
+
+The Alpha API is a distinct surface (different base path, symbol scheme, and
+likely auth) — by Capital's own abstraction that makes it a separate **venue**,
+not a new `Market` value on `BinanceVenue`. Extending the `Market` enum would
+ripple through ~6 `BinanceClient` methods and the hardcoded spot/futures
+WebSocket hubs for no benefit.
+
+Implement `engine/venues/binance_alpha.py` as a `Venue`:
+
+- **Phase 1 — read-only.** Market data (`candles`, `price`, `instrument`) via
+  the public Alpha endpoints + the `token-list` symbol mapping. Tradeable in
+  **Sim mode** immediately (Capital's simulator fills on live Alpha prices).
+- **Phase 2 — live orders.** Only once the Alpha order-placement API and its
+  auth model are confirmed. Until then `place_order` raises `VenueError`
+  ("read-only — Alpha order API not yet wired"), exactly as `PolymarketVenue`
+  does without a signing client.
+
+This keeps #118 shippable (Sim-mode tokenized-stock trading) without blocking on
+the unconfirmed trading API, and composes cleanly with the per-venue credential
+store and router wiring from #120.
