@@ -1,7 +1,7 @@
 /**
- * Settings — trading mode, Binance keys, AI-provider config and API tokens.
- * Admin only. Switching to Live needs a typed confirmation; the engine also
- * blocks any switch while positions are open.
+ * Settings — trading mode, per-venue credentials, AI-provider config and API
+ * tokens. Admin only. Switching to Live needs a typed confirmation; the engine
+ * also blocks any switch while positions are open.
  */
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,8 +23,8 @@ import {
   type Settings as SettingsData,
   type TradingMode,
   updateAiSettings,
-  updateBinanceKeys,
   updateMode,
+  updateVenueCredentials,
 } from "../lib/api/settings";
 import {
   type ApiToken,
@@ -48,6 +48,12 @@ const MODE_NOTE: Record<TradingMode, string> = {
 
 const AI_PROVIDERS = ["claude", "openai", "codex", "deepseek", "ollama", "gemini"];
 
+/** "api_secret" → "Api secret" — a human label for a credential field. */
+function fieldLabel(field: string): string {
+  const spaced = field.replaceAll("_", " ");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
 const selectStyle = {
   height: 34,
   padding: "0 10px",
@@ -67,11 +73,14 @@ export function Settings() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Trading mode + Binance keys.
+  // Trading mode.
   const [pendingLive, setPendingLive] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [apiSecret, setApiSecret] = useState("");
+
+  // Per-venue credential inputs: venue name → field name → value.
+  const [credInputs, setCredInputs] = useState<Record<string, Record<string, string>>>(
+    {},
+  );
 
   // AI provider config.
   const [aiProvider, setAiProvider] = useState("claude");
@@ -142,12 +151,21 @@ export function Settings() {
     }
   };
 
-  const saveBinanceKeys = () =>
+  const setCredField = (venue: string, field: string, value: string) =>
+    setCredInputs((prev) => ({
+      ...prev,
+      [venue]: { ...prev[venue], [field]: value },
+    }));
+
+  const saveVenueCreds = (venue: string, fieldNames: string[]) =>
     run(async () => {
-      await updateBinanceKeys(apiKey, apiSecret);
-      setApiKey("");
-      setApiSecret("");
-      setNotice("Binance API keys saved.");
+      const fields = credInputs[venue] ?? {};
+      await updateVenueCredentials(
+        venue,
+        Object.fromEntries(fieldNames.map((f) => [f, fields[f] ?? ""])),
+      );
+      setCredInputs((prev) => ({ ...prev, [venue]: {} }));
+      setNotice(`${venue} credentials saved.`);
       await load();
     });
 
@@ -298,44 +316,63 @@ export function Settings() {
 
       <Card>
         <SectionHeader
-          title="Binance API keys"
-          subtitle="Stored encrypted at rest. Required for Testnet and Live trading."
+          title="Venue credentials"
+          subtitle="API credentials per venue, encrypted at rest. Required for Testnet and Live trading."
         />
-        <div
-          style={{
-            padding: 14,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            maxWidth: 420,
-          }}
-        >
-          <div>
-            <Badge tone={settings.binance_keys_configured ? "green" : "muted"}>
-              {settings.binance_keys_configured ? "Configured" : "Not set"}
-            </Badge>
-          </div>
-          <Input
-            full
-            type="password"
-            placeholder="API key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-          />
-          <Input
-            full
-            type="password"
-            placeholder="API secret"
-            value={apiSecret}
-            onChange={(e) => setApiSecret(e.target.value)}
-          />
-          <Button
-            kind="primary"
-            disabled={busy || !apiKey || !apiSecret}
-            onClick={() => void saveBinanceKeys()}
-          >
-            Save keys
-          </Button>
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 20 }}>
+          {venues.map((venue) => {
+            const configured =
+              settings.venue_credentials_configured[venue.name] ?? false;
+            const inputs = credInputs[venue.name] ?? {};
+            const complete = venue.credential_fields.every((f) =>
+              (inputs[f] ?? "").trim(),
+            );
+            return (
+              <div
+                key={venue.name}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  maxWidth: 420,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {venue.name}
+                  </span>
+                  <Badge tone={configured ? "green" : "muted"}>
+                    {configured ? "Configured" : "Not set"}
+                  </Badge>
+                </div>
+                {venue.credential_fields.map((field) => (
+                  <Input
+                    key={field}
+                    full
+                    type="password"
+                    placeholder={fieldLabel(field)}
+                    value={inputs[field] ?? ""}
+                    onChange={(e) => setCredField(venue.name, field, e.target.value)}
+                  />
+                ))}
+                <Button
+                  kind="primary"
+                  disabled={busy || !complete}
+                  onClick={() =>
+                    void saveVenueCreds(venue.name, venue.credential_fields)
+                  }
+                >
+                  Save credentials
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </Card>
 

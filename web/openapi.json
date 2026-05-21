@@ -1147,11 +1147,19 @@
           },
           "mode": {
             "$ref": "#/components/schemas/TradingMode"
+          },
+          "venue_credentials_configured": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Venue Credentials Configured",
+            "type": "object"
           }
         },
         "required": [
           "mode",
           "binance_keys_configured",
+          "venue_credentials_configured",
           "ai_provider",
           "ai_model",
           "ai_base_url",
@@ -1577,6 +1585,24 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VenueCredentialsUpdate": {
+        "description": "A venue's credential fields \u2014 names validated against the catalogue.",
+        "properties": {
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "minProperties": 1,
+            "title": "Fields",
+            "type": "object"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "title": "VenueCredentialsUpdate",
+        "type": "object"
+      },
       "VenueRead": {
         "properties": {
           "active": {
@@ -1586,6 +1612,13 @@
           "asset_class": {
             "title": "Asset Class",
             "type": "string"
+          },
+          "credential_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Credential Fields",
+            "type": "array"
           },
           "name": {
             "title": "Name",
@@ -1600,7 +1633,8 @@
           "name",
           "asset_class",
           "supports_sandbox",
-          "active"
+          "active",
+          "credential_fields"
         ],
         "title": "VenueRead",
         "type": "object"
@@ -2647,6 +2681,57 @@
           }
         ],
         "summary": "Update Mode",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/venue-credentials/{venue}": {
+      "put": {
+        "description": "Store a venue's credentials (encrypted at rest).\n\nThe submitted field names must exactly match the venue's declared\n`credential_fields`, and every value must be non-empty.",
+        "operationId": "update_venue_credentials_api_settings_venue_credentials__venue__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "venue",
+            "required": true,
+            "schema": {
+              "title": "Venue",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VenueCredentialsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Venue Credentials",
         "tags": [
           "settings"
         ]

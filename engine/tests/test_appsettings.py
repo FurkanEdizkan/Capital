@@ -10,8 +10,11 @@ from appsettings.store import (
     binance_keys_configured,
     get_binance_keys,
     get_mode,
+    get_venue_credentials,
     set_binance_keys,
     set_mode,
+    set_venue_credentials,
+    venue_credentials_configured,
 )
 
 
@@ -52,3 +55,50 @@ def test_binance_keys_are_stored_encrypted(session: Session) -> None:
         assert row.is_secret
         assert "PLAINKEY" not in row.value
         assert "PLAINSECRET" not in row.value
+
+
+def test_venue_credentials_round_trip(session: Session) -> None:
+    set_venue_credentials(
+        session, "alpaca", {"api_key": "AK", "api_secret": "AS"}
+    )
+    assert get_venue_credentials(session, "alpaca") == {
+        "api_key": "AK",
+        "api_secret": "AS",
+    }
+
+
+def test_venue_credentials_are_isolated_per_venue(session: Session) -> None:
+    set_venue_credentials(session, "alpaca", {"api_key": "AK", "api_secret": "AS"})
+    set_venue_credentials(
+        session, "polymarket", {"wallet_private_key": "PK", "wallet_address": "0xAB"}
+    )
+    assert get_venue_credentials(session, "alpaca") == {
+        "api_key": "AK",
+        "api_secret": "AS",
+    }
+    assert get_venue_credentials(session, "polymarket")["wallet_address"] == "0xAB"
+
+
+def test_venue_credentials_stored_encrypted(session: Session) -> None:
+    set_venue_credentials(session, "alpaca", {"api_key": "PLAINAK", "api_secret": "X"})
+    for row in session.exec(select(Setting)).all():
+        assert row.is_secret
+        assert "PLAINAK" not in row.value
+
+
+def test_venue_credentials_configured_checks_all_required(session: Session) -> None:
+    required = ("api_key", "api_secret")
+    assert venue_credentials_configured(session, "alpaca", required) is False
+    set_venue_credentials(session, "alpaca", {"api_key": "AK"})  # partial
+    assert venue_credentials_configured(session, "alpaca", required) is False
+    set_venue_credentials(session, "alpaca", {"api_secret": "AS"})
+    assert venue_credentials_configured(session, "alpaca", required) is True
+
+
+def test_binance_wrappers_use_the_venue_namespace(session: Session) -> None:
+    # The binance shims write into the generic venue:* credential store.
+    set_binance_keys(session, "BK", "BS")
+    assert get_venue_credentials(session, "binance") == {
+        "api_key": "BK",
+        "api_secret": "BS",
+    }

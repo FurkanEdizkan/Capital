@@ -1,9 +1,14 @@
-"""Runtime-settings store — trading mode and encrypted Binance credentials.
+"""Runtime-settings store — trading mode and encrypted venue credentials.
 
 `config.Settings` holds static process config; this module holds settings an
 operator changes at runtime through the Settings page, persisted in the DB.
+
+Venue credentials are stored per-venue, one encrypted row per field, keyed
+`venue:{venue}:{field}` — so each venue declares its own credential shape
+(Binance/Alpaca: api_key+api_secret; Polymarket: wallet key+address).
 """
 
+from collections.abc import Iterable
 from enum import StrEnum
 
 from sqlmodel import Session, select
@@ -22,8 +27,6 @@ class TradingMode(StrEnum):
 
 _MODE_KEY = "trading_mode"
 _ACTIVE_VENUE_KEY = "active_venue"
-_BINANCE_KEY = "binance_api_key"
-_BINANCE_SECRET = "binance_api_secret"
 _AI_PROVIDER = "ai_provider"
 _AI_MODEL = "ai_model"
 _AI_BASE_URL = "ai_base_url"
@@ -77,24 +80,73 @@ def set_active_venue(session: Session, venue: str) -> None:
     set_setting(session, _ACTIVE_VENUE_KEY, venue)
 
 
+def _venue_cred_key(venue: str, field: str) -> str:
+    """The `Setting` key one venue credential field is stored under."""
+    return f"venue:{venue}:{field}"
+
+
+def set_venue_credentials(
+    session: Session, venue: str, fields: dict[str, str]
+) -> None:
+    """Store a venue's credential fields, each encrypted at rest."""
+    for field, value in fields.items():
+        _put(session, _venue_cred_key(venue, field), value, is_secret=True)
+
+
+def get_venue_credentials(session: Session, venue: str) -> dict[str, str]:
+    """Decrypt and return every stored credential field for `venue`.
+
+    Returns an empty dict when nothing is stored — callers check completeness
+    against the venue's declared `credential_fields`.
+    """
+    prefix = f"venue:{venue}:"
+    rows = session.exec(select(Setting).where(Setting.key.startswith(prefix))).all()
+    return {row.key.removeprefix(prefix): decrypt(row.value) for row in rows}
+
+
+def venue_credentials_configured(
+    session: Session, venue: str, required: Iterable[str]
+) -> bool:
+    """Whether every `required` credential field for `venue` is stored.
+
+    Checks for row presence only — values are not decrypted.
+    """
+    prefix = f"venue:{venue}:"
+    stored = {
+        row.key.removeprefix(prefix)
+        for row in session.exec(
+            select(Setting).where(Setting.key.startswith(prefix))
+        ).all()
+    }
+    required = list(required)
+    return bool(required) and all(field in stored for field in required)
+
+
+# -- Binance credential shims --------------------------------------------------
+# Binance credentials are `venue:binance:api_key` / `:api_secret`. These
+# wrappers keep the existing call sites (executor router, recovery) stable.
+
+
 def set_binance_keys(session: Session, api_key: str, api_secret: str) -> None:
     """Store the Binance API credentials, encrypted at rest."""
-    _put(session, _BINANCE_KEY, api_key, is_secret=True)
-    _put(session, _BINANCE_SECRET, api_secret, is_secret=True)
+    set_venue_credentials(
+        session, "binance", {"api_key": api_key, "api_secret": api_secret}
+    )
 
 
 def binance_keys_configured(session: Session) -> bool:
     """Whether both Binance credentials are stored (without decrypting them)."""
-    return _get(session, _BINANCE_KEY) is not None and _get(session, _BINANCE_SECRET) is not None
+    return venue_credentials_configured(
+        session, "binance", ("api_key", "api_secret")
+    )
 
 
 def get_binance_keys(session: Session) -> tuple[str, str] | None:
     """Decrypt and return `(api_key, api_secret)`, or None if unset."""
-    key = _get(session, _BINANCE_KEY)
-    secret = _get(session, _BINANCE_SECRET)
-    if key is None or secret is None:
-        return None
-    return decrypt(key.value), decrypt(secret.value)
+    creds = get_venue_credentials(session, "binance")
+    if "api_key" in creds and "api_secret" in creds:
+        return creds["api_key"], creds["api_secret"]
+    return None
 
 
 def get_ai_settings(session: Session) -> dict[str, str]:
