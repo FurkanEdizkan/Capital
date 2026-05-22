@@ -1005,6 +1005,96 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "LLMUsage": {
+        "description": "One recorded LLM completion \u2014 tokens, estimated cost, and the decision.",
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "maxLength": 8,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "estimated_cost_usd": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Estimated Cost Usd",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "input_tokens": {
+            "default": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "model": {
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "output_tokens": {
+            "default": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "provider": {
+            "maxLength": 16,
+            "title": "Provider",
+            "type": "string"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "created_at"
+        ],
+        "title": "LLMUsage",
+        "type": "object"
+      },
       "LlmCredentialsUpdate": {
         "description": "One LLM provider's credentials \u2014 both fields optional.",
         "properties": {
@@ -1085,6 +1175,51 @@
           "mode"
         ],
         "title": "ModeUpdate",
+        "type": "object"
+      },
+      "ModelUsage": {
+        "description": "Per-model rollup of LLM activity \u2014 'what each model did'.",
+        "properties": {
+          "buys": {
+            "title": "Buys",
+            "type": "integer"
+          },
+          "decisions": {
+            "title": "Decisions",
+            "type": "integer"
+          },
+          "holds": {
+            "title": "Holds",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "sells": {
+            "title": "Sells",
+            "type": "integer"
+          },
+          "total_cost_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Cost Usd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "decisions",
+          "buys",
+          "sells",
+          "holds",
+          "total_cost_usd"
+        ],
+        "title": "ModelUsage",
         "type": "object"
       },
       "OrderBook": {
@@ -2008,6 +2143,90 @@
           }
         ],
         "summary": "Analyze And Decide",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/decisions": {
+      "get": {
+        "description": "The recent decision log \u2014 what each model decided, newest first.",
+        "operationId": "decision_log_api_ai_decisions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMUsage"
+                  },
+                  "title": "Response Decision Log Api Ai Decisions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Decision Log",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/models": {
+      "get": {
+        "description": "Per-model rollup \u2014 decisions, action mix and total cost for each model.",
+        "operationId": "model_performance_api_ai_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelUsage"
+                  },
+                  "title": "Response Model Performance Api Ai Models Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Model Performance",
         "tags": [
           "ai"
         ]

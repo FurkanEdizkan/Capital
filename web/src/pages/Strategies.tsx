@@ -29,12 +29,20 @@ import {
   updateAllocation,
   updateEnabled,
 } from "../lib/api/strategies";
+import {
+  fetchDecisionLog,
+  fetchModelUsage,
+  type LlmUsage,
+  type ModelUsage,
+} from "../lib/api/ai";
 
 const REFRESH_MS = 20_000;
 const LLM_PROVIDERS = ["claude", "openai", "gemini", "ollama"];
 
 export function Strategies() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [modelUsage, setModelUsage] = useState<ModelUsage[]>([]);
+  const [decisions, setDecisions] = useState<LlmUsage[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Strategy | null>(null);
   const [allocDraft, setAllocDraft] = useState("");
@@ -47,7 +55,14 @@ export function Strategies() {
 
   const load = useCallback(async () => {
     try {
-      setStrategies(await fetchStrategies());
+      const [strats, usage, log] = await Promise.all([
+        fetchStrategies(),
+        fetchModelUsage(),
+        fetchDecisionLog(),
+      ]);
+      setStrategies(strats);
+      setModelUsage(usage);
+      setDecisions(log);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load strategies");
@@ -221,6 +236,53 @@ export function Strategies() {
     },
   ];
 
+  const modelCols: Column<ModelUsage>[] = [
+    { key: "provider", label: "Provider" },
+    { key: "model", label: "Model", render: (r) => <span className="num">{r.model}</span> },
+    { key: "decisions", label: "Decisions", align: "right" },
+    {
+      key: "actions",
+      label: "Buy / Sell / Hold",
+      align: "right",
+      render: (r) => (
+        <span className="num">
+          {r.buys} / {r.sells} / {r.holds}
+        </span>
+      ),
+    },
+    {
+      key: "total_cost_usd",
+      label: "LLM cost",
+      align: "right",
+      render: (r) => <span className="num">${fmt(Number(r.total_cost_usd), 4)}</span>,
+    },
+  ];
+
+  const decisionCols: Column<LlmUsage>[] = [
+    {
+      key: "created_at",
+      label: "Time",
+      render: (r) => (
+        <span className="num">{(r.created_at ?? "").slice(11, 19)}</span>
+      ),
+    },
+    { key: "strategy", label: "Strategy", render: (r) => r.strategy ?? "—" },
+    { key: "model", label: "Model", render: (r) => <span className="num">{r.model}</span> },
+    {
+      key: "action",
+      label: "Decision",
+      render: (r) => (r.action ? <Badge tone="blue">{r.action}</Badge> : "—"),
+    },
+    {
+      key: "estimated_cost_usd",
+      label: "Cost",
+      align: "right",
+      render: (r) => (
+        <span className="num">${fmt(Number(r.estimated_cost_usd), 4)}</span>
+      ),
+    },
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
@@ -250,6 +312,36 @@ export function Strategies() {
           <DataTable columns={cols} rows={strategies} rowKey={(r) => r.name} dense />
         )}
       </Card>
+
+      {modelUsage.length > 0 && (
+        <Card>
+          <SectionHeader
+            title="AI model performance"
+            subtitle="What each model decided and what it cost — across all AI strategies."
+          />
+          <DataTable
+            columns={modelCols}
+            rows={modelUsage}
+            rowKey={(r) => `${r.provider}/${r.model}`}
+            dense
+          />
+        </Card>
+      )}
+
+      {decisions.length > 0 && (
+        <Card>
+          <SectionHeader
+            title="Recent AI decisions"
+            subtitle="The latest LLM calls — which model decided what."
+          />
+          <DataTable
+            columns={decisionCols}
+            rows={decisions}
+            rowKey={(r) => String(r.id)}
+            dense
+          />
+        </Card>
+      )}
 
       {notice && <div style={{ fontSize: 12, color: "var(--text-2)" }}>{notice}</div>}
 

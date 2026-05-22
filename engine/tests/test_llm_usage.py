@@ -5,7 +5,14 @@ from decimal import Decimal
 
 from sqlmodel import Session
 
-from ai.usage import LLMUsage, estimate_cost, record_usage, spend_since
+from ai.usage import (
+    LLMUsage,
+    estimate_cost,
+    model_usage_summary,
+    recent_usage,
+    record_usage,
+    spend_since,
+)
 
 
 def test_estimate_cost_claude() -> None:
@@ -68,3 +75,34 @@ def test_spend_since_ignores_older_rows(session: Session) -> None:
     session.commit()
     since = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)
     assert spend_since(session, since) == Decimal("0")
+
+
+def test_model_usage_summary(session: Session) -> None:
+    record_usage(
+        session, provider="claude", model="claude-x",
+        input_tokens=1_000_000, output_tokens=0, action="buy",
+    )
+    record_usage(
+        session, provider="claude", model="claude-x",
+        input_tokens=0, output_tokens=0, action="hold",
+    )
+    record_usage(
+        session, provider="ollama", model="qwen",
+        input_tokens=100, output_tokens=100, action="sell",
+    )
+    by = {(m.provider, m.model): m for m in model_usage_summary(session)}
+    claude = by[("claude", "claude-x")]
+    assert claude.decisions == 2
+    assert claude.buys == 1
+    assert claude.holds == 1
+    assert by[("ollama", "qwen")].total_cost_usd == Decimal("0")  # local = free
+
+
+def test_recent_usage_returns_recent_rows(session: Session) -> None:
+    for i in range(3):
+        record_usage(
+            session, provider="claude", model=f"m{i}",
+            input_tokens=0, output_tokens=0,
+        )
+    rows = recent_usage(session, limit=2)
+    assert len(rows) == 2

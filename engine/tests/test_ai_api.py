@@ -75,6 +75,25 @@ def test_analyze_rejects_empty_task(ok_client: TestClient) -> None:
     assert resp.status_code == 422
 
 
+def test_models_endpoint_rolls_up_usage(ok_client: TestClient) -> None:
+    headers = _auth(ok_client)
+    ok_client.post("/api/ai/analyze", json={"task": "review BTC"}, headers=headers)
+    resp = ok_client.get("/api/ai/models", headers=headers)
+    assert resp.status_code == 200
+    rows = resp.json()
+    assert len(rows) == 1
+    assert rows[0]["decisions"] == 1
+    assert rows[0]["buys"] == 1
+
+
+def test_decision_log_endpoint(ok_client: TestClient) -> None:
+    headers = _auth(ok_client)
+    ok_client.post("/api/ai/analyze", json={"task": "review BTC"}, headers=headers)
+    resp = ok_client.get("/api/ai/decisions", headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()[0]["action"] == "buy"
+
+
 def test_analyze_records_llm_usage(ok_client: TestClient, session: Session) -> None:
     from sqlmodel import select
 

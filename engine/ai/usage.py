@@ -11,6 +11,7 @@ Ollama models are free, so they are priced at zero.
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from pydantic import BaseModel
 from sqlmodel import Field, Session, SQLModel, select
 
 
@@ -107,3 +108,52 @@ def spend_since(session: Session, since: datetime) -> Decimal:
         select(LLMUsage.estimated_cost_usd).where(LLMUsage.created_at >= since)
     ).all()
     return sum(rows, Decimal(0))
+
+
+class ModelUsage(BaseModel):
+    """Per-model rollup of LLM activity — 'what each model did'."""
+
+    provider: str
+    model: str
+    decisions: int
+    buys: int
+    sells: int
+    holds: int
+    total_cost_usd: Decimal
+
+
+def model_usage_summary(session: Session) -> list[ModelUsage]:
+    """Aggregate every recorded LLM call by `(provider, model)`."""
+    by_key: dict[tuple[str, str], ModelUsage] = {}
+    for row in session.exec(select(LLMUsage)).all():
+        key = (row.provider, row.model)
+        cur = by_key.get(key) or ModelUsage(
+            provider=row.provider,
+            model=row.model,
+            decisions=0,
+            buys=0,
+            sells=0,
+            holds=0,
+            total_cost_usd=Decimal(0),
+        )
+        by_key[key] = ModelUsage(
+            provider=row.provider,
+            model=row.model,
+            decisions=cur.decisions + 1,
+            buys=cur.buys + (row.action == "buy"),
+            sells=cur.sells + (row.action == "sell"),
+            holds=cur.holds + (row.action == "hold"),
+            total_cost_usd=cur.total_cost_usd + row.estimated_cost_usd,
+        )
+    return [by_key[k] for k in sorted(by_key)]
+
+
+def recent_usage(session: Session, limit: int = 50) -> list[LLMUsage]:
+    """The most recent LLM calls — the decision log, newest first."""
+    return list(
+        session.exec(
+            select(LLMUsage)
+            .order_by(LLMUsage.created_at.desc())  # type: ignore[attr-defined]
+            .limit(limit)
+        ).all()
+    )
