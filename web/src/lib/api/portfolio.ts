@@ -7,6 +7,7 @@ export type StrategySummary = components["schemas"]["StrategySummary"];
 export type EquitySnapshot = components["schemas"]["EquitySnapshot"];
 export type Position = components["schemas"]["Position"];
 export type Trade = components["schemas"]["Trade"];
+export type Costs = components["schemas"]["CostsRead"];
 
 export async function fetchSummary(): Promise<PortfolioSummary> {
   const { data, error } = await api.GET("/api/portfolio/summary");
@@ -29,5 +30,11 @@ export async function fetchPositions(): Promise<Position[]> {
 export async function fetchTrades(): Promise<Trade[]> {
   const { data, error } = await api.GET("/api/portfolio/trades");
   if (error || !data) throw new Error("Failed to load trades");
+  return data;
+}
+
+export async function fetchCosts(): Promise<Costs> {
+  const { data, error } = await api.GET("/api/portfolio/costs");
+  if (error || !data) throw new Error("Failed to load trading costs");
   return data;
 }

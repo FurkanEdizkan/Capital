@@ -10,9 +10,16 @@ from sqlmodel import select
 
 from api.market import StreamsDep
 from auth.deps import CurrentUser, SessionDep
-from trading.accounting import PortfolioSummary, equity_history, portfolio_summary
+from trading.accounting import (
+    CostSummary,
+    PortfolioSummary,
+    cost_summary,
+    equity_history,
+    portfolio_summary,
+)
 from trading.models import EquitySnapshot, Position, Trade
 from trading.portfolio import list_positions
+from venues.factory import venue_fee_rates
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 
@@ -51,3 +58,16 @@ def trades(_: CurrentUser, session: SessionDep, limit: int = 50) -> list[Trade]:
         select(Trade).order_by(Trade.executed_at.desc()).limit(limit)  # type: ignore[attr-defined]
     ).all()
     return list(rows)
+
+
+class CostsRead(CostSummary):
+    """Trading-cost breakdown plus the per-venue fee-rate reference."""
+
+    venue_fee_rates: dict[str, Decimal]
+
+
+@router.get("/costs", response_model=CostsRead)
+def costs(_: CurrentUser, session: SessionDep) -> CostsRead:
+    """Trading-cost visibility — fees by market, fee-%-of-volume, fee rates."""
+    summary = cost_summary(session)
+    return CostsRead(**summary.model_dump(), venue_fee_rates=venue_fee_rates())

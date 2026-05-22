@@ -44,6 +44,7 @@ class AlpacaVenue(Venue):
 
     name = "alpaca"
     supports_sandbox = True  # Alpaca's paper environment
+    fee_rate = Decimal("0")  # US equities are commission-free
 
     def __init__(
         self,

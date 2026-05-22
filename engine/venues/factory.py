@@ -11,6 +11,7 @@ wallet-signing client that is not yet wired, so it is built read-only.
 """
 
 import logging
+from decimal import Decimal
 
 from binance.client import Client
 from sqlmodel import Session
@@ -24,6 +25,19 @@ from venues.binance_alpha import BinanceAlphaVenue
 from venues.polymarket import PolymarketVenue
 
 log = logging.getLogger("capital.venues.factory")
+
+#: Every venue class, keyed by its catalogue name.
+_VENUE_CLASSES: dict[str, type[Venue]] = {
+    BinanceVenue.name: BinanceVenue,
+    AlpacaVenue.name: AlpacaVenue,
+    PolymarketVenue.name: PolymarketVenue,
+    BinanceAlphaVenue.name: BinanceAlphaVenue,
+}
+
+
+def venue_fee_rates() -> dict[str, Decimal]:
+    """Each venue's representative taker fee rate — for cost visibility."""
+    return {name: cls.fee_rate for name, cls in _VENUE_CLASSES.items()}
 
 
 def build_venue(session: Session, name: str, mode: TradingMode) -> Venue:

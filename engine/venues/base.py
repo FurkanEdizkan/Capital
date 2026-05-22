@@ -90,10 +90,13 @@ class Venue(ABC):
     Concrete venues implement every abstract method. `name` identifies the
     venue; `supports_sandbox` says whether a paper/test environment exists
     (Polymarket, for one, has none — see docs/venue-research.md).
+    `fee_rate` is a representative taker commission rate, surfaced for
+    cost visibility — actual fees are recorded per fill.
     """
 
     name: str = "base"
     supports_sandbox: bool = False
+    fee_rate: Decimal = Decimal("0")
 
     @abstractmethod
     def instrument(self, symbol: str, *, market: str | None = None) -> Instrument:

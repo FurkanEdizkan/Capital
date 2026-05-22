@@ -266,6 +266,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portfolio/costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Costs
+         * @description Trading-cost visibility — fees by market, fee-%-of-volume, fee rates.
+         */
+        get: operations["costs_api_portfolio_costs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portfolio/equity": {
         parameters: {
             query?: never;
@@ -973,6 +993,26 @@ export interface components {
         CloseResult: {
             /** Closed */
             closed: number;
+        };
+        /**
+         * CostsRead
+         * @description Trading-cost breakdown plus the per-venue fee-rate reference.
+         */
+        CostsRead: {
+            /** Fee Pct Of Volume */
+            fee_pct_of_volume: string;
+            /** Fees By Market */
+            fees_by_market: {
+                [key: string]: string;
+            };
+            /** Total Fees */
+            total_fees: string;
+            /** Traded Volume */
+            traded_volume: string;
+            /** Venue Fee Rates */
+            venue_fee_rates: {
+                [key: string]: string;
+            };
         };
         /**
          * Decision
@@ -1847,6 +1887,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    costs_api_portfolio_costs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostsRead"];
                 };
             };
         };

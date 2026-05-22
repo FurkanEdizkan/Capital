@@ -11,7 +11,13 @@ from decimal import Decimal
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from trading.models import EquitySnapshot, Position, PositionSide, StrategyAllocation
+from trading.models import (
+    EquitySnapshot,
+    Position,
+    PositionSide,
+    StrategyAllocation,
+    Trade,
+)
 from trading.portfolio import unrealized_pnl
 
 MarkPrices = dict[str, Decimal]
@@ -128,6 +134,33 @@ def record_equity_snapshot(
     session.commit()
     session.refresh(snap)
     return snap
+
+
+class CostSummary(BaseModel):
+    """Trading-cost breakdown for the dashboard's cost-visibility card."""
+
+    total_fees: Decimal
+    fees_by_market: dict[str, Decimal]  # spot / futures / … → fees paid
+    traded_volume: Decimal  # sum of |quantity| * price across all fills
+    fee_pct_of_volume: Decimal  # total_fees / traded_volume * 100
+
+
+def cost_summary(session: Session) -> CostSummary:
+    """Aggregate trading fees across every recorded fill."""
+    fees: dict[str, Decimal] = {}
+    total_fees = Decimal(0)
+    volume = Decimal(0)
+    for t in session.exec(select(Trade)).all():
+        fees[t.market] = fees.get(t.market, Decimal(0)) + t.fee
+        total_fees += t.fee
+        volume += t.quantity * t.price
+    pct = (total_fees / volume * 100) if volume > 0 else Decimal(0)
+    return CostSummary(
+        total_fees=total_fees,
+        fees_by_market=fees,
+        traded_volume=volume,
+        fee_pct_of_volume=pct,
+    )
 
 
 def equity_history(session: Session, limit: int = 500) -> list[EquitySnapshot]:
