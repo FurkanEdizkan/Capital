@@ -200,7 +200,10 @@ function CostsCard({ costs }: { costs: Costs }) {
         subtitle={`$${fmt(Number(costs.total_fees), 2)} in fees · ${fmt(
           pct,
           3,
-        )}% of $${fmt(Number(costs.traded_volume), 0)} traded`}
+        )}% of $${fmt(Number(costs.traded_volume), 0)} traded · $${fmt(
+          Number(costs.llm_spend_today),
+          2,
+        )} LLM spend today`}
       />
       <div
         style={{

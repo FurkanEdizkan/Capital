@@ -5,19 +5,24 @@ Admin only. Switching mode is gated: it is blocked while positions are open
 explicit confirmation flag. See plan: Safety Model.
 """
 
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from ai.usage import spend_since
 from appsettings.store import (
     TradingMode,
     ai_key_configured,
     binance_keys_configured,
     get_active_venue,
     get_ai_settings,
+    get_ai_spend_cap,
     get_mode,
     set_ai_settings,
+    set_ai_spend_cap,
     set_binance_keys,
     set_mode,
     set_venue_credentials,
@@ -34,6 +39,13 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 AdminUser = Annotated[User, Depends(require_admin)]
 
 
+def _day_start() -> datetime:
+    """Start of the current UTC day, tz-naive (matches stored timestamps)."""
+    return datetime.now(UTC).replace(
+        hour=0, minute=0, second=0, microsecond=0, tzinfo=None
+    )
+
+
 class SettingsRead(BaseModel):
     mode: TradingMode
     binance_keys_configured: bool
@@ -43,6 +55,8 @@ class SettingsRead(BaseModel):
     ai_model: str
     ai_base_url: str
     ai_key_configured: bool
+    ai_spend_cap: Decimal  # daily LLM spend cap in USD (0 = unlimited)
+    ai_spend_today: Decimal  # LLM spend so far today, in USD
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -59,6 +73,10 @@ class ModeUpdate(BaseModel):
 class BinanceKeysUpdate(BaseModel):
     api_key: str = Field(min_length=1, max_length=256)
     api_secret: str = Field(min_length=1, max_length=256)
+
+
+class AiSpendCapUpdate(BaseModel):
+    cap: Decimal = Field(ge=0)  # daily LLM spend cap in USD; 0 = unlimited
 
 
 class AiSettingsUpdate(BaseModel):
@@ -82,6 +100,8 @@ def _read(session: SessionDep) -> SettingsRead:
         ai_model=ai["model"],
         ai_base_url=ai["base_url"],
         ai_key_configured=ai_key_configured(session),
+        ai_spend_cap=get_ai_spend_cap(session),
+        ai_spend_today=spend_since(session, _day_start()),
     )
 
 
@@ -172,6 +192,21 @@ def update_venue_credentials(
         action="settings.venue_credentials",
         detail={"venue": venue},
     )
+
+
+@router.put("/ai-spend-cap", response_model=SettingsRead)
+def update_ai_spend_cap(
+    body: AiSpendCapUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Set the daily LLM spend cap — AI strategies pause once it is reached."""
+    set_ai_spend_cap(session, body.cap)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.ai_spend_cap",
+        detail={"cap": str(body.cap)},
+    )
+    return _read(session)
 
 
 @router.put("/ai", response_model=SettingsRead)

@@ -6,7 +6,7 @@ Ollama — by pointing `base_url` at the relevant service.
 
 from typing import Any
 
-from ai.providers.base import LLMError, LLMProvider
+from ai.providers.base import Completion, LLMError, LLMProvider
 
 
 class OpenAIProvider(LLMProvider):
@@ -32,12 +32,21 @@ class OpenAIProvider(LLMProvider):
             self._client = openai.OpenAI(**kwargs)
         return self._client
 
-    def complete(self, prompt: str, *, model: str | None = None) -> str:
+    def complete(self, prompt: str, *, model: str | None = None) -> Completion:
+        resolved = model or self.default_model
         try:
             response = self._get_client().chat.completions.create(
-                model=model or self.default_model,
+                model=resolved,
                 messages=[{"role": "user", "content": prompt}],
             )
-            return response.choices[0].message.content or ""
+            # Some OpenAI-compatible servers (older Ollama) omit `usage`.
+            usage = getattr(response, "usage", None)
+            return Completion(
+                text=response.choices[0].message.content or "",
+                provider=self.name,
+                model=resolved,
+                input_tokens=getattr(usage, "prompt_tokens", 0) or 0,
+                output_tokens=getattr(usage, "completion_tokens", 0) or 0,
+            )
         except Exception as exc:  # noqa: BLE001 — normalise SDK errors
             raise LLMError(f"OpenAI completion failed: {exc}") from exc

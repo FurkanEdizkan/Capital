@@ -275,7 +275,7 @@ export interface paths {
         };
         /**
          * Costs
-         * @description Trading-cost visibility — fees by market, fee-%-of-volume, fee rates.
+         * @description Cost visibility — trading fees by market, fee rates, and LLM spend.
          */
         get: operations["costs_api_portfolio_costs_get"];
         put?: never;
@@ -399,6 +399,26 @@ export interface paths {
          * @description Configure the AI provider. The API key is encrypted at rest.
          */
         put: operations["update_ai_settings_api_settings_ai_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/ai-spend-cap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Ai Spend Cap
+         * @description Set the daily LLM spend cap — AI strategies pause once it is reached.
+         */
+        put: operations["update_ai_spend_cap_api_settings_ai_spend_cap_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -754,6 +774,11 @@ export interface components {
             /** Provider */
             provider: string;
         };
+        /** AiSpendCapUpdate */
+        AiSpendCapUpdate: {
+            /** Cap */
+            cap: number | string;
+        };
         /** AllocationUpdate */
         AllocationUpdate: {
             /** Allocated */
@@ -996,7 +1021,7 @@ export interface components {
         };
         /**
          * CostsRead
-         * @description Trading-cost breakdown plus the per-venue fee-rate reference.
+         * @description Trading-cost breakdown, the fee-rate reference, and today's LLM spend.
          */
         CostsRead: {
             /** Fee Pct Of Volume */
@@ -1005,6 +1030,8 @@ export interface components {
             fees_by_market: {
                 [key: string]: string;
             };
+            /** Llm Spend Today */
+            llm_spend_today: string;
             /** Total Fees */
             total_fees: string;
             /** Traded Volume */
@@ -1256,6 +1283,10 @@ export interface components {
             ai_model: string;
             /** Ai Provider */
             ai_provider: string;
+            /** Ai Spend Cap */
+            ai_spend_cap: string;
+            /** Ai Spend Today */
+            ai_spend_today: string;
             /** Binance Keys Configured */
             binance_keys_configured: boolean;
             mode: components["schemas"]["TradingMode"];
@@ -2032,6 +2063,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["AiSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ai_spend_cap_api_settings_ai_spend_cap_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiSpendCapUpdate"];
             };
         };
         responses: {

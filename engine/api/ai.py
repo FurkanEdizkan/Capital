@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from ai.analyze import analyze
 from ai.providers import LLMError, get_provider
 from ai.providers.base import Decision, LLMProvider
+from ai.usage import record_usage
 from appsettings.store import get_ai_api_key, get_ai_settings
 from auth.deps import CurrentUser, SessionDep
 
@@ -46,8 +47,18 @@ def analyze_and_decide(
     """Run a free-form analyze-and-decide task through the configured LLM."""
     model = get_ai_settings(session)["model"] or None
     try:
-        return analyze(provider, task=body.task, model=model)
+        decision, completion = analyze(provider, task=body.task, model=model)
     except LLMError as exc:
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY, f"AI analysis failed: {exc}"
         ) from exc
+    record_usage(
+        session,
+        provider=completion.provider,
+        model=completion.model,
+        input_tokens=completion.input_tokens,
+        output_tokens=completion.output_tokens,
+        action=decision.action.value,
+        confidence=decision.confidence,
+    )
+    return decision

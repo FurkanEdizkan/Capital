@@ -173,3 +173,72 @@ def test_flatten_closes_open_positions(db_engine: Any, factory: Any) -> None:
     assert closed == 1
     with Session(db_engine) as s:
         assert list_positions(s, strategy="MA Cross", open_only=True) == []
+
+
+def test_ai_strategy_paused_when_llm_spend_cap_reached(
+    db_engine: Any, factory: Any
+) -> None:
+    """Once the daily LLM spend cap is hit, the engine skips AI strategies."""
+    from ai.providers.base import Completion, LLMProvider
+    from ai.usage import record_usage
+    from appsettings.store import set_ai_spend_cap
+    from strategies.ai_strategy import AIStrategy
+
+    class CountingProvider(LLMProvider):
+        name = "fake"
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def complete(self, prompt: str, *, model: str | None = None) -> Completion:
+            self.calls += 1
+            return Completion(
+                text='{"action": "hold", "confidence": 0.5, "reasoning": "x"}',
+                provider=self.name,
+                model="m",
+                input_tokens=1,
+                output_tokens=1,
+            )
+
+    provider = CountingProvider()
+    strat = AIStrategy("AI BTC", "BTCUSDT", provider=provider)
+    engine = _engine(factory, [strat])
+    with factory() as session:
+        set_ai_spend_cap(session, Decimal("1"))
+        # $3 already spent today — over the $1 cap.
+        record_usage(
+            session,
+            provider="claude",
+            model="claude-sonnet-4-6",
+            input_tokens=1_000_000,
+            output_tokens=0,
+        )
+
+    engine.tick()
+    assert provider.calls == 0  # the paid LLM call was skipped
+
+
+def test_ai_strategy_runs_when_under_the_cap(db_engine: Any, factory: Any) -> None:
+    """Under the cap, the AI strategy ticks and its LLM usage is recorded."""
+    from ai.providers.base import Completion, LLMProvider
+    from ai.usage import LLMUsage
+    from strategies.ai_strategy import AIStrategy
+
+    class StubProvider(LLMProvider):
+        name = "fake"
+
+        def complete(self, prompt: str, *, model: str | None = None) -> Completion:
+            return Completion(
+                text='{"action": "hold", "confidence": 0.5, "reasoning": "x"}',
+                provider=self.name,
+                model="m",
+                input_tokens=10,
+                output_tokens=5,
+            )
+
+    engine = _engine(factory, [AIStrategy("AI BTC", "BTCUSDT", provider=StubProvider())])
+    engine.tick()
+    with factory() as session:
+        rows = session.exec(select(LLMUsage)).all()
+    assert len(rows) == 1
+    assert rows[0].strategy == "AI BTC"

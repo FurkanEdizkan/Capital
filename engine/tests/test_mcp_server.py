@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 import mcp_server
-from ai.providers.base import LLMProvider
+from ai.providers.base import Completion, LLMProvider
 from api.ai import get_llm_provider
 from auth.api_tokens import create_api_token
 from db import get_session
@@ -20,8 +20,14 @@ from trading.models import FillSide, Trade
 class FakeProvider(LLMProvider):
     name = "fake"
 
-    def complete(self, prompt: str, *, model: str | None = None) -> str:
-        return '{"action": "hold", "confidence": 0.5, "reasoning": "wait and see"}'
+    def complete(self, prompt: str, *, model: str | None = None) -> Completion:
+        return Completion(
+            text='{"action": "hold", "confidence": 0.5, "reasoning": "wait"}',
+            provider=self.name,
+            model=model or "fake-model",
+            input_tokens=10,
+            output_tokens=5,
+        )
 
 
 @pytest.fixture

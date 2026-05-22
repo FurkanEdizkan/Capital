@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from ai.providers.base import LLMError, LLMProvider
+from ai.providers.base import Completion, LLMError, LLMProvider
 from marketdata.models import Candle
 from strategies.ai_strategy import AIStrategy
 from strategies.base import StrategyContext
@@ -19,10 +19,16 @@ class FakeProvider(LLMProvider):
         self._text = text
         self._raises = raises
 
-    def complete(self, prompt: str, *, model: str | None = None) -> str:
+    def complete(self, prompt: str, *, model: str | None = None) -> Completion:
         if self._raises:
             raise LLMError("provider unavailable")
-        return self._text
+        return Completion(
+            text=self._text,
+            provider=self.name,
+            model=model or "fake-model",
+            input_tokens=12,
+            output_tokens=8,
+        )
 
 
 def _candles(n: int = 5) -> list[Candle]:

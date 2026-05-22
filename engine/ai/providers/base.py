@@ -9,6 +9,7 @@ model is configured.
 import json
 import re
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 
@@ -17,6 +18,21 @@ from pydantic import BaseModel, Field
 
 class LLMError(Exception):
     """An LLM call failed or returned an unusable response."""
+
+
+@dataclass(frozen=True)
+class Completion:
+    """An LLM completion plus the token usage of the call that produced it.
+
+    Token counts come from the provider's response; a provider that does not
+    report them leaves both at 0 (cost then estimates to 0 — acceptable).
+    """
+
+    text: str
+    provider: str
+    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 class DecisionAction(StrEnum):
@@ -63,12 +79,12 @@ class LLMProvider(ABC):
     default_model: str = ""
 
     @abstractmethod
-    def complete(self, prompt: str, *, model: str | None = None) -> str:
-        """Return the model's text completion for `prompt`.
+    def complete(self, prompt: str, *, model: str | None = None) -> Completion:
+        """Return the model's completion (text + token usage) for `prompt`.
 
         Raises `LLMError` on any provider failure.
         """
 
     def decide(self, prompt: str, *, model: str | None = None) -> Decision:
         """Ask for a completion and parse a structured trading `Decision`."""
-        return parse_decision(self.complete(prompt, model=model))
+        return parse_decision(self.complete(prompt, model=model).text)

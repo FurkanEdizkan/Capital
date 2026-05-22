@@ -49,3 +49,11 @@ export async function updateAiSettings(
   if (error || !data) throw new Error(errorDetail(error, "Failed to save AI settings"));
   return data;
 }
+
+export async function updateAiSpendCap(cap: string): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/ai-spend-cap", {
+    body: { cap },
+  });
+  if (error || !data) throw new Error(errorDetail(error, "Failed to set spend cap"));
+  return data;
+}

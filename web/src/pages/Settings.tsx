@@ -23,6 +23,7 @@ import {
   type Settings as SettingsData,
   type TradingMode,
   updateAiSettings,
+  updateAiSpendCap,
   updateMode,
   updateVenueCredentials,
 } from "../lib/api/settings";
@@ -87,6 +88,7 @@ export function Settings() {
   const [aiModel, setAiModel] = useState("");
   const [aiBaseUrl, setAiBaseUrl] = useState("");
   const [aiKey, setAiKey] = useState("");
+  const [aiSpendCap, setAiSpendCap] = useState("");
 
   // API tokens.
   const [tokenName, setTokenName] = useState("");
@@ -98,6 +100,7 @@ export function Settings() {
     setAiProvider(s.ai_provider);
     setAiModel(s.ai_model);
     setAiBaseUrl(s.ai_base_url);
+    setAiSpendCap(String(s.ai_spend_cap));
   }, []);
 
   const load = useCallback(async () => {
@@ -174,6 +177,12 @@ export function Settings() {
       applySettings(await updateAiSettings(aiProvider, aiModel, aiBaseUrl, aiKey));
       setAiKey("");
       setNotice("AI provider settings saved.");
+    });
+
+  const saveAiSpendCap = () =>
+    run(async () => {
+      applySettings(await updateAiSpendCap(aiSpendCap || "0"));
+      setNotice("LLM spend cap saved.");
     });
 
   const createApiToken = () =>
@@ -429,6 +438,39 @@ export function Settings() {
           />
           <Button kind="primary" disabled={busy} onClick={() => void saveAiSettings()}>
             Save AI settings
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="LLM spend cap"
+          subtitle="A daily cap on AI spend — AI strategies pause once it is reached, and resume the next day. 0 means unlimited."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 420,
+          }}
+        >
+          <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+            Spent today:{" "}
+            <span className="num">
+              ${Number(settings.ai_spend_today).toFixed(2)}
+            </span>
+          </div>
+          <Input
+            full
+            type="number"
+            placeholder="Daily cap in USD (0 = unlimited)"
+            value={aiSpendCap}
+            onChange={(e) => setAiSpendCap(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void saveAiSpendCap()}>
+            Save spend cap
           </Button>
         </div>
       </Card>

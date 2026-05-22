@@ -7,7 +7,7 @@ still flows through the risk manager and capital allocator.
 
 from decimal import Decimal
 
-from ai.providers.base import Decision, LLMProvider
+from ai.providers.base import Completion, Decision, LLMProvider, parse_decision
 
 _JSON_INSTRUCTION = (
     'Respond ONLY with a JSON object of the form '
@@ -38,11 +38,13 @@ def build_market_prompt(
 
 def analyze(
     provider: LLMProvider, *, task: str, model: str | None = None
-) -> Decision:
+) -> tuple[Decision, Completion]:
     """Run a free-form analyze-and-decide task through the LLM.
 
-    Returns a structured `Decision`; executing it remains a separate, risk-
-    and role-gated step.
+    Returns the structured `Decision` and the `Completion` (for usage/cost
+    tracking); executing the decision remains a separate, risk- and role-gated
+    step.
     """
     prompt = f"{task}\n\n{_JSON_INSTRUCTION}"
-    return provider.decide(prompt, model=model)
+    completion = provider.complete(prompt, model=model)
+    return parse_decision(completion.text), completion

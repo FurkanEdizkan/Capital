@@ -9,6 +9,7 @@ Venue credentials are stored per-venue, one encrypted row per field, keyed
 """
 
 from collections.abc import Iterable
+from decimal import Decimal
 from enum import StrEnum
 
 from sqlmodel import Session, select
@@ -31,6 +32,7 @@ _AI_PROVIDER = "ai_provider"
 _AI_MODEL = "ai_model"
 _AI_BASE_URL = "ai_base_url"
 _AI_API_KEY = "ai_api_key"
+_AI_SPEND_CAP = "ai_spend_cap_usd"
 
 
 def _get(session: Session, key: str) -> Setting | None:
@@ -183,3 +185,14 @@ def set_ai_settings(
     set_setting(session, _AI_BASE_URL, base_url)
     if api_key:
         _put(session, _AI_API_KEY, api_key, is_secret=True)
+
+
+def get_ai_spend_cap(session: Session) -> Decimal:
+    """The daily LLM spend cap in USD — `0` means unlimited (the default)."""
+    val = get_setting(session, _AI_SPEND_CAP)
+    return Decimal(val) if val else Decimal(0)
+
+
+def set_ai_spend_cap(session: Session, cap: Decimal) -> None:
+    """Set the daily LLM spend cap in USD (`0` disables the cap)."""
+    set_setting(session, _AI_SPEND_CAP, str(cap))

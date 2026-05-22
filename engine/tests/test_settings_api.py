@@ -152,6 +152,25 @@ def test_venue_credentials_reject_wrong_fields(settings_client: TestClient) -> N
     assert resp.status_code == 400
 
 
+def test_set_ai_spend_cap(settings_client: TestClient) -> None:
+    headers = _auth(settings_client)
+    resp = settings_client.put(
+        "/api/settings/ai-spend-cap", json={"cap": "5.50"}, headers=headers
+    )
+    assert resp.status_code == 200
+    assert Decimal(resp.json()["ai_spend_cap"]) == Decimal("5.50")
+    assert Decimal(resp.json()["ai_spend_today"]) == Decimal("0")
+
+
+def test_ai_spend_cap_rejects_negative(settings_client: TestClient) -> None:
+    resp = settings_client.put(
+        "/api/settings/ai-spend-cap",
+        json={"cap": "-1"},
+        headers=_auth(settings_client),
+    )
+    assert resp.status_code == 422
+
+
 def test_testnet_blocked_when_active_venue_has_no_sandbox(
     settings_client: TestClient,
 ) -> None:
