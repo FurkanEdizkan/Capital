@@ -3,11 +3,13 @@
 Powers the Dashboard. All endpoints require an authenticated operator.
 """
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter
 from sqlmodel import select
 
+from ai.usage import spend_since
 from api.market import StreamsDep
 from auth.deps import CurrentUser, SessionDep
 from trading.accounting import (
@@ -61,13 +63,21 @@ def trades(_: CurrentUser, session: SessionDep, limit: int = 50) -> list[Trade]:
 
 
 class CostsRead(CostSummary):
-    """Trading-cost breakdown plus the per-venue fee-rate reference."""
+    """Trading-cost breakdown, the fee-rate reference, and today's LLM spend."""
 
     venue_fee_rates: dict[str, Decimal]
+    llm_spend_today: Decimal  # estimated LLM API spend so far today, in USD
 
 
 @router.get("/costs", response_model=CostsRead)
 def costs(_: CurrentUser, session: SessionDep) -> CostsRead:
-    """Trading-cost visibility — fees by market, fee-%-of-volume, fee rates."""
+    """Cost visibility — trading fees by market, fee rates, and LLM spend."""
     summary = cost_summary(session)
-    return CostsRead(**summary.model_dump(), venue_fee_rates=venue_fee_rates())
+    day_start = datetime.now(UTC).replace(
+        hour=0, minute=0, second=0, microsecond=0, tzinfo=None
+    )
+    return CostsRead(
+        **summary.model_dump(),
+        venue_fee_rates=venue_fee_rates(),
+        llm_spend_today=spend_since(session, day_start),
+    )

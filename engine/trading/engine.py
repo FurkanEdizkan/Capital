@@ -9,16 +9,20 @@ engine).
 
 import logging
 from collections.abc import Callable
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session
 
+from ai.usage import record_usage, spend_since
+from appsettings.store import get_ai_spend_cap
 from marketdata.cache import refresh_venue_candles
 from marketdata.freshness import feed_is_stale
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
 from ops.watchdog import record_heartbeat
+from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
 from trading.executor_router import ExecutorRouter
@@ -35,6 +39,35 @@ from trading.risk import RiskManager
 from trading.venue_router import VenueRouter
 
 log = logging.getLogger("capital.trading.engine")
+
+
+def _llm_cap_reached(session: Session) -> bool:
+    """Whether today's LLM spend has reached the operator's daily cap."""
+    cap = get_ai_spend_cap(session)
+    if cap <= 0:  # a non-positive cap means unlimited
+        return False
+    day_start = datetime.now(UTC).replace(
+        hour=0, minute=0, second=0, microsecond=0, tzinfo=None
+    )
+    return spend_since(session, day_start) >= cap
+
+
+def _record_ai_usage(session: Session, strat: AIStrategy) -> None:
+    """Record the AI strategy's latest LLM call as an `LLMUsage` row."""
+    usage = strat.last_usage
+    decision = strat.last_decision
+    if usage is None:
+        return
+    record_usage(
+        session,
+        provider=usage.provider,
+        model=usage.model,
+        input_tokens=usage.input_tokens,
+        output_tokens=usage.output_tokens,
+        strategy=strat.name,
+        action=decision.action.value if decision is not None else None,
+        confidence=decision.confidence if decision is not None else None,
+    )
 
 
 class TradingEngine:
@@ -148,7 +181,17 @@ class TradingEngine:
                 allocation=allocation,
                 price=price,
             )
+            # AI spend cap — skip the paid LLM call once the daily cap is hit.
+            if isinstance(strat, AIStrategy) and _llm_cap_reached(session):
+                log.warning(
+                    "AI strategy %r skipped — daily LLM spend cap reached",
+                    strat.name,
+                )
+                return
             order = strat.evaluate(ctx)
+            # Record the LLM call's tokens, cost and decision for tracking.
+            if isinstance(strat, AIStrategy) and strat.last_usage is not None:
+                _record_ai_usage(session, strat)
             if order is None:
                 return
             # Cap the order to the strategy's capital allocation. The full risk

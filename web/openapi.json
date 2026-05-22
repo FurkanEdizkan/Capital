@@ -47,6 +47,28 @@
         "title": "AiSettingsUpdate",
         "type": "object"
       },
+      "AiSpendCapUpdate": {
+        "properties": {
+          "cap": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Cap"
+          }
+        },
+        "required": [
+          "cap"
+        ],
+        "title": "AiSpendCapUpdate",
+        "type": "object"
+      },
       "AllocationUpdate": {
         "properties": {
           "allocated": {
@@ -686,7 +708,7 @@
         "type": "object"
       },
       "CostsRead": {
-        "description": "Trading-cost breakdown plus the per-venue fee-rate reference.",
+        "description": "Trading-cost breakdown, the fee-rate reference, and today's LLM spend.",
         "properties": {
           "fee_pct_of_volume": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -700,6 +722,11 @@
             },
             "title": "Fees By Market",
             "type": "object"
+          },
+          "llm_spend_today": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Llm Spend Today",
+            "type": "string"
           },
           "total_fees": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -725,7 +752,8 @@
           "fees_by_market",
           "traded_volume",
           "fee_pct_of_volume",
-          "venue_fee_rates"
+          "venue_fee_rates",
+          "llm_spend_today"
         ],
         "title": "CostsRead",
         "type": "object"
@@ -1284,6 +1312,16 @@
             "title": "Ai Provider",
             "type": "string"
           },
+          "ai_spend_cap": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ai Spend Cap",
+            "type": "string"
+          },
+          "ai_spend_today": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ai Spend Today",
+            "type": "string"
+          },
           "binance_keys_configured": {
             "title": "Binance Keys Configured",
             "type": "boolean"
@@ -1306,7 +1344,9 @@
           "ai_provider",
           "ai_model",
           "ai_base_url",
-          "ai_key_configured"
+          "ai_key_configured",
+          "ai_spend_cap",
+          "ai_spend_today"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -2575,7 +2615,7 @@
     },
     "/api/portfolio/costs": {
       "get": {
-        "description": "Trading-cost visibility \u2014 fees by market, fee-%-of-volume, fee rates.",
+        "description": "Cost visibility \u2014 trading fees by market, fee rates, and LLM spend.",
         "operationId": "costs_api_portfolio_costs_get",
         "responses": {
           "200": {
@@ -2811,6 +2851,53 @@
           }
         ],
         "summary": "Update Ai Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/ai-spend-cap": {
+      "put": {
+        "description": "Set the daily LLM spend cap \u2014 AI strategies pause once it is reached.",
+        "operationId": "update_ai_spend_cap_api_settings_ai_spend_cap_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiSpendCapUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Ai Spend Cap",
         "tags": [
           "settings"
         ]

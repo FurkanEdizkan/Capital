@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from ai.providers.base import LLMError, LLMProvider
+from ai.providers.base import Completion, LLMError, LLMProvider
 from api.ai import get_llm_provider
 from db import get_session
 from main import app
@@ -20,10 +20,16 @@ class FakeProvider(LLMProvider):
         self._text = text
         self._raises = raises
 
-    def complete(self, prompt: str, *, model: str | None = None) -> str:
+    def complete(self, prompt: str, *, model: str | None = None) -> Completion:
         if self._raises:
             raise LLMError("provider unavailable")
-        return self._text
+        return Completion(
+            text=self._text,
+            provider=self.name,
+            model=model or "fake-model",
+            input_tokens=12,
+            output_tokens=8,
+        )
 
 
 def _client(session: Session, provider: LLMProvider) -> Iterator[TestClient]:
@@ -67,6 +73,22 @@ def test_analyze_returns_a_decision(ok_client: TestClient) -> None:
 def test_analyze_rejects_empty_task(ok_client: TestClient) -> None:
     resp = ok_client.post("/api/ai/analyze", json={"task": ""}, headers=_auth(ok_client))
     assert resp.status_code == 422
+
+
+def test_analyze_records_llm_usage(ok_client: TestClient, session: Session) -> None:
+    from sqlmodel import select
+
+    from ai.usage import LLMUsage
+
+    ok_client.post(
+        "/api/ai/analyze",
+        json={"task": "review my BTC position"},
+        headers=_auth(ok_client),
+    )
+    rows = session.exec(select(LLMUsage)).all()
+    assert len(rows) == 1
+    assert rows[0].input_tokens == 12
+    assert rows[0].action == "buy"
 
 
 def test_llm_failure_returns_502(failing_client: TestClient) -> None:

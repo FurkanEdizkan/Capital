@@ -6,6 +6,7 @@ base URL differs.
 """
 
 from ai.providers.base import (
+    Completion,
     Decision,
     DecisionAction,
     LLMError,
@@ -21,6 +22,7 @@ _OPENAI_COMPATIBLE = {"openai", "codex", "deepseek", "ollama"}
 
 __all__ = [
     "ClaudeProvider",
+    "Completion",
     "Decision",
     "DecisionAction",
     "GeminiProvider",

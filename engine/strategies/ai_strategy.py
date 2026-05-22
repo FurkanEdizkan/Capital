@@ -13,7 +13,14 @@ timeframes. An LLM failure is logged and treated as "hold".
 import logging
 
 from ai.analyze import build_market_prompt
-from ai.providers.base import DecisionAction, LLMError, LLMProvider
+from ai.providers.base import (
+    Completion,
+    Decision,
+    DecisionAction,
+    LLMError,
+    LLMProvider,
+    parse_decision,
+)
 from exchange.client import Market
 from strategies.base import BaseStrategy, StrategyContext
 from trading.executors.base import Order
@@ -42,8 +49,14 @@ class AIStrategy(BaseStrategy):
         self._provider = provider
         self._model = model
         self._lookback = lookback
+        # The most recent LLM call's usage + decision — read by the engine
+        # after each tick to record an `LLMUsage` row. Reset every evaluate().
+        self.last_usage: Completion | None = None
+        self.last_decision: Decision | None = None
 
     def evaluate(self, ctx: StrategyContext) -> Order | None:
+        self.last_usage = None
+        self.last_decision = None
         closes = [c.close for c in ctx.candles]
         if len(closes) < 2 or ctx.price <= 0:
             return None
@@ -58,10 +71,14 @@ class AIStrategy(BaseStrategy):
             lookback=self._lookback,
         )
         try:
-            decision = self._provider.decide(prompt, model=self._model)
+            completion = self._provider.complete(prompt, model=self._model)
+            decision = parse_decision(completion.text)
         except LLMError:
             log.warning("AI strategy %r — LLM call failed, holding", self.name, exc_info=True)
             return None
+        # Surface usage + decision for the engine to record (cost tracking).
+        self.last_usage = completion
+        self.last_decision = decision
 
         log.info(
             "AI strategy %r decided %s (confidence %s)",

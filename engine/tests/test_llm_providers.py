@@ -20,7 +20,10 @@ class FakeClaude:
     def create(self, **_: Any) -> Any:
         if self._raises:
             raise RuntimeError("api unavailable")
-        return SimpleNamespace(content=[SimpleNamespace(text=self._text)])
+        return SimpleNamespace(
+            content=[SimpleNamespace(text=self._text)],
+            usage=SimpleNamespace(input_tokens=100, output_tokens=50),
+        )
 
 
 class FakeOpenAI:
@@ -33,7 +36,8 @@ class FakeOpenAI:
         if self._raises:
             raise RuntimeError("api unavailable")
         return SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content=self._text))]
+            choices=[SimpleNamespace(message=SimpleNamespace(content=self._text))],
+            usage=SimpleNamespace(prompt_tokens=100, completion_tokens=50),
         )
 
 
@@ -45,7 +49,12 @@ class FakeGemini:
     def generate_content(self, **_: Any) -> Any:
         if self._raises:
             raise RuntimeError("api unavailable")
-        return SimpleNamespace(text=self._text)
+        return SimpleNamespace(
+            text=self._text,
+            usage_metadata=SimpleNamespace(
+                prompt_token_count=100, candidates_token_count=50
+            ),
+        )
 
 
 # --- parse_decision --------------------------------------------------------
@@ -76,8 +85,22 @@ def test_parse_decision_with_bad_action_raises() -> None:
 
 def test_claude_provider_completes_and_decides() -> None:
     provider = ClaudeProvider(client=FakeClaude(_DECISION_JSON))
-    assert provider.complete("prompt") == _DECISION_JSON
+    completion = provider.complete("prompt")
+    assert completion.text == _DECISION_JSON
+    assert completion.input_tokens == 100
+    assert completion.output_tokens == 50
     assert provider.decide("prompt").action is DecisionAction.buy
+
+
+def test_providers_report_token_usage() -> None:
+    # Every adapter must surface the call's token counts on the Completion.
+    for completion in (
+        ClaudeProvider(client=FakeClaude(_DECISION_JSON)).complete("p"),
+        OpenAIProvider(client=FakeOpenAI(_DECISION_JSON)).complete("p"),
+        GeminiProvider(client=FakeGemini(_DECISION_JSON)).complete("p"),
+    ):
+        assert completion.input_tokens == 100
+        assert completion.output_tokens == 50
 
 
 def test_openai_provider_completes_and_decides() -> None:
