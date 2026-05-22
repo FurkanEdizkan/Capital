@@ -98,17 +98,26 @@ def factory(db_engine: Any) -> Iterator[Any]:
     yield lambda: Session(db_engine)
 
 
-def _engine(factory: Any, strategies: list[BaseStrategy]) -> TradingEngine:
+def _engine(
+    factory: Any,
+    strategies: list[BaseStrategy],
+    *,
+    ai_resolver: Any = None,
+) -> TradingEngine:
     # Mirror startup seeding — every strategy gets a capital budget so the
     # allocation enforcer admits its orders.
     with factory() as session:
         for strat in strategies:
             set_allocation(session, strat.name, Decimal("100000"))
     venue = FakeVenue()
+    kwargs: dict[str, Any] = {}
+    if ai_resolver is not None:
+        kwargs["ai_resolver"] = ai_resolver
     return TradingEngine(
         session_factory=factory,
         venue_router=VenueRouter(builder=lambda *_: venue),
         strategies=strategies,  # default ExecutorRouter — Sim mode
+        **kwargs,
     )
 
 
@@ -201,8 +210,10 @@ def test_ai_strategy_paused_when_llm_spend_cap_reached(
             )
 
     provider = CountingProvider()
-    strat = AIStrategy("AI BTC", "BTCUSDT", provider=provider)
-    engine = _engine(factory, [strat])
+    strat = AIStrategy("AI BTC", "BTCUSDT")
+    engine = _engine(
+        factory, [strat], ai_resolver=lambda _s, _n: (provider, None)
+    )
     with factory() as session:
         set_ai_spend_cap(session, Decimal("1"))
         # $3 already spent today — over the $1 cap.
@@ -231,14 +242,20 @@ def test_ai_strategy_runs_when_under_the_cap(db_engine: Any, factory: Any) -> No
             return Completion(
                 text='{"action": "hold", "confidence": 0.5, "reasoning": "x"}',
                 provider=self.name,
-                model="m",
+                model=model or "m",
                 input_tokens=10,
                 output_tokens=5,
             )
 
-    engine = _engine(factory, [AIStrategy("AI BTC", "BTCUSDT", provider=StubProvider())])
+    provider = StubProvider()
+    engine = _engine(
+        factory,
+        [AIStrategy("AI BTC", "BTCUSDT")],
+        ai_resolver=lambda _s, _n: (provider, "stub-model"),
+    )
     engine.tick()
     with factory() as session:
         rows = session.exec(select(LLMUsage)).all()
     assert len(rows) == 1
     assert rows[0].strategy == "AI BTC"
+    assert rows[0].model == "stub-model"

@@ -11,10 +11,13 @@ import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session
 
+from ai.providers import LLMError
+from ai.resolve import strategy_ai_settings
 from ai.usage import record_usage, spend_since
 from appsettings.store import get_ai_spend_cap
 from marketdata.cache import refresh_venue_candles
@@ -82,6 +85,7 @@ class TradingEngine:
         strategies: list[BaseStrategy] | None = None,
         risk: RiskManager | None = None,
         notifier: TelegramNotifier | None = None,
+        ai_resolver: Callable[..., tuple[Any, str | None]] = strategy_ai_settings,
         tick_seconds: int = 60,
         candle_limit: int = 200,
         retention_candle_days: int = 0,
@@ -92,6 +96,8 @@ class TradingEngine:
         self._venue_router = venue_router or VenueRouter.default()
         # Resolves Sim / Testnet / Live executor from the stored mode per tick.
         self._router = router or ExecutorRouter()
+        # Resolves an AI strategy's (provider, model) from its stored config.
+        self._ai_resolver = ai_resolver
         self._risk = risk or RiskManager()  # all limits disabled by default
         self._notifier = notifier or TelegramNotifier()  # disabled by default
         self._strategies: list[BaseStrategy] = list(strategies or [])
@@ -181,13 +187,24 @@ class TradingEngine:
                 allocation=allocation,
                 price=price,
             )
-            # AI spend cap — skip the paid LLM call once the daily cap is hit.
-            if isinstance(strat, AIStrategy) and _llm_cap_reached(session):
-                log.warning(
-                    "AI strategy %r skipped — daily LLM spend cap reached",
-                    strat.name,
-                )
-                return
+            if isinstance(strat, AIStrategy):
+                # AI spend cap — skip the paid LLM call once the cap is hit.
+                if _llm_cap_reached(session):
+                    log.warning(
+                        "AI strategy %r skipped — daily LLM spend cap reached",
+                        strat.name,
+                    )
+                    return
+                # Point the strategy at its configured provider + model.
+                try:
+                    provider, ai_model = self._ai_resolver(session, strat.name)
+                except LLMError:
+                    log.warning(
+                        "AI strategy %r — LLM provider misconfigured, skipping",
+                        strat.name,
+                    )
+                    return
+                strat.set_ai_config(provider, ai_model)
             order = strat.evaluate(ctx)
             # Record the LLM call's tokens, cost and decision for tracking.
             if isinstance(strat, AIStrategy) and strat.last_usage is not None:

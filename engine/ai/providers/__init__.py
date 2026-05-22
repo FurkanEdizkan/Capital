@@ -45,7 +45,9 @@ def get_provider(
     if key == "claude":
         return ClaudeProvider(api_key)
     if key in _OPENAI_COMPATIBLE:
-        return OpenAIProvider(api_key, base_url=base_url)
+        # Carry the real provider name so usage is attributed/costed to it
+        # (e.g. local Ollama models are free, OpenAI models are not).
+        return OpenAIProvider(api_key, base_url=base_url, name=key)
     if key == "gemini":
         return GeminiProvider(api_key)
     raise LLMError(f"unknown LLM provider: {name!r}")

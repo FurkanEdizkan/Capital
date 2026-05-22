@@ -13,6 +13,8 @@ from auth.models import AuditLog
 from db import get_session
 from exchange.client import Market
 from main import app
+from strategies.ai_strategy import AIStrategy
+from strategies.base import BaseStrategy
 from strategies.ma_cross import MACrossStrategy
 from tests.conftest import ADMIN_PASSWORD, login
 from trading.lifecycle import is_enabled
@@ -31,15 +33,18 @@ class FakeStreams:
     futures = _FakeHub()
 
 
+AI_STRAT = "AI Trader BTC"
+
+
 class FakeEngine:
     """Minimal TradingEngine stand-in — exposes strategies and flatten()."""
 
-    def __init__(self, strategies: list[MACrossStrategy]) -> None:
+    def __init__(self, strategies: list[BaseStrategy]) -> None:
         self._strategies = strategies
         self.flatten_calls: list[str] = []
 
     @property
-    def strategies(self) -> list[MACrossStrategy]:
+    def strategies(self) -> list[BaseStrategy]:
         return self._strategies
 
     def flatten(self, name: str) -> int:
@@ -51,7 +56,10 @@ class FakeEngine:
 def strat_client(session: Session) -> Iterator[TestClient]:
     set_allocation(session, STRAT, Decimal("5000"))
     engine = FakeEngine(
-        [MACrossStrategy(STRAT, "BTCUSDT", market=Market.spot, timeframe="1h")]
+        [
+            MACrossStrategy(STRAT, "BTCUSDT", market=Market.spot, timeframe="1h"),
+            AIStrategy(AI_STRAT, "ETHUSDT", market=Market.spot, timeframe="1h"),
+        ]
     )
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[get_stream_manager] = lambda: FakeStreams()
@@ -72,12 +80,13 @@ def test_list_requires_auth(strat_client: TestClient) -> None:
 def test_list_strategies(strat_client: TestClient) -> None:
     resp = strat_client.get("/api/strategies", headers=_auth(strat_client))
     assert resp.status_code == 200
-    rows = resp.json()
-    assert len(rows) == 1
-    assert rows[0]["name"] == STRAT
-    assert rows[0]["kind"] == "MA Cross"
-    assert Decimal(rows[0]["allocated"]) == Decimal("5000")
-    assert rows[0]["enabled"] is True
+    rows = {r["name"]: r for r in resp.json()}
+    assert rows[STRAT]["kind"] == "MA Cross"
+    assert Decimal(rows[STRAT]["allocated"]) == Decimal("5000")
+    # The AI strategy exposes its configured provider; others do not.
+    assert rows[AI_STRAT]["ai_provider"] == "claude"
+    assert rows[STRAT]["ai_provider"] is None
+    assert rows[STRAT]["enabled"] is True
 
 
 def test_update_allocation(strat_client: TestClient, session: Session) -> None:
@@ -139,3 +148,33 @@ def test_allocation_change_is_audited(strat_client: TestClient, session: Session
     ).all()
     assert len(entries) == 1
     assert entries[0].target == STRAT
+
+
+def test_set_ai_model(strat_client: TestClient) -> None:
+    resp = strat_client.patch(
+        f"/api/strategies/{AI_STRAT}/ai-model",
+        json={"provider": "ollama", "model": "qwen2.5"},
+        headers=_auth(strat_client),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ai_provider"] == "ollama"
+    assert body["ai_model"] == "qwen2.5"
+
+
+def test_ai_model_rejected_for_non_ai_strategy(strat_client: TestClient) -> None:
+    resp = strat_client.patch(
+        f"/api/strategies/{STRAT}/ai-model",
+        json={"provider": "ollama", "model": "x"},
+        headers=_auth(strat_client),
+    )
+    assert resp.status_code == 400
+
+
+def test_ai_model_rejects_unknown_provider(strat_client: TestClient) -> None:
+    resp = strat_client.patch(
+        f"/api/strategies/{AI_STRAT}/ai-model",
+        json={"provider": "skynet", "model": "x"},
+        headers=_auth(strat_client),
+    )
+    assert resp.status_code == 400

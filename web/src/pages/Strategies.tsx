@@ -25,17 +25,22 @@ import {
   closeStrategy,
   fetchStrategies,
   type Strategy,
+  updateAiModel,
   updateAllocation,
   updateEnabled,
 } from "../lib/api/strategies";
 
 const REFRESH_MS = 20_000;
+const LLM_PROVIDERS = ["claude", "openai", "gemini", "ollama"];
 
 export function Strategies() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Strategy | null>(null);
   const [allocDraft, setAllocDraft] = useState("");
+  const [aiEditing, setAiEditing] = useState<Strategy | null>(null);
+  const [aiProviderDraft, setAiProviderDraft] = useState("claude");
+  const [aiModelDraft, setAiModelDraft] = useState("");
   const [closing, setClosing] = useState<Strategy | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -77,6 +82,16 @@ export function Strategies() {
     void act(async () => {
       await updateAllocation(strat.name, allocDraft);
       setNotice(`Updated allocation for ${strat.name}.`);
+    });
+  };
+
+  const saveAiModel = () => {
+    if (!aiEditing) return;
+    const strat = aiEditing;
+    setAiEditing(null);
+    void act(async () => {
+      await updateAiModel(strat.name, aiProviderDraft, aiModelDraft);
+      setNotice(`Updated AI model for ${strat.name}.`);
     });
   };
 
@@ -151,6 +166,32 @@ export function Strategies() {
       label: "Fees",
       align: "right",
       render: (r) => <Money value={Number(r.fees)} />,
+    },
+    {
+      key: "ai_model",
+      label: "Model",
+      render: (r) =>
+        r.kind === "AI" ? (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>
+              {r.ai_provider}
+              {r.ai_model ? ` · ${r.ai_model}` : ""}
+            </span>
+            <Button
+              size="sm"
+              kind="ghost"
+              onClick={() => {
+                setAiEditing(r);
+                setAiProviderDraft(r.ai_provider ?? "claude");
+                setAiModelDraft(r.ai_model ?? "");
+              }}
+            >
+              Edit
+            </Button>
+          </div>
+        ) : (
+          <span style={{ color: "var(--text-2)" }}>—</span>
+        ),
     },
     {
       key: "open_positions",
@@ -237,6 +278,54 @@ export function Strategies() {
             onChange={(e) => setAllocDraft(e.target.value)}
             prefix="$"
             type="number"
+            full
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        open={aiEditing !== null}
+        onClose={() => setAiEditing(null)}
+        title={aiEditing ? `AI model — ${aiEditing.name}` : ""}
+        footer={
+          <>
+            <Button kind="ghost" onClick={() => setAiEditing(null)}>
+              Cancel
+            </Button>
+            <Button kind="primary" onClick={saveAiModel} disabled={busy}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <span style={{ fontSize: 12, color: "var(--text-2)" }}>
+            Pick the LLM this strategy asks each tick. Local Ollama models are
+            free; cloud providers need a key set on the Settings page.
+          </span>
+          <select
+            value={aiProviderDraft}
+            onChange={(e) => setAiProviderDraft(e.target.value)}
+            style={{
+              height: 34,
+              padding: "0 10px",
+              background: "#18181B",
+              border: "1px solid #27272A",
+              borderRadius: 8,
+              color: "#E4E4E7",
+              fontSize: 12.5,
+            }}
+          >
+            {LLM_PROVIDERS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <Input
+            value={aiModelDraft}
+            onChange={(e) => setAiModelDraft(e.target.value)}
+            placeholder="Model (e.g. claude-sonnet-4-6, qwen2.5)"
             full
           />
         </div>

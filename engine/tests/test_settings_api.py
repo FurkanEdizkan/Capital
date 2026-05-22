@@ -152,6 +152,29 @@ def test_venue_credentials_reject_wrong_fields(settings_client: TestClient) -> N
     assert resp.status_code == 400
 
 
+def test_set_llm_credentials(settings_client: TestClient) -> None:
+    headers = _auth(settings_client)
+    resp = settings_client.put(
+        "/api/settings/llm-credentials/openai",
+        json={"api_key": "sk-x", "base_url": ""},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    configured = resp.json()["llm_providers_configured"]
+    assert configured["openai"] is True
+    assert configured["ollama"] is True  # local — always usable
+    assert configured["gemini"] is False
+
+
+def test_llm_credentials_reject_unknown_provider(settings_client: TestClient) -> None:
+    resp = settings_client.put(
+        "/api/settings/llm-credentials/skynet",
+        json={"api_key": "x"},
+        headers=_auth(settings_client),
+    )
+    assert resp.status_code == 404
+
+
 def test_set_ai_spend_cap(settings_client: TestClient) -> None:
     headers = _auth(settings_client)
     resp = settings_client.put(

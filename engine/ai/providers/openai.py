@@ -16,11 +16,19 @@ class OpenAIProvider(LLMProvider):
     default_model = "gpt-4o"
 
     def __init__(
-        self, api_key: str = "", *, base_url: str = "", client: Any | None = None
+        self,
+        api_key: str = "",
+        *,
+        base_url: str = "",
+        client: Any | None = None,
+        name: str = "openai",
     ) -> None:
         self._api_key = api_key
         self._base_url = base_url
         self._client = client
+        # `name` lets an OpenAI-compatible provider (Ollama, DeepSeek) report
+        # its own identity — so usage is costed and attributed correctly.
+        self.name = name
 
     def _get_client(self) -> Any:
         if self._client is None:

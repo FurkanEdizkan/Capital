@@ -196,3 +196,60 @@ def get_ai_spend_cap(session: Session) -> Decimal:
 def set_ai_spend_cap(session: Session, cap: Decimal) -> None:
     """Set the daily LLM spend cap in USD (`0` disables the cap)."""
     set_setting(session, _AI_SPEND_CAP, str(cap))
+
+
+# -- per-provider LLM credentials ---------------------------------------------
+# Each LLM provider stores its own credentials, so a Claude strategy and a
+# local-Ollama strategy can run side by side. Keys: `llm:{provider}:api_key`
+# (encrypted) and `llm:{provider}:base_url` (plain — for Ollama / compatible
+# endpoints). Ollama is local and needs no key.
+
+#: LLM providers an AI strategy can be pointed at.
+LLM_PROVIDERS: tuple[str, ...] = ("claude", "openai", "gemini", "ollama")
+
+
+def set_llm_credentials(
+    session: Session,
+    provider: str,
+    *,
+    api_key: str | None = None,
+    base_url: str | None = None,
+) -> None:
+    """Store one provider's credentials. Each field updates only when given."""
+    if api_key:
+        _put(session, f"llm:{provider}:api_key", api_key, is_secret=True)
+    if base_url is not None:
+        set_setting(session, f"llm:{provider}:base_url", base_url)
+
+
+def get_llm_credentials(session: Session, provider: str) -> dict[str, str]:
+    """The decrypted `api_key` and `base_url` for a provider (blank if unset)."""
+    key_row = _get(session, f"llm:{provider}:api_key")
+    return {
+        "api_key": decrypt(key_row.value) if key_row is not None else "",
+        "base_url": get_setting(session, f"llm:{provider}:base_url") or "",
+    }
+
+
+def llm_provider_configured(session: Session, provider: str) -> bool:
+    """Whether a provider is usable — Ollama always is; others need a key."""
+    if provider == "ollama":
+        return True
+    return _get(session, f"llm:{provider}:api_key") is not None
+
+
+def get_strategy_ai_config(session: Session, strategy: str) -> dict[str, str]:
+    """An AI strategy's provider + model, falling back to the global setting."""
+    ai = get_ai_settings(session)
+    return {
+        "provider": get_setting(session, f"ai:{strategy}:provider") or ai["provider"],
+        "model": get_setting(session, f"ai:{strategy}:model") or ai["model"],
+    }
+
+
+def set_strategy_ai_config(
+    session: Session, strategy: str, *, provider: str, model: str
+) -> None:
+    """Pin an AI strategy to a specific provider + model."""
+    set_setting(session, f"ai:{strategy}:provider", provider)
+    set_setting(session, f"ai:{strategy}:model", model)
