@@ -1,19 +1,28 @@
 # Capital — reverse proxy and single entry point.
 #
 # Caddy serves the dashboard and proxies the API + WebSocket to the engine,
-# so the browser sees one origin (no CORS). Reached privately over Tailscale.
-
-{
-	# Caddy's internal CA issues the TLS certificate — valid for a private,
-	# Tailscale-only deployment with no public DNS. To use Tailscale's own
-	# certificates instead, run Caddy with the Tailscale cert source.
-	auto_https disable_redirects
-}
+# so the browser sees one origin (no CORS).
+#
+# TLS is chosen by CAPITAL_TLS:
+#   internal          — Caddy's private CA; for a Tailscale / LAN deploy with
+#                       no public DNS (the default)
+#   you@example.com   — an ACME contact email; Caddy obtains a public
+#                       Let's Encrypt certificate for CAPITAL_HOSTNAME, for a
+#                       cloud VM reachable on a real domain
 
 {$CAPITAL_HOSTNAME:localhost} {
-	tls internal
+	tls {$CAPITAL_TLS:internal}
 
 	encode gzip
+
+	# Hardening headers — sent on every response.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
 
 	# API and WebSocket traffic → the trading engine.
 	@engine path /api/* /ws /ws/*

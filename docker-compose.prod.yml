@@ -30,9 +30,13 @@ services:
       - web
     environment:
       CAPITAL_HOSTNAME: ${CAPITAL_HOSTNAME:-localhost}
+      # TLS mode: `internal` (Caddy's private CA — Tailscale / local) or an
+      # ACME contact email to get a public Let's Encrypt certificate.
+      CAPITAL_TLS: ${CAPITAL_TLS:-internal}
     ports:
-      # Bind only to the Tailscale interface. TAILSCALE_HOST defaults to
-      # localhost so a misconfigured deploy is never publicly reachable.
+      # Bind to the interface TAILSCALE_HOST names. It defaults to localhost
+      # so a misconfigured deploy is never publicly reachable; set it to the
+      # Tailscale IP for a tailnet deploy, or 0.0.0.0 for a public cloud VM.
       - "${TAILSCALE_HOST:-127.0.0.1}:80:80"
       - "${TAILSCALE_HOST:-127.0.0.1}:443:443"
     volumes:
