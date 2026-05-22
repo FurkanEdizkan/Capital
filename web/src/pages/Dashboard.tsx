@@ -17,7 +17,9 @@ import {
 } from "../components/ui";
 import { fmt } from "../lib/format";
 import {
+  type Costs,
   type EquitySnapshot,
+  fetchCosts,
   fetchEquity,
   fetchPositions,
   fetchSummary,
@@ -34,20 +36,23 @@ export function Dashboard() {
   const [equity, setEquity] = useState<EquitySnapshot[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [costs, setCosts] = useState<Costs | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [s, e, p, t] = await Promise.all([
+      const [s, e, p, t, c] = await Promise.all([
         fetchSummary(),
         fetchEquity(),
         fetchPositions(),
         fetchTrades(),
+        fetchCosts(),
       ]);
       setSummary(s);
       setEquity(e);
       setPositions(p);
       setTrades(t);
+      setCosts(c);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard");
@@ -102,6 +107,12 @@ export function Dashboard() {
       align: "right",
       render: (r) => <span className="num">{fmt(Number(r.price), 2)}</span>,
     },
+    {
+      key: "fee",
+      label: "Fee",
+      align: "right",
+      render: (r) => <span className="num">${fmt(Number(r.fee), 4)}</span>,
+    },
   ];
 
   return (
@@ -139,6 +150,8 @@ export function Dashboard() {
         </div>
       </Card>
 
+      {costs && <CostsCard costs={costs} />}
+
       <Card>
         <SectionHeader title="Open positions" subtitle={`${positions.length} held`} />
         {positions.length === 0 ? (
@@ -166,5 +179,64 @@ function PnlText({ value }: { value: number }) {
     <span className="num" style={{ color }}>
       {value >= 0 ? "+" : "−"}${fmt(Math.abs(value))}
     </span>
+  );
+}
+
+/** Trading-cost visibility — fees by market and the per-venue fee-rate table. */
+function CostsCard({ costs }: { costs: Costs }) {
+  const pct = Number(costs.fee_pct_of_volume);
+  const byMarket = Object.entries(costs.fees_by_market);
+  const rates = Object.entries(costs.venue_fee_rates);
+  const rowStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: 12.5,
+    padding: "3px 0",
+  } as const;
+  return (
+    <Card>
+      <SectionHeader
+        title="Trading costs"
+        subtitle={`$${fmt(Number(costs.total_fees), 2)} in fees · ${fmt(
+          pct,
+          3,
+        )}% of $${fmt(Number(costs.traded_volume), 0)} traded`}
+      />
+      <div
+        style={{
+          padding: 14,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 24,
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
+            FEES BY MARKET
+          </div>
+          {byMarket.length === 0 ? (
+            <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>No fees yet</span>
+          ) : (
+            byMarket.map(([market, fee]) => (
+              <div key={market} style={rowStyle}>
+                <span style={{ textTransform: "capitalize" }}>{market}</span>
+                <span className="num">${fmt(Number(fee), 4)}</span>
+              </div>
+            ))
+          )}
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
+            VENUE FEE RATES
+          </div>
+          {rates.map(([venue, rate]) => (
+            <div key={venue} style={rowStyle}>
+              <span style={{ textTransform: "capitalize" }}>{venue}</span>
+              <span className="num">{fmt(Number(rate) * 100, 3)}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }

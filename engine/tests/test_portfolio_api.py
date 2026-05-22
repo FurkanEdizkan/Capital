@@ -93,3 +93,22 @@ def test_equity_history(pf_client: TestClient) -> None:
     )
     assert resp.status_code == 200
     assert len(resp.json()) == 1
+
+
+def test_costs(pf_client: TestClient) -> None:
+    token = login(pf_client, "admin", ADMIN_PASSWORD)
+    resp = pf_client.get(
+        "/api/portfolio/costs", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    # The seeded fill is a 0.1 BTC spot buy at 70000.
+    assert "spot" in body["fees_by_market"]
+    assert Decimal(body["traded_volume"]) == Decimal("7000")
+    assert set(body["venue_fee_rates"]) == {
+        "binance",
+        "alpaca",
+        "polymarket",
+        "binance-alpha",
+    }
+    assert Decimal(body["venue_fee_rates"]["alpaca"]) == Decimal("0")

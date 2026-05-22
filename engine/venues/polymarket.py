@@ -39,6 +39,7 @@ class PolymarketVenue(Venue):
 
     name = "polymarket"
     supports_sandbox = False  # Polymarket has no paper environment
+    fee_rate = Decimal("0")  # Polymarket CLOB charges no trading fee
 
     def __init__(
         self,

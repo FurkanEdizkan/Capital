@@ -1,15 +1,18 @@
 """Tests for the accounting layer — PnL, fees, equity snapshots."""
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlmodel import Session
 
 from trading.accounting import (
+    cost_summary,
     equity_history,
     portfolio_summary,
     record_equity_snapshot,
     strategy_summary,
 )
+from trading.models import Trade
 from trading.portfolio import apply_fill, set_allocation
 
 MARK = {"BTCUSDT": Decimal("110")}
@@ -68,3 +71,36 @@ def test_record_and_read_equity_history(session: Session) -> None:
     history = equity_history(session)
     assert len(history) == 2
     assert all(h.net_pnl == Decimal("13.5") for h in history)
+
+
+def _trade(session: Session, market: str, qty: str, price: str, fee: str) -> None:
+    session.add(
+        Trade(
+            strategy="s",
+            market=market,
+            symbol="BTCUSDT",
+            side="buy",
+            quantity=Decimal(qty),
+            price=Decimal(price),
+            fee=Decimal(fee),
+            executed_at=datetime.now(UTC).replace(tzinfo=None),
+        )
+    )
+    session.commit()
+
+
+def test_cost_summary(session: Session) -> None:
+    _trade(session, "spot", "1", "100", "0.1")
+    _trade(session, "spot", "2", "100", "0.2")
+    _trade(session, "futures", "1", "200", "0.08")
+    cs = cost_summary(session)
+    assert cs.total_fees == Decimal("0.38")
+    assert cs.fees_by_market == {"spot": Decimal("0.3"), "futures": Decimal("0.08")}
+    assert cs.traded_volume == Decimal("500")  # 100 + 200 + 200
+    assert cs.fee_pct_of_volume == Decimal("0.076")  # 0.38 / 500 * 100
+
+
+def test_cost_summary_empty(session: Session) -> None:
+    cs = cost_summary(session)
+    assert cs.total_fees == Decimal("0")
+    assert cs.fee_pct_of_volume == Decimal("0")

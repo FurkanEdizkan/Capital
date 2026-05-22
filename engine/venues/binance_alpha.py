@@ -44,6 +44,7 @@ class BinanceAlphaVenue(Venue):
 
     name = "binance-alpha"
     supports_sandbox = False  # Binance Alpha has no paper environment
+    fee_rate = Decimal("0")  # read-only venue — no orders placed here
 
     def __init__(self, *, http: Any | None = None) -> None:
         # `http` is an httpx.Client-like object; injected in tests.

@@ -685,6 +685,51 @@
         "title": "CloseResult",
         "type": "object"
       },
+      "CostsRead": {
+        "description": "Trading-cost breakdown plus the per-venue fee-rate reference.",
+        "properties": {
+          "fee_pct_of_volume": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fee Pct Of Volume",
+            "type": "string"
+          },
+          "fees_by_market": {
+            "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Fees By Market",
+            "type": "object"
+          },
+          "total_fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Fees",
+            "type": "string"
+          },
+          "traded_volume": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Traded Volume",
+            "type": "string"
+          },
+          "venue_fee_rates": {
+            "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Venue Fee Rates",
+            "type": "object"
+          }
+        },
+        "required": [
+          "total_fees",
+          "fees_by_market",
+          "traded_volume",
+          "fee_pct_of_volume",
+          "venue_fee_rates"
+        ],
+        "title": "CostsRead",
+        "type": "object"
+      },
       "Decision": {
         "description": "A structured trading decision parsed from an LLM response.",
         "properties": {
@@ -2525,6 +2570,33 @@
         "summary": "Place Manual Order",
         "tags": [
           "orders"
+        ]
+      }
+    },
+    "/api/portfolio/costs": {
+      "get": {
+        "description": "Trading-cost visibility \u2014 fees by market, fee-%-of-volume, fee rates.",
+        "operationId": "costs_api_portfolio_costs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Costs",
+        "tags": [
+          "portfolio"
         ]
       }
     },

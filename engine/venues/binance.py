@@ -47,6 +47,7 @@ class BinanceVenue(Venue):
 
     name = "binance"
     supports_sandbox = True  # Binance offers a testnet
+    fee_rate = Decimal("0.001")  # representative spot taker fee (0.1%)
 
     def __init__(
         self,
