@@ -112,6 +112,11 @@ through the Settings page.
 - [docs/polymarket-setup.md](docs/polymarket-setup.md) — Polymarket (prediction markets)
 - [docs/venue-api-features.md](docs/venue-api-features.md) — what each venue API offers vs. what Capital uses
 
+## Deployment
+
+Run the stack privately over Tailscale, or on a public cloud VM with a real
+domain and Let's Encrypt TLS — see [docs/deployment.md](docs/deployment.md).
+
 ## Manual setup (without Docker)
 
 For working on a single service directly — see
