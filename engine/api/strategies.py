@@ -14,6 +14,11 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session
 
 from api.market import StreamsDep
+from appsettings.store import (
+    LLM_PROVIDERS,
+    get_strategy_ai_config,
+    set_strategy_ai_config,
+)
 from auth.audit import record_audit
 from auth.deps import CurrentUser, SessionDep
 from strategies.base import BaseStrategy
@@ -48,6 +53,9 @@ class StrategyRead(BaseModel):
     fees: Decimal
     net_pnl: Decimal
     open_positions: int
+    # The configured LLM provider + model — set only for AI strategies.
+    ai_provider: str | None = None
+    ai_model: str | None = None
 
 
 class AllocationUpdate(BaseModel):
@@ -56,6 +64,11 @@ class AllocationUpdate(BaseModel):
 
 class EnabledUpdate(BaseModel):
     enabled: bool
+
+
+class AiModelUpdate(BaseModel):
+    provider: str = Field(min_length=1, max_length=16)
+    model: str = Field(default="", max_length=64)
 
 
 class CloseResult(BaseModel):
@@ -75,6 +88,11 @@ def _read(
     session: Session, strategy: BaseStrategy, marks: dict[str, Decimal]
 ) -> StrategyRead:
     summary = strategy_summary(session, strategy.name, marks)
+    ai_provider: str | None = None
+    ai_model: str | None = None
+    if getattr(strategy, "kind", "") == "AI":
+        cfg = get_strategy_ai_config(session, strategy.name)
+        ai_provider, ai_model = cfg["provider"], cfg["model"]
     return StrategyRead(
         name=strategy.name,
         kind=strategy.kind,
@@ -88,6 +106,8 @@ def _read(
         fees=summary.fees,
         net_pnl=summary.net_pnl,
         open_positions=summary.open_positions,
+        ai_provider=ai_provider,
+        ai_model=ai_model,
     )
 
 
@@ -149,6 +169,37 @@ def update_enabled(
         action="strategy.enabled",
         target=name,
         detail={"from": before, "to": body.enabled},
+    )
+    return _read(session, strategy, _marks(streams))
+
+
+@router.patch("/{name}/ai-model", response_model=StrategyRead)
+def update_ai_model(
+    name: str,
+    body: AiModelUpdate,
+    user: CurrentUser,
+    session: SessionDep,
+    engine: TradingDep,
+    streams: StreamsDep,
+) -> StrategyRead:
+    """Pin an AI strategy to a provider + model (Claude / OpenAI / Gemini / Ollama)."""
+    strategy = _find(engine, name)
+    if getattr(strategy, "kind", "") != "AI":
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "not an AI strategy"
+        )
+    if body.provider not in LLM_PROVIDERS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"unknown LLM provider — choose one of {sorted(LLM_PROVIDERS)}",
+        )
+    set_strategy_ai_config(session, name, provider=body.provider, model=body.model)
+    record_audit(
+        session,
+        actor=user.username,
+        action="strategy.ai_model",
+        target=name,
+        detail={"provider": body.provider, "model": body.model},
     )
     return _read(session, strategy, _marks(streams))
 

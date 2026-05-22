@@ -446,6 +446,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/llm-credentials/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Llm Credentials
+         * @description Store one LLM provider's API key and/or base URL (encrypted at rest).
+         */
+        put: operations["update_llm_credentials_api_settings_llm_credentials__provider__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/mode": {
         parameters: {
             query?: never;
@@ -507,6 +527,26 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/strategies/{name}/ai-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Ai Model
+         * @description Pin an AI strategy to a provider + model (Claude / OpenAI / Gemini / Ollama).
+         */
+        patch: operations["update_ai_model_api_strategies__name__ai_model_patch"];
         trace?: never;
     };
     "/api/strategies/{name}/allocation": {
@@ -753,6 +793,16 @@ export interface components {
         ActiveVenueUpdate: {
             /** Venue */
             venue: string;
+        };
+        /** AiModelUpdate */
+        AiModelUpdate: {
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /** Provider */
+            provider: string;
         };
         /** AiSettingsUpdate */
         AiSettingsUpdate: {
@@ -1143,6 +1193,22 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * LlmCredentialsUpdate
+         * @description One LLM provider's credentials — both fields optional.
+         */
+        LlmCredentialsUpdate: {
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
+            /**
+             * Base Url
+             * @default
+             */
+            base_url: string;
+        };
         /** ManualOrderRequest */
         ManualOrderRequest: {
             /**
@@ -1289,6 +1355,10 @@ export interface components {
             ai_spend_today: string;
             /** Binance Keys Configured */
             binance_keys_configured: boolean;
+            /** Llm Providers Configured */
+            llm_providers_configured: {
+                [key: string]: boolean;
+            };
             mode: components["schemas"]["TradingMode"];
             /** Venue Credentials Configured */
             venue_credentials_configured: {
@@ -1300,6 +1370,10 @@ export interface components {
          * @description A strategy's identity, lifecycle state and accounting summary.
          */
         StrategyRead: {
+            /** Ai Model */
+            ai_model?: string | null;
+            /** Ai Provider */
+            ai_provider?: string | null;
             /** Allocated */
             allocated: string;
             /** Enabled */
@@ -2150,6 +2224,41 @@ export interface operations {
             };
         };
     };
+    update_llm_credentials_api_settings_llm_credentials__provider__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmCredentialsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_mode_api_settings_mode_put: {
         parameters: {
             query?: never;
@@ -2232,6 +2341,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StrategyRead"][];
+                };
+            };
+        };
+    };
+    update_ai_model_api_strategies__name__ai_model_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiModelUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -24,6 +24,7 @@ import {
   type TradingMode,
   updateAiSettings,
   updateAiSpendCap,
+  updateLlmCredentials,
   updateMode,
   updateVenueCredentials,
 } from "../lib/api/settings";
@@ -89,6 +90,10 @@ export function Settings() {
   const [aiBaseUrl, setAiBaseUrl] = useState("");
   const [aiKey, setAiKey] = useState("");
   const [aiSpendCap, setAiSpendCap] = useState("");
+  // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
+  const [llmInputs, setLlmInputs] = useState<
+    Record<string, { api_key: string; base_url: string }>
+  >({});
 
   // API tokens.
   const [tokenName, setTokenName] = useState("");
@@ -183,6 +188,14 @@ export function Settings() {
     run(async () => {
       applySettings(await updateAiSpendCap(aiSpendCap || "0"));
       setNotice("LLM spend cap saved.");
+    });
+
+  const saveLlmCreds = (provider: string) =>
+    run(async () => {
+      const v = llmInputs[provider] ?? { api_key: "", base_url: "" };
+      applySettings(await updateLlmCredentials(provider, v.api_key, v.base_url));
+      setLlmInputs((prev) => ({ ...prev, [provider]: { api_key: "", base_url: "" } }));
+      setNotice(`${provider} credentials saved.`);
     });
 
   const createApiToken = () =>
@@ -439,6 +452,83 @@ export function Settings() {
           <Button kind="primary" disabled={busy} onClick={() => void saveAiSettings()}>
             Save AI settings
           </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="LLM provider keys"
+          subtitle="Per-provider credentials, encrypted at rest. An AI strategy picks its provider on the Strategies page. Ollama runs locally and needs no key."
+        />
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 18 }}>
+          {Object.entries(settings.llm_providers_configured).map(
+            ([provider, configured]) => {
+              const v = llmInputs[provider] ?? { api_key: "", base_url: "" };
+              const isOllama = provider === "ollama";
+              return (
+                <div
+                  key={provider}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    maxWidth: 420,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {provider}
+                    </span>
+                    <Badge tone={configured ? "green" : "muted"}>
+                      {configured ? "Ready" : "No key"}
+                    </Badge>
+                  </div>
+                  {!isOllama && (
+                    <Input
+                      full
+                      type="password"
+                      placeholder="API key (blank keeps the current one)"
+                      value={v.api_key}
+                      onChange={(e) =>
+                        setLlmInputs((prev) => ({
+                          ...prev,
+                          [provider]: { ...v, api_key: e.target.value },
+                        }))
+                      }
+                    />
+                  )}
+                  <Input
+                    full
+                    placeholder={
+                      isOllama
+                        ? "Base URL (e.g. http://host.docker.internal:11434/v1)"
+                        : "Base URL (optional — OpenAI-compatible endpoints)"
+                    }
+                    value={v.base_url}
+                    onChange={(e) =>
+                      setLlmInputs((prev) => ({
+                        ...prev,
+                        [provider]: { ...v, base_url: e.target.value },
+                      }))
+                    }
+                  />
+                  <Button
+                    kind="primary"
+                    disabled={busy}
+                    onClick={() => void saveLlmCreds(provider)}
+                  >
+                    Save {provider} credentials
+                  </Button>
+                </div>
+              );
+            },
+          )}
         </div>
       </Card>
 

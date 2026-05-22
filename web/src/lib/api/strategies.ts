@@ -35,3 +35,22 @@ export async function closeStrategy(name: string): Promise<number> {
   if (error || !data) throw new Error("Failed to close strategy positions");
   return data.closed;
 }
+
+export async function updateAiModel(
+  name: string,
+  provider: string,
+  model: string,
+): Promise<Strategy> {
+  const { data, error } = await api.PATCH("/api/strategies/{name}/ai-model", {
+    params: { path: { name } },
+    body: { provider, model },
+  });
+  if (error || !data) {
+    const detail =
+      error && typeof error === "object" && "detail" in error
+        ? String((error as { detail: unknown }).detail)
+        : "Failed to set the AI model";
+    throw new Error(detail);
+  }
+  return data;
+}

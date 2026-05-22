@@ -39,13 +39,16 @@ class AIStrategy(BaseStrategy):
         name: str,
         symbol: str,
         *,
-        provider: LLMProvider,
+        provider: LLMProvider | None = None,
         market: Market = Market.spot,
         timeframe: str = "1h",
         model: str | None = None,
         lookback: int = 30,
     ) -> None:
         super().__init__(name, symbol, market=market, timeframe=timeframe)
+        # The provider + model are resolved per tick from the strategy's
+        # stored config — the engine calls `set_ai_config` before each tick,
+        # so different AI strategies can run on different models.
         self._provider = provider
         self._model = model
         self._lookback = lookback
@@ -54,9 +57,16 @@ class AIStrategy(BaseStrategy):
         self.last_usage: Completion | None = None
         self.last_decision: Decision | None = None
 
+    def set_ai_config(self, provider: LLMProvider, model: str | None) -> None:
+        """Point the strategy at a provider + model for the coming tick."""
+        self._provider = provider
+        self._model = model
+
     def evaluate(self, ctx: StrategyContext) -> Order | None:
         self.last_usage = None
         self.last_decision = None
+        if self._provider is None:  # no model configured — nothing to ask
+            return None
         closes = [c.close for c in ctx.candles]
         if len(closes) < 2 or ctx.price <= 0:
             return None

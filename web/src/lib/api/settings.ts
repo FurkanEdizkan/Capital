@@ -57,3 +57,18 @@ export async function updateAiSpendCap(cap: string): Promise<Settings> {
   if (error || !data) throw new Error(errorDetail(error, "Failed to set spend cap"));
   return data;
 }
+
+export async function updateLlmCredentials(
+  provider: string,
+  apiKey: string,
+  baseUrl: string,
+): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/llm-credentials/{provider}", {
+    params: { path: { provider } },
+    body: { api_key: apiKey, base_url: baseUrl },
+  });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save LLM credentials"));
+  }
+  return data;
+}

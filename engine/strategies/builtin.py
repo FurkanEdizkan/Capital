@@ -14,6 +14,7 @@ from sqlmodel import Session
 
 from config import settings
 from exchange.client import Market
+from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy
 from strategies.bollinger import BollingerStrategy
 from strategies.dca import DCAStrategy
@@ -21,6 +22,7 @@ from strategies.loader import load_plugin_strategies
 from strategies.ma_cross import MACrossStrategy
 from strategies.macd import MACDStrategy
 from strategies.rsi import RSIStrategy
+from trading.lifecycle import set_enabled
 from trading.portfolio import get_allocation, set_allocation
 
 log = logging.getLogger("capital.strategies")
@@ -37,6 +39,11 @@ def default_strategies() -> list[BaseStrategy]:
         MACDStrategy("MACD Trend ETH", "ETHUSDT", market=Market.spot, timeframe="1h"),
         BollingerStrategy("Bollinger Breakout BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
         DCAStrategy("DCA Accumulate BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
+        # AI strategies — each resolves its own provider+model per tick.
+        # Seeded disabled (an LLM call costs money / needs credentials); the
+        # operator picks a model and enables them from the Strategies page.
+        AIStrategy("AI Trader BTC", "BTCUSDT", market=Market.spot, timeframe="1h"),
+        AIStrategy("AI Trader ETH", "ETHUSDT", market=Market.spot, timeframe="1h"),
     ]
 
 
@@ -65,4 +72,8 @@ def seed_allocations(
         for strat in strategies:
             if get_allocation(session, strat.name) == 0:
                 set_allocation(session, strat.name, DEFAULT_ALLOCATION)
+                # AI strategies cost money per tick — seed them disabled so
+                # the operator opts in after choosing a model.
+                if getattr(strat, "kind", "") == "AI":
+                    set_enabled(session, strat.name, False)
                 log.info("seeded allocation for %r: %s", strat.name, DEFAULT_ALLOCATION)

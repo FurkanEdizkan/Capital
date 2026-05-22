@@ -9,10 +9,15 @@ from appsettings.store import (
     TradingMode,
     binance_keys_configured,
     get_binance_keys,
+    get_llm_credentials,
     get_mode,
+    get_strategy_ai_config,
     get_venue_credentials,
+    llm_provider_configured,
     set_binance_keys,
+    set_llm_credentials,
     set_mode,
+    set_strategy_ai_config,
     set_venue_credentials,
     venue_credentials_configured,
 )
@@ -102,3 +107,36 @@ def test_binance_wrappers_use_the_venue_namespace(session: Session) -> None:
         "api_key": "BK",
         "api_secret": "BS",
     }
+
+
+def test_llm_credentials_round_trip(session: Session) -> None:
+    set_llm_credentials(session, "openai", api_key="sk-123", base_url="https://x")
+    creds = get_llm_credentials(session, "openai")
+    assert creds == {"api_key": "sk-123", "base_url": "https://x"}
+
+
+def test_llm_provider_configured(session: Session) -> None:
+    # Ollama is local — always usable; others need a key.
+    assert llm_provider_configured(session, "ollama") is True
+    assert llm_provider_configured(session, "claude") is False
+    set_llm_credentials(session, "claude", api_key="sk-claude")
+    assert llm_provider_configured(session, "claude") is True
+
+
+def test_llm_key_stored_encrypted(session: Session) -> None:
+    set_llm_credentials(session, "gemini", api_key="PLAINGEMINI")
+    for row in session.exec(select(Setting)).all():
+        if row.key.endswith("api_key"):
+            assert "PLAINGEMINI" not in row.value
+
+
+def test_strategy_ai_config_falls_back_to_global(session: Session) -> None:
+    # With nothing set, a strategy inherits the global AI provider default.
+    cfg = get_strategy_ai_config(session, "AI BTC")
+    assert cfg["provider"] == "claude"
+
+
+def test_strategy_ai_config_round_trip(session: Session) -> None:
+    set_strategy_ai_config(session, "AI BTC", provider="ollama", model="qwen2.5")
+    cfg = get_strategy_ai_config(session, "AI BTC")
+    assert cfg == {"provider": "ollama", "model": "qwen2.5"}

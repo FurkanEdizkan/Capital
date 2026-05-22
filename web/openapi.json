@@ -14,6 +14,27 @@
         "title": "ActiveVenueUpdate",
         "type": "object"
       },
+      "AiModelUpdate": {
+        "properties": {
+          "model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "AiModelUpdate",
+        "type": "object"
+      },
       "AiSettingsUpdate": {
         "properties": {
           "api_key": {
@@ -984,6 +1005,25 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "LlmCredentialsUpdate": {
+        "description": "One LLM provider's credentials \u2014 both fields optional.",
+        "properties": {
+          "api_key": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Api Key",
+            "type": "string"
+          },
+          "base_url": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Base Url",
+            "type": "string"
+          }
+        },
+        "title": "LlmCredentialsUpdate",
+        "type": "object"
+      },
       "ManualOrderRequest": {
         "properties": {
           "market": {
@@ -1326,6 +1366,13 @@
             "title": "Binance Keys Configured",
             "type": "boolean"
           },
+          "llm_providers_configured": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Llm Providers Configured",
+            "type": "object"
+          },
           "mode": {
             "$ref": "#/components/schemas/TradingMode"
           },
@@ -1346,7 +1393,8 @@
           "ai_base_url",
           "ai_key_configured",
           "ai_spend_cap",
-          "ai_spend_today"
+          "ai_spend_today",
+          "llm_providers_configured"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -1354,6 +1402,28 @@
       "StrategyRead": {
         "description": "A strategy's identity, lifecycle state and accounting summary.",
         "properties": {
+          "ai_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Model"
+          },
+          "ai_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Provider"
+          },
           "allocated": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated",
@@ -2943,6 +3013,64 @@
         ]
       }
     },
+    "/api/settings/llm-credentials/{provider}": {
+      "put": {
+        "description": "Store one LLM provider's API key and/or base URL (encrypted at rest).",
+        "operationId": "update_llm_credentials_api_settings_llm_credentials__provider__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmCredentialsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Llm Credentials",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/settings/mode": {
       "put": {
         "description": "Switch the trading mode (Sim / Testnet / Live).",
@@ -3067,6 +3195,64 @@
           }
         ],
         "summary": "List Strategies",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/{name}/ai-model": {
+      "patch": {
+        "description": "Pin an AI strategy to a provider + model (Claude / OpenAI / Gemini / Ollama).",
+        "operationId": "update_ai_model_api_strategies__name__ai_model_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiModelUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Ai Model",
         "tags": [
           "strategies"
         ]

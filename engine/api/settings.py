@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from ai.usage import spend_since
 from appsettings.store import (
+    LLM_PROVIDERS,
     TradingMode,
     ai_key_configured,
     binance_keys_configured,
@@ -21,9 +22,11 @@ from appsettings.store import (
     get_ai_settings,
     get_ai_spend_cap,
     get_mode,
+    llm_provider_configured,
     set_ai_settings,
     set_ai_spend_cap,
     set_binance_keys,
+    set_llm_credentials,
     set_mode,
     set_venue_credentials,
     venue_credentials_configured,
@@ -57,6 +60,8 @@ class SettingsRead(BaseModel):
     ai_key_configured: bool
     ai_spend_cap: Decimal  # daily LLM spend cap in USD (0 = unlimited)
     ai_spend_today: Decimal  # LLM spend so far today, in USD
+    # Per-LLM-provider: whether it is usable (Ollama always; others need a key).
+    llm_providers_configured: dict[str, bool]
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -77,6 +82,13 @@ class BinanceKeysUpdate(BaseModel):
 
 class AiSpendCapUpdate(BaseModel):
     cap: Decimal = Field(ge=0)  # daily LLM spend cap in USD; 0 = unlimited
+
+
+class LlmCredentialsUpdate(BaseModel):
+    """One LLM provider's credentials — both fields optional."""
+
+    api_key: str = Field(default="", max_length=256)
+    base_url: str = Field(default="", max_length=256)
 
 
 class AiSettingsUpdate(BaseModel):
@@ -102,6 +114,9 @@ def _read(session: SessionDep) -> SettingsRead:
         ai_key_configured=ai_key_configured(session),
         ai_spend_cap=get_ai_spend_cap(session),
         ai_spend_today=spend_since(session, _day_start()),
+        llm_providers_configured={
+            p: llm_provider_configured(session, p) for p in LLM_PROVIDERS
+        },
     )
 
 
@@ -192,6 +207,34 @@ def update_venue_credentials(
         action="settings.venue_credentials",
         detail={"venue": venue},
     )
+
+
+@router.put("/llm-credentials/{provider}", response_model=SettingsRead)
+def update_llm_credentials(
+    provider: str,
+    body: LlmCredentialsUpdate,
+    admin: AdminUser,
+    session: SessionDep,
+) -> SettingsRead:
+    """Store one LLM provider's API key and/or base URL (encrypted at rest)."""
+    if provider not in LLM_PROVIDERS:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"unknown LLM provider {provider!r}"
+        )
+    set_llm_credentials(
+        session,
+        provider,
+        api_key=body.api_key or None,
+        base_url=body.base_url if body.base_url else None,
+    )
+    # The key value itself is never written to the audit log.
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.llm_credentials",
+        detail={"provider": provider},
+    )
+    return _read(session)
 
 
 @router.put("/ai-spend-cap", response_model=SettingsRead)
