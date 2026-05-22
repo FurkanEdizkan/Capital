@@ -24,6 +24,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Decision Log
+         * @description The recent decision log — what each model decided, newest first.
+         */
+        get: operations["decision_log_api_ai_decisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Model Performance
+         * @description Per-model rollup — decisions, action mix and total cost for each model.
+         */
+        get: operations["model_performance_api_ai_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -1194,6 +1234,44 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /**
+         * LLMUsage
+         * @description One recorded LLM completion — tokens, estimated cost, and the decision.
+         */
+        LLMUsage: {
+            /** Action */
+            action?: string | null;
+            /** Confidence */
+            confidence?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Estimated Cost Usd
+             * @default 0
+             */
+            estimated_cost_usd: string;
+            /** Id */
+            id?: number | null;
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /** Model */
+            model: string;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+            /** Provider */
+            provider: string;
+            /** Strategy */
+            strategy?: string | null;
+        };
+        /**
          * LlmCredentialsUpdate
          * @description One LLM provider's credentials — both fields optional.
          */
@@ -1235,6 +1313,26 @@ export interface components {
              */
             confirm: boolean;
             mode: components["schemas"]["TradingMode"];
+        };
+        /**
+         * ModelUsage
+         * @description Per-model rollup of LLM activity — 'what each model did'.
+         */
+        ModelUsage: {
+            /** Buys */
+            buys: number;
+            /** Decisions */
+            decisions: number;
+            /** Holds */
+            holds: number;
+            /** Model */
+            model: string;
+            /** Provider */
+            provider: string;
+            /** Sells */
+            sells: number;
+            /** Total Cost Usd */
+            total_cost_usd: string;
         };
         /** OrderBook */
         OrderBook: {
@@ -1615,6 +1713,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decision_log_api_ai_decisions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMUsage"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    model_performance_api_ai_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelUsage"][];
                 };
             };
         };

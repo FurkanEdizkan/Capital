@@ -1,8 +1,9 @@
-"""AI API — the analyze-and-decide endpoint.
+"""AI API — analyze-and-decide, plus per-model usage and the decision log.
 
 An operator (or an agent) submits a free-form task; the configured LLM
 returns a structured `Decision`. Executing that decision is a separate,
-risk- and role-gated step — this endpoint only advises.
+risk- and role-gated step — this endpoint only advises. The model endpoints
+surface what each model did and what it cost.
 """
 
 from typing import Annotated
@@ -13,7 +14,7 @@ from pydantic import BaseModel, Field
 from ai.analyze import analyze
 from ai.providers import LLMError, get_provider
 from ai.providers.base import Decision, LLMProvider
-from ai.usage import record_usage
+from ai.usage import LLMUsage, ModelUsage, model_usage_summary, recent_usage, record_usage
 from appsettings.store import get_ai_api_key, get_ai_settings
 from auth.deps import CurrentUser, SessionDep
 
@@ -62,3 +63,17 @@ def analyze_and_decide(
         confidence=decision.confidence,
     )
     return decision
+
+
+@router.get("/models", response_model=list[ModelUsage])
+def model_performance(_: CurrentUser, session: SessionDep) -> list[ModelUsage]:
+    """Per-model rollup — decisions, action mix and total cost for each model."""
+    return model_usage_summary(session)
+
+
+@router.get("/decisions", response_model=list[LLMUsage])
+def decision_log(
+    _: CurrentUser, session: SessionDep, limit: int = 50
+) -> list[LLMUsage]:
+    """The recent decision log — what each model decided, newest first."""
+    return recent_usage(session, limit=limit)
