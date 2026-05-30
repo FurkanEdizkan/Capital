@@ -15,6 +15,39 @@ _JSON_INSTRUCTION = (
 )
 
 
+def build_decision_prompt(
+    *,
+    symbol: str,
+    closes: list[Decimal],
+    position_side: str,
+    position_qty: Decimal,
+    allocation: Decimal,
+    price: Decimal,
+    news: list[str] | None = None,
+    connections: list[str] | None = None,
+    lookback: int = 30,
+) -> str:
+    """Compose the per-tick context pack and instruction for a decision.
+
+    Folds in recent per-asset news headlines and the asset's known graph
+    connections when supplied — they give the model context beyond price.
+    """
+    recent = ", ".join(str(c) for c in closes[-lookback:])
+    parts = [
+        f"You are a disciplined trading assistant for {symbol}.",
+        f"Recent closing prices (oldest first): {recent}.",
+        f"Current position: {position_side} {position_qty}.",
+        f"Capital allocation: {allocation}. Latest price: {price}.",
+    ]
+    if news:
+        headlines = "\n".join(f"- {h}" for h in news)
+        parts.append(f"Recent news for {symbol}:\n{headlines}")
+    if connections:
+        parts.append(f"Known connections for {symbol}: {', '.join(connections)}.")
+    parts.append(f"Decide whether to buy, sell or hold. {_JSON_INSTRUCTION}")
+    return "\n".join(parts)
+
+
 def build_market_prompt(
     *,
     symbol: str,
@@ -25,14 +58,15 @@ def build_market_prompt(
     price: Decimal,
     lookback: int = 30,
 ) -> str:
-    """Compose the per-tick context pack and instruction for a decision."""
-    recent = ", ".join(str(c) for c in closes[-lookback:])
-    return (
-        f"You are a disciplined trading assistant for {symbol}.\n"
-        f"Recent closing prices (oldest first): {recent}.\n"
-        f"Current position: {position_side} {position_qty}.\n"
-        f"Capital allocation: {allocation}. Latest price: {price}.\n"
-        f"Decide whether to buy, sell or hold. {_JSON_INSTRUCTION}"
+    """Backwards-compatible price-only prompt — delegates with no extra context."""
+    return build_decision_prompt(
+        symbol=symbol,
+        closes=closes,
+        position_side=position_side,
+        position_qty=position_qty,
+        allocation=allocation,
+        price=price,
+        lookback=lookback,
     )
 
 

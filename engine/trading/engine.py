@@ -18,9 +18,12 @@ from sqlmodel import Session
 
 from ai.providers import LLMError
 from ai.resolve import strategy_ai_settings
+from ai.signals import record_signal
 from ai.usage import record_usage, spend_since
-from appsettings.store import get_ai_spend_cap
+from appsettings.store import get_ai_spend_cap, get_strategy_action_mode
+from connections import service as connections_service
 from marketdata.cache import refresh_venue_candles
+from news import service as news_service
 from marketdata.freshness import feed_is_stale
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
@@ -205,6 +208,17 @@ class TradingEngine:
                     )
                     return
                 strat.set_ai_config(provider, ai_model)
+                # Enrich the decision prompt with recent per-asset news and
+                # the asset's known graph connections (bound to this session).
+                strat.set_context_providers(
+                    news=lambda sym: [
+                        n.title
+                        for n in news_service.recent(session, symbol=sym, limit=5)
+                    ],
+                    connections=lambda sym: connections_service.neighbours(
+                        session, sym
+                    ),
+                )
             order = strat.evaluate(ctx)
             # Record the LLM call's tokens, cost and decision for tracking.
             if isinstance(strat, AIStrategy) and strat.last_usage is not None:
@@ -221,6 +235,36 @@ class TradingEngine:
             order = self._risk.review(session, order, position, price)
             if order is None:
                 log.info("strategy %r order blocked by risk manager", strat.name)
+                return
+            # Notify-only AI strategies (the safe default): surface the decision
+            # for operator confirmation instead of executing it now.
+            if (
+                isinstance(strat, AIStrategy)
+                and get_strategy_action_mode(session, strat.name) == "notify"
+            ):
+                decision = strat.last_decision
+                signal = record_signal(
+                    session,
+                    strategy=strat.name,
+                    symbol=order.symbol,
+                    market=order.market,
+                    action=(decision.action.value if decision else order.side.value),
+                    confidence=(decision.confidence if decision else Decimal(0)),
+                    reasoning=(decision.reasoning if decision else ""),
+                    reference_price=price,
+                    quantity=order.quantity,
+                )
+                log.info(
+                    "AI strategy %r signalled %s %s (awaiting confirmation)",
+                    strat.name,
+                    order.side.value,
+                    order.symbol,
+                )
+                self._notifier.send(
+                    f"AI signal — {strat.name}: {order.side.value} "
+                    f"{order.quantity} {order.symbol} @ {price} "
+                    f"(confidence {signal.confidence})"
+                )
                 return
             try:
                 fill = executor.execute(session, order, reference_price=price)
@@ -248,8 +292,18 @@ class TradingEngine:
         if self._retention_candle_days > 0 or self._retention_equity_days > 0:
             # Daily retention prune at 04:00 — keeps the database bounded.
             self._scheduler.add_job(self._prune, trigger="cron", hour=4, id="retention")
+        # Daily news refresh at 06:00 — populates world + per-asset headlines.
+        self._scheduler.add_job(self._refresh_news, trigger="cron", hour=6, id="news")
         self._scheduler.start()
         log.info("trading engine started — %d strategies", len(self._strategies))
+
+    def _refresh_news(self) -> None:
+        """Scheduled daily refresh of the news feeds."""
+        try:
+            with self._session_factory() as session:
+                news_service.refresh(session)
+        except Exception:  # noqa: BLE001 — news refresh must not abort the engine
+            log.exception("news refresh failed")
 
     def _prune(self) -> None:
         """Scheduled retention prune of old candles and equity snapshots."""

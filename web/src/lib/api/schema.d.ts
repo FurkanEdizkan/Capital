@@ -64,6 +64,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/signals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Signals
+         * @description Recent AI signals (notify-mode decisions), newest first.
+         */
+        get: operations["list_signals_api_ai_signals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/signals/{signal_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Signal
+         * @description Execute a pending AI signal through the same risk + executor path.
+         *
+         *     Re-prices at confirmation and re-runs the risk gate, so a stale or
+         *     risk-blocked signal cannot slip through. Marks the signal `executed`.
+         */
+        post: operations["confirm_signal_api_ai_signals__signal_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/signals/{signal_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Signal
+         * @description Dismiss a pending AI signal without executing it.
+         */
+        post: operations["dismiss_signal_api_ai_signals__signal_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -140,6 +203,106 @@ export interface paths {
          * @description Replay a strategy over the requested date range and return the result.
          */
         post: operations["run_api_backtest_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/edges/{edge_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Edge
+         * @description Delete an edge (reject a suggestion or prune a curated link).
+         */
+        delete: operations["delete_edge_api_connections_edges__edge_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/edges/{edge_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Edge
+         * @description Approve a pending edge so it joins the graph.
+         */
+        post: operations["approve_edge_api_connections_edges__edge_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Graph
+         * @description The full graph. Pending (AI-suggested) edges are opt-in.
+         */
+        get: operations["get_graph_api_connections_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/nodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Node
+         * @description Create a node (or return the existing one with the same label).
+         */
+        post: operations["create_node_api_connections_nodes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/suggest/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Connections
+         * @description Ask the LLM to suggest related entities for a node (stored pending).
+         */
+        post: operations["suggest_connections_api_connections_suggest__node_id__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -280,6 +443,46 @@ export interface paths {
         get: operations["list_tickers_api_market_tickers_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/news": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List News
+         * @description Recent headlines, newest first — optionally filtered by `symbol`.
+         */
+        get: operations["list_news_api_news_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/news/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh News
+         * @description Fetch every configured feed now. Returns the number of new headlines.
+         */
+        post: operations["refresh_news_api_news_refresh_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -439,6 +642,26 @@ export interface paths {
          * @description Configure the AI provider. The API key is encrypted at rest.
          */
         put: operations["update_ai_settings_api_settings_ai_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/ai-action-mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Ai Action Mode
+         * @description Set how AI decisions are applied: `notify` (confirm) or `auto`.
+         */
+        put: operations["update_ai_action_mode_api_settings_ai_action_mode_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -829,10 +1052,67 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AISignal
+         * @description One AI decision surfaced to the operator for confirmation.
+         */
+        AISignal: {
+            /** Action */
+            action: string;
+            /**
+             * Confidence
+             * @default 0
+             */
+            confidence: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id?: number | null;
+            /**
+             * Market
+             * @default spot
+             */
+            market: string;
+            /**
+             * Quantity
+             * @default 0
+             */
+            quantity: string;
+            /**
+             * Reasoning
+             * @default
+             */
+            reasoning: string;
+            /**
+             * Reference Price
+             * @default 0
+             */
+            reference_price: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /** Strategy */
+            strategy: string;
+            /** Symbol */
+            symbol: string;
+        };
         /** ActiveVenueUpdate */
         ActiveVenueUpdate: {
             /** Venue */
             venue: string;
+        };
+        /** AiActionModeUpdate */
+        AiActionModeUpdate: {
+            /**
+             * Mode
+             * @description notify | auto
+             */
+            mode: string;
         };
         /** AiModelUpdate */
         AiModelUpdate: {
@@ -1228,6 +1508,69 @@ export interface components {
             /** Symbol */
             symbol: string;
         };
+        /**
+         * GraphEdge
+         * @description A directed, labelled relation from one node to another.
+         */
+        GraphEdge: {
+            /**
+             * Approved
+             * @default true
+             */
+            approved: boolean;
+            /** Created At */
+            created_at?: string | null;
+            /** Id */
+            id?: number | null;
+            /**
+             * Origin
+             * @default seed
+             */
+            origin: string;
+            /**
+             * Relation
+             * @default related
+             */
+            relation: string;
+            /** Source Id */
+            source_id: number;
+            /** Target Id */
+            target_id: number;
+            /**
+             * Weight
+             * @default 1
+             */
+            weight: string;
+        };
+        /**
+         * GraphNode
+         * @description A node: an asset, a product, or a concept.
+         */
+        GraphNode: {
+            /** Icon */
+            icon?: string | null;
+            /** Id */
+            id?: number | null;
+            /**
+             * Kind
+             * @default concept
+             */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Symbol */
+            symbol?: string | null;
+        };
+        /**
+         * GraphView
+         * @description The connections graph — nodes and the edges between them.
+         */
+        GraphView: {
+            /** Edges */
+            edges: components["schemas"]["GraphEdge"][];
+            /** Nodes */
+            nodes: components["schemas"]["GraphNode"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1334,6 +1677,55 @@ export interface components {
             /** Total Cost Usd */
             total_cost_usd: string;
         };
+        /**
+         * NewsItem
+         * @description A single news headline pulled from an RSS feed.
+         */
+        NewsItem: {
+            /**
+             * Category
+             * @default world
+             */
+            category: string;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
+            /** Id */
+            id?: number | null;
+            /** Published At */
+            published_at?: string | null;
+            /** Sentiment */
+            sentiment?: string | null;
+            /** Source */
+            source: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /** Symbol */
+            symbol?: string | null;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** NodeCreate */
+        NodeCreate: {
+            /** Icon */
+            icon?: string | null;
+            /**
+             * Kind
+             * @default concept
+             */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Symbol */
+            symbol?: string | null;
+        };
         /** OrderBook */
         OrderBook: {
             /** Asks */
@@ -1439,6 +1831,8 @@ export interface components {
         Role: "admin" | "user";
         /** SettingsRead */
         SettingsRead: {
+            /** Ai Action Mode */
+            ai_action_mode: string;
             /** Ai Base Url */
             ai_base_url: string;
             /** Ai Key Configured */
@@ -1768,6 +2162,100 @@ export interface operations {
             };
         };
     };
+    list_signals_api_ai_signals_get: {
+        parameters: {
+            query?: {
+                status_filter?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISignal"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_signal_api_ai_signals__signal_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                signal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISignal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_signal_api_ai_signals__signal_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                signal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISignal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_auth_login_post: {
         parameters: {
             query?: never;
@@ -1874,6 +2362,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BacktestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_edge_api_connections_edges__edge_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_edge_api_connections_edges__edge_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphEdge"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_graph_api_connections_graph_get: {
+        parameters: {
+            query?: {
+                include_pending?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_node_api_connections_nodes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphNode"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_connections_api_connections_suggest__node_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphEdge"][];
                 };
             };
             /** @description Validation Error */
@@ -2112,6 +2755,60 @@ export interface operations {
             };
         };
     };
+    list_news_api_news_get: {
+        parameters: {
+            query?: {
+                symbol?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_news_api_news_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
     place_manual_order_api_orders_manual_post: {
         parameters: {
             query?: never;
@@ -2286,6 +2983,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["AiSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ai_action_mode_api_settings_ai_action_mode_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiActionModeUpdate"];
             };
         };
         responses: {

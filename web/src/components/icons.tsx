@@ -204,6 +204,43 @@ export const I: Record<string, IconComponent> = {
       }
     />
   ),
+  News: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <rect x="1.5" y="3" width="11" height="10" rx="1" />
+          <path d="M12.5 6 L14.5 6 L14.5 11.5 A1.5 1.5 0 0 1 12.5 13" />
+          <path d="M4 6 L10 6 M4 8.5 L10 8.5 M4 11 L8 11" />
+        </>
+      }
+    />
+  ),
+  Connections: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <circle cx="3.5" cy="8" r="2" />
+          <circle cx="12.5" cy="3.5" r="2" />
+          <circle cx="12.5" cy="12.5" r="2" />
+          <path d="M5.4 7 L10.6 4.3 M5.4 9 L10.6 11.7" />
+        </>
+      }
+    />
+  ),
+  Guide: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <circle cx="8" cy="8" r="6" />
+          <path d="M6.2 6.2 A1.8 1.8 0 1 1 8 9 L8 10" />
+          <path d="M8 12 L8 12.4" />
+        </>
+      }
+    />
+  ),
 };
 
 /** Brand mark — a "C" with a bolt motif. */

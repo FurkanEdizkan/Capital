@@ -11,8 +11,9 @@ timeframes. An LLM failure is logged and treated as "hold".
 """
 
 import logging
+from collections.abc import Callable
 
-from ai.analyze import build_market_prompt
+from ai.analyze import build_decision_prompt
 from ai.providers.base import (
     Completion,
     Decision,
@@ -52,6 +53,11 @@ class AIStrategy(BaseStrategy):
         self._provider = provider
         self._model = model
         self._lookback = lookback
+        # Per-tick context providers (recent news + graph connections for the
+        # symbol). Set by the engine before evaluate(); each returns a list of
+        # short strings. Default to no-ops so the strategy is usable standalone.
+        self._news_provider: Callable[[str], list[str]] = lambda _s: []
+        self._connections_provider: Callable[[str], list[str]] = lambda _s: []
         # The most recent LLM call's usage + decision — read by the engine
         # after each tick to record an `LLMUsage` row. Reset every evaluate().
         self.last_usage: Completion | None = None
@@ -62,6 +68,16 @@ class AIStrategy(BaseStrategy):
         self._provider = provider
         self._model = model
 
+    def set_context_providers(
+        self,
+        *,
+        news: Callable[[str], list[str]],
+        connections: Callable[[str], list[str]],
+    ) -> None:
+        """Supply per-tick news + connections lookups for the decision prompt."""
+        self._news_provider = news
+        self._connections_provider = connections
+
     def evaluate(self, ctx: StrategyContext) -> Order | None:
         self.last_usage = None
         self.last_decision = None
@@ -71,13 +87,15 @@ class AIStrategy(BaseStrategy):
         if len(closes) < 2 or ctx.price <= 0:
             return None
 
-        prompt = build_market_prompt(
+        prompt = build_decision_prompt(
             symbol=self.symbol,
             closes=closes,
             position_side=ctx.position.side,
             position_qty=ctx.position.qty,
             allocation=ctx.allocation,
             price=ctx.price,
+            news=self._news_provider(self.symbol),
+            connections=self._connections_provider(self.symbol),
             lookback=self._lookback,
         )
         try:

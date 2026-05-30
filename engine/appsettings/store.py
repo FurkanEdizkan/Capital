@@ -33,6 +33,11 @@ _AI_MODEL = "ai_model"
 _AI_BASE_URL = "ai_base_url"
 _AI_API_KEY = "ai_api_key"
 _AI_SPEND_CAP = "ai_spend_cap_usd"
+_AI_ACTION_MODE = "ai_action_mode"
+
+#: How an AI strategy's decision is applied. `notify` (the default) surfaces it
+#: for operator confirmation; `auto` executes it straight through the risk gate.
+AI_ACTION_MODES: tuple[str, ...] = ("notify", "auto")
 
 
 def _get(session: Session, key: str) -> Setting | None:
@@ -253,3 +258,34 @@ def set_strategy_ai_config(
     """Pin an AI strategy to a specific provider + model."""
     set_setting(session, f"ai:{strategy}:provider", provider)
     set_setting(session, f"ai:{strategy}:model", model)
+
+
+# -- AI action mode (notify vs auto-execute) ----------------------------------
+# The global default is `notify`: an AI decision is surfaced for operator
+# confirmation rather than executed. A strategy may override the global mode.
+
+
+def _normalise_mode(value: str | None, default: str = "notify") -> str:
+    """Coerce a stored value to a known mode, defaulting safely to `notify`."""
+    return value if value in AI_ACTION_MODES else default
+
+
+def get_ai_action_mode(session: Session) -> str:
+    """The global AI action mode — `notify` (default) or `auto`."""
+    return _normalise_mode(get_setting(session, _AI_ACTION_MODE))
+
+
+def set_ai_action_mode(session: Session, mode: str) -> None:
+    """Set the global AI action mode."""
+    set_setting(session, _AI_ACTION_MODE, _normalise_mode(mode))
+
+
+def get_strategy_action_mode(session: Session, strategy: str) -> str:
+    """An AI strategy's action mode, falling back to the global default."""
+    override = get_setting(session, f"ai:{strategy}:action_mode")
+    return _normalise_mode(override, default=get_ai_action_mode(session))
+
+
+def set_strategy_action_mode(session: Session, strategy: str, mode: str) -> None:
+    """Pin an AI strategy to a specific action mode."""
+    set_setting(session, f"ai:{strategy}:action_mode", _normalise_mode(mode))

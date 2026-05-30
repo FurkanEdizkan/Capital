@@ -17,18 +17,24 @@
   --text-2: #a1a1aa;
   --text-3: #71717a;
   --text-4: #52525b;
+  /* Semantic colours — the ONLY non-monochrome hues in the UI. Green = up /
+   * buy / profit, red = down / sell / loss. Used for indicators, PnL and
+   * chart lines; everything else stays black & white. */
   --green: #10b981;
   --green-dim: #064e3b;
   --green-bg: rgba(16, 185, 129, 0.1);
   --red: #ef4444;
   --red-dim: #7f1d1d;
   --red-bg: rgba(239, 68, 68, 0.1);
-  --amber: #f59e0b;
-  --amber-bg: rgba(245, 158, 11, 0.1);
-  --blue: #3b82f6;
-  --blue-bg: rgba(59, 130, 246, 0.1);
-  --violet: #8b5cf6;
-  --violet-bg: rgba(139, 92, 246, 0.1);
+  /* Amber → a neutral grey "warning / pending" affordance (no hue). */
+  --amber: #d4d4d8;
+  --amber-bg: rgba(255, 255, 255, 0.06);
+  /* Former blue/violet accents, neutralised to greys so the UI reads
+   * monochrome. Kept as variables so existing references resolve. */
+  --blue: #d4d4d8;
+  --blue-bg: rgba(255, 255, 255, 0.06);
+  --violet: #a1a1aa;
+  --violet-bg: rgba(255, 255, 255, 0.05);
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.4);
   --radius: 8px;
   --radius-sm: 6px;

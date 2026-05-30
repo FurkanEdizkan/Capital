@@ -18,10 +18,12 @@ import {
   SectionHeader,
   SegmentedControl,
 } from "../components/ui";
+import { GuideButton } from "../components/GuideModal";
 import {
   fetchSettings,
   type Settings as SettingsData,
   type TradingMode,
+  updateAiActionMode,
   updateAiSettings,
   updateAiSpendCap,
   updateLlmCredentials,
@@ -190,6 +192,12 @@ export function Settings() {
       setNotice("LLM spend cap saved.");
     });
 
+  const saveAiActionMode = (mode: string) =>
+    run(async () => {
+      applySettings(await updateAiActionMode(mode));
+      setNotice(`AI action mode set to ${mode}.`);
+    });
+
   const saveLlmCreds = (provider: string) =>
     run(async () => {
       const v = llmInputs[provider] ?? { api_key: "", base_url: "" };
@@ -338,7 +346,11 @@ export function Settings() {
 
       <Card>
         <SectionHeader
-          title="Venue credentials"
+          title={
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              Venue credentials <GuideButton slug="binance-api-key" />
+            </span>
+          }
           subtitle="API credentials per venue, encrypted at rest. Required for Testnet and Live trading."
         />
         <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 20 }}>
@@ -402,7 +414,11 @@ export function Settings() {
 
       <Card>
         <SectionHeader
-          title="AI provider"
+          title={
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              AI provider <GuideButton slug="ai-providers" />
+            </span>
+          }
           subtitle="Powers AI strategies and the analyze-and-decide endpoint."
         />
         <div
@@ -562,6 +578,27 @@ export function Settings() {
           <Button kind="primary" disabled={busy} onClick={() => void saveAiSpendCap()}>
             Save spend cap
           </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title={
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              AI action mode <GuideButton slug="ai-providers" />
+            </span>
+          }
+          subtitle="Notify (default) surfaces AI decisions for you to confirm. Auto executes them straight through the risk manager."
+        />
+        <div style={{ padding: 14 }}>
+          <SegmentedControl
+            options={[
+              { value: "notify", label: "Notify only" },
+              { value: "auto", label: "Auto-execute" },
+            ]}
+            value={settings.ai_action_mode}
+            onChange={(m) => void saveAiActionMode(m)}
+          />
         </div>
       </Card>
 
