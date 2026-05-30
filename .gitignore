@@ -19,5 +19,8 @@ __pycache__/
 .DS_Store
 *.log
 
-# Claude Code local session state
-.claude/
+# Claude Code local session state — ignored, except shared project skills.
+# Ignore .claude/ contents (settings.local.json, worktrees, session state...)
+# but keep .claude/skills/ tracked so committed skills ship with the repo.
+.claude/*
+!.claude/skills/
