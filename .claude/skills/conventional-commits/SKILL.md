@@ -17,9 +17,8 @@ on every commit via:
 - the husky `commit-msg` hook (`.husky/commit-msg` runs `commitlint --edit`)
 - a commitlint check in CI
 
-A commit that doesn't match the format is **rejected before it lands**. Release
-notes and version bumps (release-please) are also derived from these types, so
-getting the type right matters.
+A commit that doesn't match the format is **rejected before it lands**, so
+getting the type and format right matters.
 
 ## The format
 
@@ -45,19 +44,19 @@ Rules commitlint enforces (config-conventional defaults):
 
 ## Allowed types
 
-| Type       | Use for                                                        | Bumps version |
-| ---------- | ------------------------------------------------------------- | ------------- |
-| `feat`     | a new feature                                                 | minor         |
-| `fix`      | a bug fix                                                      | patch         |
-| `docs`     | documentation only                                            | —             |
-| `refactor` | code change that neither fixes a bug nor adds a feature       | —             |
-| `test`     | adding or correcting tests                                    | —             |
-| `chore`    | build, deps, tooling, housekeeping                            | —             |
-| `ci`       | CI configuration / pipeline changes                           | —             |
-| `perf`     | a performance improvement                                     | patch         |
-| `build`    | build system or external dependency changes                   | —             |
-| `style`    | formatting/whitespace, no code-meaning change                 | —             |
-| `revert`   | reverting a previous commit                                   | —             |
+| Type       | Use for                                                  |
+| ---------- | -------------------------------------------------------- |
+| `feat`     | a new feature                                            |
+| `fix`      | a bug fix                                                |
+| `docs`     | documentation only                                       |
+| `refactor` | code change that neither fixes a bug nor adds a feature  |
+| `test`     | adding or correcting tests                               |
+| `chore`    | build, deps, tooling, housekeeping                       |
+| `ci`       | CI configuration / pipeline changes                      |
+| `perf`     | a performance improvement                                |
+| `build`    | build system or external dependency changes              |
+| `style`    | formatting/whitespace, no code-meaning change            |
+| `revert`   | reverting a previous commit                              |
 
 CONTRIBUTING.md highlights `feat`, `fix`, `chore`, `docs`, `refactor`, `test`,
 `ci` as the everyday set — prefer those unless another clearly fits better.
@@ -78,8 +77,6 @@ Signal a breaking change in **either** way (or both):
 
 - a `!` after the type/scope: `feat(engine)!: drop legacy order schema`
 - a footer: `BREAKING CHANGE: <what broke and the migration path>`
-
-Either one triggers a **major** version bump.
 
 ## Referencing issues
 
