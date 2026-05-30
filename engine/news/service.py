@@ -13,7 +13,7 @@ import json
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from time import struct_time
 
 import feedparser
@@ -44,7 +44,11 @@ DEFAULT_FEEDS: tuple[Feed, ...] = (
     Feed("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/", "asset"),
     Feed("Cointelegraph", "https://cointelegraph.com/rss", "asset"),
     Feed("Yahoo Finance", "https://finance.yahoo.com/news/rssindex", "world"),
-    Feed("Reuters Business", "https://www.reutersagency.com/feed/?best-topics=business-finance", "world"),
+    Feed(
+        "Reuters Business",
+        "https://www.reutersagency.com/feed/?best-topics=business-finance",
+        "world",
+    ),
 )
 
 #: Keyword → trading symbol. Lower-cased substrings matched against the
@@ -100,7 +104,7 @@ def _published(entry: object) -> datetime | None:
     )
     if parsed is None:
         return None
-    return datetime(*parsed[:6], tzinfo=timezone.utc).replace(tzinfo=None)
+    return datetime(*parsed[:6], tzinfo=UTC).replace(tzinfo=None)
 
 
 def configured_feeds(session: Session) -> list[Feed]:

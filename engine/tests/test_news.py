@@ -62,7 +62,11 @@ def test_refresh_skips_a_broken_feed(session: Session) -> None:
         raise RuntimeError("feed down")
 
     bad = Feed("Bad", "https://example.com/bad.xml")
-    added = service.refresh(session, feeds=[bad, _FEED], fetch=lambda u: boom(u) if "bad" in u else _fetch(u))
+    added = service.refresh(
+        session,
+        feeds=[bad, _FEED],
+        fetch=lambda u: boom(u) if "bad" in u else _fetch(u),
+    )
     assert added == 2  # the good feed still imported
 
 
