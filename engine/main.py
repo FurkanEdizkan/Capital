@@ -13,7 +13,9 @@ from sqlmodel import Session
 
 from api.ai import router as ai_router
 from api.backtest import router as backtest_router
+from api.connections import router as connections_router
 from api.history import router as history_router
+from api.news import router as news_router
 from api.market import router as market_router
 from api.market import ws_router as market_ws_router
 from api.orders import router as orders_router
@@ -27,6 +29,7 @@ from api.venues import router as venues_router
 from auth.routes import router as auth_router
 from auth.seed import seed_admin
 from config import settings
+from connections.seed import ensure_seed
 from db import engine as db_engine
 from logging_config import setup_logging
 from marketdata.stream import StreamManager
@@ -48,6 +51,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         seed_admin()
     except Exception:  # noqa: BLE001 — never let seeding crash startup
         log.exception("Admin seeding skipped (run `alembic upgrade head` first?)")
+
+    # Seed the connections graph with the bundled curated nodes/edges.
+    try:
+        with Session(db_engine) as session:
+            ensure_seed(session)
+    except Exception:  # noqa: BLE001 — never let seeding crash startup
+        log.exception("Connections seeding skipped")
 
     # Live market-data streams — self-healing Binance WebSocket consumers.
     streams = StreamManager()
@@ -110,6 +120,8 @@ app.include_router(history_router)
 app.include_router(ai_router)
 app.include_router(tokens_router)
 app.include_router(venues_router)
+app.include_router(news_router)
+app.include_router(connections_router)
 
 
 @app.get("/health", tags=["system"])

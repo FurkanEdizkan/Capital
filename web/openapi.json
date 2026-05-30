@@ -1,6 +1,85 @@
 {
   "components": {
     "schemas": {
+      "AISignal": {
+        "description": "One AI decision surfaced to the operator for confirmation.",
+        "properties": {
+          "action": {
+            "maxLength": 8,
+            "title": "Action",
+            "type": "string"
+          },
+          "confidence": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,18}|(?=[\\d.]{1,29}0*$)\\d{0,18}\\.\\d{0,10}0*$)",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "market": {
+            "default": "spot",
+            "maxLength": 8,
+            "title": "Market",
+            "type": "string"
+          },
+          "quantity": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reasoning": {
+            "default": "",
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "reference_price": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Reference Price",
+            "type": "string"
+          },
+          "status": {
+            "default": "pending",
+            "maxLength": 12,
+            "title": "Status",
+            "type": "string"
+          },
+          "strategy": {
+            "maxLength": 64,
+            "title": "Strategy",
+            "type": "string"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy",
+          "symbol",
+          "action",
+          "created_at"
+        ],
+        "title": "AISignal",
+        "type": "object"
+      },
       "ActiveVenueUpdate": {
         "properties": {
           "venue": {
@@ -12,6 +91,20 @@
           "venue"
         ],
         "title": "ActiveVenueUpdate",
+        "type": "object"
+      },
+      "AiActionModeUpdate": {
+        "properties": {
+          "mode": {
+            "description": "notify | auto",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "AiActionModeUpdate",
         "type": "object"
       },
       "AiModelUpdate": {
@@ -992,6 +1085,152 @@
         "title": "FundingRate",
         "type": "object"
       },
+      "GraphEdge": {
+        "description": "A directed, labelled relation from one node to another.",
+        "properties": {
+          "approved": {
+            "default": true,
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "origin": {
+            "default": "seed",
+            "maxLength": 8,
+            "title": "Origin",
+            "type": "string"
+          },
+          "relation": {
+            "default": "related",
+            "maxLength": 40,
+            "title": "Relation",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "integer"
+          },
+          "target_id": {
+            "title": "Target Id",
+            "type": "integer"
+          },
+          "weight": {
+            "default": "1",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,4}|(?=[\\d.]{1,7}0*$)\\d{0,4}\\.\\d{0,2}0*$)",
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "target_id"
+        ],
+        "title": "GraphEdge",
+        "type": "object"
+      },
+      "GraphNode": {
+        "description": "A node: an asset, a product, or a concept.",
+        "properties": {
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "kind": {
+            "default": "concept",
+            "maxLength": 16,
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 120,
+            "title": "Label",
+            "type": "string"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "GraphNode",
+        "type": "object"
+      },
+      "GraphView": {
+        "description": "The connections graph \u2014 nodes and the edges between them.",
+        "properties": {
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/GraphEdge"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/GraphNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "nodes",
+          "edges"
+        ],
+        "title": "GraphView",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1220,6 +1459,139 @@
           "total_cost_usd"
         ],
         "title": "ModelUsage",
+        "type": "object"
+      },
+      "NewsItem": {
+        "description": "A single news headline pulled from an RSS feed.",
+        "properties": {
+          "category": {
+            "default": "world",
+            "maxLength": 16,
+            "title": "Category",
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentiment"
+          },
+          "source": {
+            "maxLength": 64,
+            "title": "Source",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "title": {
+            "maxLength": 512,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 1024,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "title",
+          "url",
+          "fetched_at"
+        ],
+        "title": "NewsItem",
+        "type": "object"
+      },
+      "NodeCreate": {
+        "properties": {
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "kind": {
+            "default": "concept",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "NodeCreate",
         "type": "object"
       },
       "OrderBook": {
@@ -1471,6 +1843,10 @@
       },
       "SettingsRead": {
         "properties": {
+          "ai_action_mode": {
+            "title": "Ai Action Mode",
+            "type": "string"
+          },
           "ai_base_url": {
             "title": "Ai Base Url",
             "type": "string"
@@ -1529,6 +1905,7 @@
           "ai_key_configured",
           "ai_spend_cap",
           "ai_spend_today",
+          "ai_action_mode",
           "llm_providers_configured"
         ],
         "title": "SettingsRead",
@@ -2232,6 +2609,171 @@
         ]
       }
     },
+    "/api/ai/signals": {
+      "get": {
+        "description": "Recent AI signals (notify-mode decisions), newest first.",
+        "operationId": "list_signals_api_ai_signals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AISignal"
+                  },
+                  "title": "Response List Signals Api Ai Signals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Signals",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/signals/{signal_id}/confirm": {
+      "post": {
+        "description": "Execute a pending AI signal through the same risk + executor path.\n\nRe-prices at confirmation and re-runs the risk gate, so a stale or\nrisk-blocked signal cannot slip through. Marks the signal `executed`.",
+        "operationId": "confirm_signal_api_ai_signals__signal_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "signal_id",
+            "required": true,
+            "schema": {
+              "title": "Signal Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AISignal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Confirm Signal",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/signals/{signal_id}/dismiss": {
+      "post": {
+        "description": "Dismiss a pending AI signal without executing it.",
+        "operationId": "dismiss_signal_api_ai_signals__signal_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "signal_id",
+            "required": true,
+            "schema": {
+              "title": "Signal Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AISignal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Dismiss Signal",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/auth/login": {
       "post": {
         "description": "Exchange operator credentials for an access + refresh token pair.\n\nRate-limited: repeated failures lock the username out (brute-force guard).",
@@ -2387,6 +2929,243 @@
         "summary": "Run",
         "tags": [
           "backtest"
+        ]
+      }
+    },
+    "/api/connections/edges/{edge_id}": {
+      "delete": {
+        "description": "Delete an edge (reject a suggestion or prune a curated link).",
+        "operationId": "delete_edge_api_connections_edges__edge_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "edge_id",
+            "required": true,
+            "schema": {
+              "title": "Edge Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Edge",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/api/connections/edges/{edge_id}/approve": {
+      "post": {
+        "description": "Approve a pending edge so it joins the graph.",
+        "operationId": "approve_edge_api_connections_edges__edge_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "edge_id",
+            "required": true,
+            "schema": {
+              "title": "Edge Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphEdge"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Approve Edge",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/api/connections/graph": {
+      "get": {
+        "description": "The full graph. Pending (AI-suggested) edges are opt-in.",
+        "operationId": "get_graph_api_connections_graph_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_pending",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Pending",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Graph",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/api/connections/nodes": {
+      "post": {
+        "description": "Create a node (or return the existing one with the same label).",
+        "operationId": "create_node_api_connections_nodes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NodeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphNode"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Node",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/api/connections/suggest/{node_id}": {
+      "post": {
+        "description": "Ask the LLM to suggest related entities for a node (stored pending).",
+        "operationId": "suggest_connections_api_connections_suggest__node_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "title": "Node Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GraphEdge"
+                  },
+                  "title": "Response Suggest Connections Api Connections Suggest  Node Id  Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Suggest Connections",
+        "tags": [
+          "connections"
         ]
       }
     },
@@ -2855,6 +3634,106 @@
         ]
       }
     },
+    "/api/news": {
+      "get": {
+        "description": "Recent headlines, newest first \u2014 optionally filtered by `symbol`.",
+        "operationId": "list_news_api_news_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Symbol"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NewsItem"
+                  },
+                  "title": "Response List News Api News Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List News",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/api/news/refresh": {
+      "post": {
+        "description": "Fetch every configured feed now. Returns the number of new headlines.",
+        "operationId": "refresh_news_api_news_refresh_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Refresh News Api News Refresh Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Refresh News",
+        "tags": [
+          "news"
+        ]
+      }
+    },
     "/api/orders/manual": {
       "post": {
         "description": "Place a one-off order, risk-checked and recorded as `manual`.",
@@ -3140,6 +4019,53 @@
           }
         ],
         "summary": "Update Ai Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/ai-action-mode": {
+      "put": {
+        "description": "Set how AI decisions are applied: `notify` (confirm) or `auto`.",
+        "operationId": "update_ai_action_mode_api_settings_ai_action_mode_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiActionModeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Ai Action Mode",
         "tags": [
           "settings"
         ]

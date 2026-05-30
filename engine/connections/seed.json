@@ -1,0 +1,27 @@
+{
+  "nodes": [
+    { "label": "Bitcoin", "kind": "asset", "symbol": "BTCUSDT", "icon": "₿" },
+    { "label": "Ethereum", "kind": "asset", "symbol": "ETHUSDT", "icon": "Ξ" },
+    { "label": "Tether", "kind": "asset", "symbol": "USDT", "icon": "₮" },
+    { "label": "Solana", "kind": "asset", "symbol": "SOLUSDT", "icon": "◎" },
+    { "label": "NVIDIA", "kind": "asset", "symbol": "NVDA", "icon": "🟩" },
+    { "label": "AMD", "kind": "asset", "symbol": "AMD", "icon": "🟥" },
+    { "label": "Tesla", "kind": "asset", "symbol": "TSLA", "icon": "🚗" },
+    { "label": "US Dollar", "kind": "concept", "symbol": null, "icon": "💵" },
+    { "label": "Stablecoin", "kind": "concept", "symbol": null, "icon": "🪙" },
+    { "label": "GPU chip", "kind": "product", "symbol": null, "icon": "🔲" },
+    { "label": "AI compute", "kind": "concept", "symbol": null, "icon": "🧠" },
+    { "label": "Proof of Stake", "kind": "concept", "symbol": null, "icon": "🔗" }
+  ],
+  "edges": [
+    { "source": "Tether", "target": "US Dollar", "relation": "pegged_to" },
+    { "source": "Tether", "target": "Stablecoin", "relation": "is_a" },
+    { "source": "GPU chip", "target": "NVIDIA", "relation": "supplied_by" },
+    { "source": "GPU chip", "target": "AMD", "relation": "supplied_by" },
+    { "source": "AI compute", "target": "GPU chip", "relation": "depends_on" },
+    { "source": "AI compute", "target": "NVIDIA", "relation": "driven_by" },
+    { "source": "Tesla", "target": "AI compute", "relation": "depends_on" },
+    { "source": "Ethereum", "target": "Proof of Stake", "relation": "uses" },
+    { "source": "Solana", "target": "Proof of Stake", "relation": "uses" }
+  ]
+}

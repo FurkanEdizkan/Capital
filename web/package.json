@@ -12,15 +12,19 @@
     "gen:api": "openapi-typescript ./openapi.json -o ./src/lib/api/schema.d.ts"
   },
   "dependencies": {
+    "d3-force": "^3.0.0",
+    "lightweight-charts": "^4.2.0",
     "openapi-fetch": "^0.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.1",
-    "lightweight-charts": "^4.2.0"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@types/d3-force": "^3.0.10",
+    "@types/node": "^22.19.19",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",

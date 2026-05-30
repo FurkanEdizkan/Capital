@@ -10,12 +10,15 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+from ai import signals as _ai_signals  # noqa: F401 — register tables on metadata
 from alembic import context
 from appsettings import models as _settings_models  # noqa: F401 — register tables
 from auth import models as _auth_models  # noqa: F401 — register tables on metadata
 from config import settings
+from connections import models as _conn_models  # noqa: F401 — register tables
 from db import SQLModel
 from marketdata import models as _md_models  # noqa: F401 — register tables on metadata
+from news import models as _news_models  # noqa: F401 — register tables on metadata
 from trading import models as _trading_models  # noqa: F401 — register tables on metadata
 
 # Model modules are imported above so their tables register on

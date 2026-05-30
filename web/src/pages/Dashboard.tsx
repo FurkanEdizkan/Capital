@@ -7,6 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { EquityChart } from "../components/EquityChart";
 import { I } from "../components/icons";
 import {
+  Badge,
+  Button,
   Card,
   type Column,
   DataTable,
@@ -15,7 +17,14 @@ import {
   SideBadge,
   StatTile,
 } from "../components/ui";
+import { useAuth } from "../lib/auth";
 import { fmt } from "../lib/format";
+import {
+  type AiSignal,
+  confirmSignal,
+  dismissSignal,
+  fetchSignals,
+} from "../lib/api/ai";
 import {
   type Costs,
   type EquitySnapshot,
@@ -37,22 +46,25 @@ export function Dashboard() {
   const [positions, setPositions] = useState<Position[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [costs, setCosts] = useState<Costs | null>(null);
+  const [signals, setSignals] = useState<AiSignal[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [s, e, p, t, c] = await Promise.all([
+      const [s, e, p, t, c, sig] = await Promise.all([
         fetchSummary(),
         fetchEquity(),
         fetchPositions(),
         fetchTrades(),
         fetchCosts(),
+        fetchSignals("pending"),
       ]);
       setSummary(s);
       setEquity(e);
       setPositions(p);
       setTrades(t);
       setCosts(c);
+      setSignals(sig);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard");
@@ -150,6 +162,8 @@ export function Dashboard() {
         </div>
       </Card>
 
+      {signals.length > 0 && <SignalsCard signals={signals} onChange={load} />}
+
       {costs && <CostsCard costs={costs} />}
 
       <Card>
@@ -170,6 +184,86 @@ export function Dashboard() {
         )}
       </Card>
     </div>
+  );
+}
+
+/** Pending AI signals (notify mode) — confirm to execute, or dismiss. */
+function SignalsCard({ signals, onChange }: { signals: AiSignal[]; onChange: () => void }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [busy, setBusy] = useState<number | null>(null);
+
+  const act = async (id: number, fn: (id: number) => Promise<unknown>) => {
+    setBusy(id);
+    try {
+      await fn(id);
+      await onChange();
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Card>
+      <SectionHeader
+        title="Pending AI signals"
+        subtitle={`${signals.length} awaiting confirmation`}
+      />
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {signals.map((s) => (
+          <div
+            key={s.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 16px",
+              borderTop: "1px solid var(--border-soft)",
+            }}
+          >
+            <SideBadge side={s.action} />
+            <div style={{ fontSize: 13 }}>
+              <span style={{ fontWeight: 600 }}>{s.symbol}</span>{" "}
+              <span style={{ color: "var(--text-3)" }}>· {s.strategy}</span>
+            </div>
+            <Badge tone="muted">conf {fmt(Number(s.confidence) * 100, 0)}%</Badge>
+            <span
+              style={{
+                flex: 1,
+                fontSize: 12,
+                color: "var(--text-3)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={s.reasoning ?? ""}
+            >
+              {s.reasoning}
+            </span>
+            {isAdmin && s.id != null && (
+              <>
+                <Button
+                  kind="primary"
+                  size="sm"
+                  disabled={busy === s.id}
+                  onClick={() => void act(s.id!, confirmSignal)}
+                >
+                  Confirm
+                </Button>
+                <Button
+                  kind="ghost"
+                  size="sm"
+                  disabled={busy === s.id}
+                  onClick={() => void act(s.id!, dismissSignal)}
+                >
+                  Dismiss
+                </Button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 

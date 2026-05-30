@@ -93,9 +93,11 @@ export function Badge({
     muted: { fg: "var(--text-2)", bg: "rgba(255,255,255,.04)", bd: "var(--border)" },
     green: { fg: "#34D399", bg: "var(--green-bg)", bd: "rgba(16,185,129,.30)" },
     red: { fg: "#F87171", bg: "var(--red-bg)", bd: "rgba(239,68,68,.30)" },
-    amber: { fg: "#FBBF24", bg: "var(--amber-bg)", bd: "rgba(245,158,11,.30)" },
-    blue: { fg: "#60A5FA", bg: "var(--blue-bg)", bd: "rgba(59,130,246,.30)" },
-    violet: { fg: "#A78BFA", bg: "var(--violet-bg)", bd: "rgba(139,92,246,.30)" },
+    // amber/blue/violet neutralised — the theme is monochrome apart from
+    // green/red. They remain distinct grey tones for non-semantic labels.
+    amber: { fg: "var(--text)", bg: "var(--amber-bg)", bd: "var(--border)" },
+    blue: { fg: "var(--text-2)", bg: "var(--blue-bg)", bd: "var(--border)" },
+    violet: { fg: "var(--text-3)", bg: "var(--violet-bg)", bd: "var(--border)" },
     live: { fg: "#FCA5A5", bg: "rgba(239,68,68,.14)", bd: "rgba(239,68,68,.45)" },
   };
   const t = tones[tone] ?? tones.muted;

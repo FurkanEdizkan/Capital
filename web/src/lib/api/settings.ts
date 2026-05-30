@@ -58,6 +58,14 @@ export async function updateAiSpendCap(cap: string): Promise<Settings> {
   return data;
 }
 
+export async function updateAiActionMode(mode: string): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/ai-action-mode", {
+    body: { mode },
+  });
+  if (error || !data) throw new Error(errorDetail(error, "Failed to set AI action mode"));
+  return data;
+}
+
 export async function updateLlmCredentials(
   provider: string,
   apiKey: string,
