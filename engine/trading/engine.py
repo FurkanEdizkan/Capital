@@ -23,8 +23,8 @@ from ai.usage import record_usage, spend_since
 from appsettings.store import get_ai_spend_cap, get_strategy_action_mode
 from connections import service as connections_service
 from marketdata.cache import refresh_venue_candles
-from news import service as news_service
 from marketdata.freshness import feed_is_stale
+from news import service as news_service
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
 from ops.watchdog import record_heartbeat

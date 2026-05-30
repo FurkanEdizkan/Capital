@@ -15,9 +15,9 @@ from api.ai import router as ai_router
 from api.backtest import router as backtest_router
 from api.connections import router as connections_router
 from api.history import router as history_router
-from api.news import router as news_router
 from api.market import router as market_router
 from api.market import ws_router as market_ws_router
+from api.news import router as news_router
 from api.orders import router as orders_router
 from api.portfolio import router as portfolio_router
 from api.settings import router as settings_router
