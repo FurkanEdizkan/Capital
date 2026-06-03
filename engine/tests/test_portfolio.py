@@ -8,6 +8,7 @@ from sqlmodel import Session
 
 from trading.models import PositionSide
 from trading.portfolio import (
+    PositionFillRequest,
     apply_fill,
     get_allocation,
     list_allocations,
@@ -22,13 +23,15 @@ S, M, SYM = "MA Cross", "spot", "BTCUSDT"
 def _fill(session: Session, side: str, qty: str, price: str, fee: str = "0", strategy: str = S):
     return apply_fill(
         session,
-        strategy=strategy,
-        market=M,
-        symbol=SYM,
-        side=side,
-        qty=Decimal(qty),
-        price=Decimal(price),
-        fee=Decimal(fee),
+        PositionFillRequest(
+            strategy=strategy,
+            market=M,
+            symbol=SYM,
+            side=side,
+            qty=Decimal(qty),
+            price=Decimal(price),
+            fee=Decimal(fee),
+        ),
     )
 
 
