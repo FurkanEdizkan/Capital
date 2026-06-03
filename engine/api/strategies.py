@@ -11,21 +11,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlmodel import Session
 
 from api.market import StreamsDep
-from appsettings.store import (
-    LLM_PROVIDERS,
-    get_strategy_ai_config,
-    set_strategy_ai_config,
-)
+from appsettings.store import LLM_PROVIDERS, set_strategy_ai_config
 from auth.audit import record_audit
 from auth.deps import CurrentUser, SessionDep
 from strategies.base import BaseStrategy
-from trading.accounting import strategy_summary
 from trading.engine import TradingEngine
 from trading.lifecycle import is_enabled, set_enabled
 from trading.portfolio import get_allocation, set_allocation
+from trading.strategy_view import StrategyRead, read_strategy_state
 
 router = APIRouter(prefix="/api/strategies", tags=["strategies"])
 
@@ -36,26 +31,6 @@ def get_trading_engine(request: Request) -> TradingEngine:
 
 
 TradingDep = Annotated[TradingEngine, Depends(get_trading_engine)]
-
-
-class StrategyRead(BaseModel):
-    """A strategy's identity, lifecycle state and accounting summary."""
-
-    name: str
-    kind: str
-    symbol: str
-    market: str
-    timeframe: str
-    enabled: bool
-    allocated: Decimal
-    realized_pnl: Decimal
-    unrealized_pnl: Decimal
-    fees: Decimal
-    net_pnl: Decimal
-    open_positions: int
-    # The configured LLM provider + model — set only for AI strategies.
-    ai_provider: str | None = None
-    ai_model: str | None = None
 
 
 class AllocationUpdate(BaseModel):
@@ -84,33 +59,6 @@ def _marks(streams: object) -> dict[str, Decimal]:
     return marks
 
 
-def _read(
-    session: Session, strategy: BaseStrategy, marks: dict[str, Decimal]
-) -> StrategyRead:
-    summary = strategy_summary(session, strategy.name, marks)
-    ai_provider: str | None = None
-    ai_model: str | None = None
-    if getattr(strategy, "kind", "") == "AI":
-        cfg = get_strategy_ai_config(session, strategy.name)
-        ai_provider, ai_model = cfg["provider"], cfg["model"]
-    return StrategyRead(
-        name=strategy.name,
-        kind=strategy.kind,
-        symbol=strategy.symbol,
-        market=strategy.market.value,
-        timeframe=strategy.timeframe,
-        enabled=is_enabled(session, strategy.name),
-        allocated=summary.allocated,
-        realized_pnl=summary.realized_pnl,
-        unrealized_pnl=summary.unrealized_pnl,
-        fees=summary.fees,
-        net_pnl=summary.net_pnl,
-        open_positions=summary.open_positions,
-        ai_provider=ai_provider,
-        ai_model=ai_model,
-    )
-
-
 def _find(engine: TradingEngine, name: str) -> BaseStrategy:
     for strategy in engine.strategies:
         if strategy.name == name:
@@ -124,7 +72,7 @@ def list_strategies(
 ) -> list[StrategyRead]:
     """Every registered strategy with its allocation, state and PnL."""
     marks = _marks(streams)
-    return [_read(session, s, marks) for s in engine.strategies]
+    return [read_strategy_state(session, s, marks) for s in engine.strategies]
 
 
 @router.patch("/{name}/allocation", response_model=StrategyRead)
@@ -147,7 +95,7 @@ def update_allocation(
         target=name,
         detail={"from": str(before), "to": str(body.allocated)},
     )
-    return _read(session, strategy, _marks(streams))
+    return read_strategy_state(session, strategy, _marks(streams))
 
 
 @router.patch("/{name}/enabled", response_model=StrategyRead)
@@ -170,7 +118,7 @@ def update_enabled(
         target=name,
         detail={"from": before, "to": body.enabled},
     )
-    return _read(session, strategy, _marks(streams))
+    return read_strategy_state(session, strategy, _marks(streams))
 
 
 @router.patch("/{name}/ai-model", response_model=StrategyRead)
@@ -201,7 +149,7 @@ def update_ai_model(
         target=name,
         detail={"provider": body.provider, "model": body.model},
     )
-    return _read(session, strategy, _marks(streams))
+    return read_strategy_state(session, strategy, _marks(streams))
 
 
 @router.post("/{name}/close", response_model=CloseResult)
