@@ -19,8 +19,10 @@ __pycache__/
 .DS_Store
 *.log
 
-# Claude Code local session state — ignored, except shared project skills.
+# Claude Code local session state — ignored, except shared project config.
 # Ignore .claude/ contents (settings.local.json, worktrees, session state...)
-# but keep .claude/skills/ tracked so committed skills ship with the repo.
+# but keep .claude/settings.json (and any committed .claude/skills/) tracked so
+# shared project config ships with the repo.
 .claude/*
 !.claude/skills/
+!.claude/settings.json
