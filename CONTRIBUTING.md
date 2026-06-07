@@ -36,6 +36,26 @@ npm install
 npm run dev                          # http://localhost:5173
 ```
 
+## Skills (Claude Code)
+
+Shared dev-practice skills (Conventional Commits, Conventional Branches, modular
+service units) come from the central
+[My-Skills](https://github.com/FurkanEdizkan/My-Skills) plugin marketplace,
+registered in `.claude/settings.json` (`furkanedizkan-skills` → the `skills`
+plugin). They are no longer vendored under `.claude/skills/`.
+
+Registering the marketplace in settings does not auto-install it, so once per
+machine activate the plugin from inside this repo in Claude Code:
+
+```text
+/plugin install skills@furkanedizkan-skills
+```
+
+If Claude Code doesn't already know the marketplace, add it first with
+`/plugin marketplace add FurkanEdizkan/My-Skills`. The skills then activate by
+description, or invoke one explicitly as `/skills:<name>` (e.g.
+`/skills:conventional-commits`).
+
 ## Branching
 
 `main` is protected — no direct pushes. All changes land via Pull Request.
