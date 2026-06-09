@@ -19,7 +19,8 @@ __pycache__/
 .DS_Store
 *.log
 
-# Claude Code local session state — entirely ignored.
-# Skills are sourced from the My-Skills plugin marketplace (see AGENTS.md),
-# not vendored in this repo, so there is nothing in .claude/ worth tracking.
-.claude/
+# Claude Code: ignore local session state by default, but keep the
+# project-committed settings.json — it registers the My-Skills marketplace and
+# enables the skills plugin for anyone working in this repo (see AGENTS.md).
+.claude/*
+!.claude/settings.json
