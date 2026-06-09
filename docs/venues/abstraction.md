@@ -1,12 +1,14 @@
 # Venue abstraction — design
 
-Phase 8 expands Capital beyond Binance. The [`Venue`](../../engine/venues/base.py)
-interface is how: every trading venue implements one contract, and the rest of
+The [`Venue`](../../engine/venues/base.py) interface is how Capital stays
+venue-pluggable: every trading venue implements one contract, and the rest of
 the engine never learns which venue it is talking to.
 
-This document is the design (issue #46). The interface lands here; the
-Binance/Alpaca/Polymarket implementations and the engine rewiring follow as
-separate issues.
+This document is the abstraction's design (issue #46). Capital currently ships
+**Binance only**; the interface is preserved so additional venues can be
+re-added later as one new implementation file plus a registry entry. See
+[research.md](research.md) for the original multi-venue survey that informed
+the abstraction's shape.
 
 ## The interface
 
@@ -47,45 +49,32 @@ places orders* becomes venue-pluggable.
 | `reconcile.get_futures_positions` | `Venue.positions()` |
 
 The Sim executor stays as-is — simulation is venue-independent (paper fills on
-whatever venue's candles).
+the active venue's candles).
 
-## Constraints carried from the research (#45)
+## Constraints carried from the research
 
-The venue survey surfaced three things the interface deliberately accounts for:
+The original venue survey (see [research.md](research.md)) surfaced three
+things the interface deliberately accounts for:
 
-- **Auth is not always key/secret.** Polymarket signs requests with an
-  Ethereum wallet. The `Venue` ABC takes **no credentials** — each
-  implementation's constructor accepts whatever it needs, so the abstraction
-  never assumes a key/secret pair.
-- **Not every venue has a sandbox.** `supports_sandbox` lets the Sim/Testnet/
-  Live mode model offer only the modes a venue actually has.
+- **Auth is not always key/secret.** Some venues use wallet signing or
+  multi-step credential derivation. The `Venue` ABC takes **no credentials** —
+  each implementation's constructor accepts whatever it needs, so the
+  abstraction never assumes a key/secret pair.
+- **Not every venue has a sandbox.** `supports_sandbox` lets the
+  Sim/Testnet/Live mode model offer only the modes a venue actually has.
 - **Fee models vary** (commission-free, per-share, per-contract, maker/taker).
   The realised fee rides on `OrderResult.fee`; backtest fee *estimation* stays
   the backtest runner's separate `FeeModel`.
 
-## Migration plan — complete
+## Re-adding a venue
 
-1. ✅ **`Venue` interface** — landed (#46).
-2. ✅ **`BinanceVenue`** — Binance wrapped as the first venue, no behaviour
-   change.
-3. ✅ **Rewire the engine** — the trading engine, market-data `/klines` API,
-   reconciliation and order execution all depend on a `Venue` rather than
-   `BinanceClient` + executors directly (#110).
-4. ✅ **Add venues** — `AlpacaVenue` (stocks) and `PolymarketVenue` (prediction
-   markets) are implemented behind the interface.
-5. ✅ **UI** — a venue selector on Settings; Markets / Strategies / History show
-   the active venue.
+The abstraction is intentionally preserved for this. To bring an additional
+venue back online:
 
-Keeping each venue behind this interface is what made the expansion additive
-rather than a rewrite.
-
-### Known follow-ups
-
-- **Routing is Binance-only.** `VenueRouter` and `ExecutorRouter` wire only
-  Binance — selecting Alpaca or Polymarket as the active venue falls back to
-  Binance with a warning. Wiring those venues (with their credential handling)
-  is tracked separately.
-- **Market-data API:** only `/klines` is venue-routed; tickers, funding and
-  order-book endpoints are still Binance-specific.
-- **Testnet/Live execution** is code-complete but not yet exercised against a
-  real venue. See [api-features.md](api-features.md).
+1. Add `<name>.py` under `engine/venues/` implementing the `Venue` ABC.
+2. Append a `VenueInfo(...)` entry to `AVAILABLE_VENUES` in
+   `engine/venues/registry.py`.
+3. Add the new class to `_VENUE_CLASSES` in `engine/venues/factory.py` and
+   add a `build_venue` branch wiring its credentials.
+4. Add the venue's setup guide under `docs/venues/`.
+5. Add hermetic unit tests under `engine/tests/`.

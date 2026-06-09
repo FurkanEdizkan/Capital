@@ -7,7 +7,6 @@ from sqlmodel import Session
 
 from appsettings.store import (
     TradingMode,
-    set_active_venue,
     set_mode,
     set_venue_credentials,
 )
@@ -93,15 +92,6 @@ def test_executor_is_cached(session: Session) -> None:
     router = ExecutorRouter(builder=builder)
     assert router.resolve(session) is router.resolve(session)
     assert len(builder.calls) == 1  # built once, then cached
-
-
-def test_active_venue_is_resolved(session: Session) -> None:
-    set_mode(session, TradingMode.live)
-    set_active_venue(session, "alpaca")
-    set_venue_credentials(session, "alpaca", {"api_key": "k", "api_secret": "s"})
-    builder = _FakeBuilder()
-    ExecutorRouter(builder=builder).resolve(session)
-    assert builder.calls == [("alpaca", TradingMode.live)]
 
 
 def test_mode_switch_changes_the_executor(session: Session) -> None:

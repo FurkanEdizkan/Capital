@@ -17,6 +17,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sourced Claude skills (`conventional-commits`, `conventional-branches`,
   `modular-services`) from the [My-Skills](https://github.com/FurkanEdizkan/My-Skills)
   plugin marketplace instead of vendoring them locally.
+- Reorganized `docs/` by topic into `docs/operations/` and `docs/venues/`;
+  normalized naming to lowercase-kebab; trimmed `README.md` by moving manual
+  setup and the project-structure tree to a new `docs/development.md`; added
+  a topical `docs/README.md` index.
+- Consolidated three open engine refactors (#139, #140, #141) into a single
+  modular-services pass: typed `PositionFillRequest`, extracted
+  `manual_order` service, and extracted `strategy_view` projection.
+
+### Removed
+
+- **Platform reduced to Binance only.** Removed the `AlpacaVenue`,
+  `PolymarketVenue`, and `BinanceAlphaVenue` implementations and their
+  dedicated tests. The `Venue` ABC and registry/factory shape are preserved
+  so re-adding a venue later is one new implementation file plus a registry
+  entry. Multi-venue parametrize blocks in cross-cutting tests have been
+  trimmed to Binance.
 
 ## [0.2.0](https://github.com/FurkanEdizkan/Capital/compare/v0.1.0...v0.2.0) - 2026-05-22
 

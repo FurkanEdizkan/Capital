@@ -1,15 +1,21 @@
 # Venue API features — offered vs. used
 
 A per-venue inventory of what each trading API *can* do, and what Capital
-*actually uses* today. The gap is the roadmap: most of each API is untapped.
+*actually uses* today. The gap is the roadmap: most of the API is untapped.
 
 > Provider APIs and product availability change — and regional rules vary.
 > Treat this as a decision-level summary; verify specifics against each
 > provider's live docs before building on them.
 
+> Capital currently supports **Binance only**. The `Venue` abstraction is
+> preserved so additional venues can be re-added as one new implementation
+> plus a registry entry. See [abstraction.md](abstraction.md) and
+> [research.md](research.md) for the design and the broader multi-venue
+> survey.
+
 ## Why this matters
 
-Capital deliberately integrated a **thin, safe slice** of each venue to ship a
+Capital deliberately integrated a **thin, safe slice** of Binance to ship a
 working system. "Capital trades on Binance" really means *spot and USDⓈ-M
 futures market data plus MARKET orders* — a fraction of Binance's API. This
 document makes that explicit so expansion is a deliberate choice, not a
@@ -27,7 +33,6 @@ lines:
 | **COIN-M Futures** | Coin-margined futures | ❌ |
 | **Margin** | Borrow to trade spot with leverage | ❌ |
 | **Options** | European-style crypto options | ❌ |
-| **Tokenized stocks** | On-chain tokens tracking real equities — AAPLon, TSLAon, NVDAon, QQQon… via the Ondo Finance partnership on **Binance Alpha** (2026; not US-available) | ⚠ market data only — `BinanceAlphaVenue` is read-only (Sim-mode tradeable; no order API yet) |
 | **Convert / Buy Crypto** | One-click swaps, card purchases | ❌ |
 | **Earn / Staking / Sub-accounts / Withdrawals** | Account & yield features | ❌ |
 
@@ -48,44 +53,15 @@ roadmap.
 rates, order-book depth, live WebSocket ticker streams. Untapped: trades,
 mark/index price streams, full depth, account-data user streams.
 
-## Alpaca — offered vs. used
-
-| Alpaca capability | Offered | Capital uses it? |
-|-------------------|---------|------------------|
-| **US equities** (stocks, ETFs, fractional shares) | ✅ | ✅ bars, latest trade, MARKET orders, positions |
-| **Options** (US equity options) | ✅ | ❌ |
-| **Crypto** (~20 coins) | ✅ | ❌ (Capital uses Binance for crypto) |
-| **Order types** | MARKET, LIMIT, STOP, STOP_LIMIT, trailing, bracket | ❌ MARKET only |
-| **Paper environment** | ✅ free, global | ✅ maps to Capital's Testnet mode |
-| **Account data / corporate actions / watchlists** | ✅ | ❌ |
-
-Alpaca is commission-free and its paper account mirrors live — the
-lowest-friction second asset class. `AlpacaVenue` covers stock bars, latest
-trade, MARKET orders and positions; options and crypto are untouched.
-
-## Polymarket — offered vs. used
-
-| Polymarket capability | Offered | Capital uses it? |
-|-----------------------|---------|------------------|
-| **CLOB market data** (price history, midpoint, books) | ✅ | ✅ price history + midpoint |
-| **Order placement** (limit & market on the CLOB) | ✅ | ✅ MARKET via the signing client |
-| **Positions** (on-chain, per wallet) | ✅ via data API | ✅ for reconciliation |
-| **WebSocket feed** | ✅ | ❌ (REST polling only) |
-| **Sandbox / paper** | ❌ none exists | — Sim mode only |
-
-A Polymarket "symbol" is an outcome **token id**; prices are probabilities in
-0..1; collateral is USDC and settlement is on-chain. Auth is wallet-based
-(L1 → L2), not key/secret — see [polymarket-setup.md](polymarket-setup.md).
-
 ## Summary — the untapped surface
 
 | Theme | Status |
 |-------|--------|
 | Binance spot & USDⓈ-M futures, MARKET orders | ✅ in use |
-| LIMIT / STOP / bracket orders (all venues) | ❌ roadmap |
+| LIMIT / STOP / bracket orders | ❌ roadmap |
 | Binance margin, options, COIN-M | ❌ not planned |
-| Binance tokenized stocks (Ondo / Alpha) | ⚠ read-only `BinanceAlphaVenue` — Sim-mode only; live order API not yet wired |
+| Binance tokenized stocks (Ondo / Alpha) | ❌ deferred — separate venue surface |
 | Manual spot buy + self-custody withdrawal | ❌ roadmap |
-| Alpaca / Polymarket as a selectable active venue | ❌ implemented but not wired into routing |
+| Additional venues (US equities, prediction markets, …) | ❌ deferred — re-added on top of solid Binance base |
 
 The roadmap items are tracked as GitHub issues; see the project board.

@@ -1,9 +1,15 @@
 # Venue research — open trading APIs
 
-Phase 8 expands Capital beyond Binance to **stocks, stock-index futures and
-prediction markets**. This is the research deliverable: a survey of brokers
-and markets with open trading APIs, a comparison on the axes that matter for
-this platform, and a recommendation for the first targets.
+> **Status: audit trail.** Capital today supports **Binance only**. This file
+> documents the original multi-venue survey that informed the `Venue`
+> abstraction's design — kept as the rationale for the abstraction's shape,
+> not as a current to-do list. When a venue is re-introduced, revisit the
+> relevant section below and refresh it against the venue's live docs.
+
+Phase 8 originally expanded Capital beyond Binance to **stocks, stock-index
+futures and prediction markets**. This was the research deliverable: a survey
+of brokers and markets with open trading APIs, a comparison on the axes that
+matter for this platform, and a recommendation for the first targets.
 
 > Pricing, regional rules and API surfaces change. Treat the specifics below
 > as a decision-level summary — verify current details against each provider's

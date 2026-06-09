@@ -124,14 +124,13 @@ def test_mode_change_is_audited(settings_client: TestClient, session: Session) -
 def test_store_venue_credentials(settings_client: TestClient) -> None:
     headers = _auth(settings_client)
     resp = settings_client.put(
-        "/api/settings/venue-credentials/alpaca",
+        "/api/settings/venue-credentials/binance",
         json={"fields": {"api_key": "ak-1", "api_secret": "as-2"}},
         headers=headers,
     )
     assert resp.status_code == 204
     read = settings_client.get("/api/settings", headers=headers)
-    assert read.json()["venue_credentials_configured"]["alpaca"] is True
-    assert read.json()["venue_credentials_configured"]["polymarket"] is False
+    assert read.json()["venue_credentials_configured"]["binance"] is True
 
 
 def test_venue_credentials_reject_unknown_venue(settings_client: TestClient) -> None:
@@ -145,7 +144,7 @@ def test_venue_credentials_reject_unknown_venue(settings_client: TestClient) -> 
 
 def test_venue_credentials_reject_wrong_fields(settings_client: TestClient) -> None:
     resp = settings_client.put(
-        "/api/settings/venue-credentials/alpaca",
+        "/api/settings/venue-credentials/binance",
         json={"fields": {"api_key": "x"}},  # missing api_secret
         headers=_auth(settings_client),
     )
@@ -194,25 +193,11 @@ def test_ai_spend_cap_rejects_negative(settings_client: TestClient) -> None:
     assert resp.status_code == 422
 
 
-def test_testnet_blocked_when_active_venue_has_no_sandbox(
-    settings_client: TestClient,
-) -> None:
-    headers = _auth(settings_client)
-    settings_client.put(
-        "/api/venues/active", json={"venue": "polymarket"}, headers=headers
-    )
-    # Polymarket has no sandbox — switching to Testnet is rejected.
-    resp = settings_client.put(
-        "/api/settings/mode", json={"mode": "testnet"}, headers=headers
-    )
-    assert resp.status_code == 409
-
-
 def test_venue_credentials_audited_without_values(
     settings_client: TestClient, session: Session
 ) -> None:
     settings_client.put(
-        "/api/settings/venue-credentials/alpaca",
+        "/api/settings/venue-credentials/binance",
         json={"fields": {"api_key": "secret-ak", "api_secret": "secret-as"}},
         headers=_auth(settings_client),
     )

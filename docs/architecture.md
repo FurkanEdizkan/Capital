@@ -17,8 +17,9 @@ monorepo of two long-lived services plus a database.
                                          └────────────┘
 ```
 
-The **engine** is the only component that talks to venues (Binance, Alpaca,
-Polymarket). The **web** dashboard is purely a client of the engine's API —
+The **engine** is the only component that talks to the venue (Binance today;
+the `Venue` abstraction keeps the door open for others). The **web** dashboard
+is purely a client of the engine's API —
 closing the browser never stops trading. **PostgreSQL** holds strategies,
 trades, positions, candle cache and equity history; the schema is managed with
 Alembic migrations.
@@ -29,7 +30,7 @@ Alembic migrations.
 | --------- | -------------- | -------- |
 | Engine API | REST + WebSocket surface for the dashboard and external agents | `engine/api/` |
 | Strategy tick loop | Schedules indicator / AI strategies, applies risk + allocation, routes orders | `engine/trading/`, `engine/strategies/` |
-| Venues | Binance / Alpaca / Polymarket adapters behind a common interface | `engine/exchange/`, `engine/strategies/plugins/` |
+| Venues | Binance adapter behind the `Venue` interface; others re-added later | `engine/venues/`, `engine/exchange/` |
 | Market data | Candle cache + live streams | `engine/marketdata/` |
 | Auth | JWT login, roles, API tokens, audit log | `engine/auth/` |
 | Accounting | Honest PnL (Decimal-based), equity snapshots | `engine/trading/` |

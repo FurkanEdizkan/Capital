@@ -48,18 +48,12 @@ def test_resolves_the_default_venue(session: Session) -> None:
     assert router.resolve(session) is binance
 
 
-def test_resolves_the_active_venue(session: Session) -> None:
-    binance, alpaca = _FakeVenue("binance"), _FakeVenue("alpaca")
-    router = VenueRouter(builder=_builder({"binance": binance, "alpaca": alpaca}))
-    set_active_venue(session, "alpaca")
-    assert router.resolve(session) is alpaca
-
-
-def test_unwired_active_venue_falls_back_to_default(session: Session) -> None:
+def test_unknown_active_venue_falls_back_to_default(session: Session) -> None:
     binance = _FakeVenue("binance")
-    # The builder only knows binance — an unknown active venue raises KeyError.
+    # The builder only knows binance — an unknown active venue raises KeyError
+    # and the router falls back to the default.
     router = VenueRouter(builder=_builder({"binance": binance}))
-    set_active_venue(session, "polymarket")
+    set_active_venue(session, "kraken")
     assert router.resolve(session) is binance
 
 
