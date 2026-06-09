@@ -194,14 +194,10 @@ Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
 
 Project skills (Conventional Commits, Conventional Branches, modular service
 design) live in the [My-Skills](https://github.com/FurkanEdizkan/My-Skills)
-plugin marketplace. Install once per machine:
-
-```sh
-/plugin marketplace add FurkanEdizkan/My-Skills
-/plugin install skills@furkanedizkan-skills
-```
-
-See [AGENTS.md](AGENTS.md) for the full agent guide.
+plugin marketplace, pre-registered in [`.claude/settings.json`](.claude/settings.json).
+Claude Code will offer to trust + install them the first time you open this
+repo — no manual step required. See [AGENTS.md](AGENTS.md) for the full agent
+guide.
 
 ### For AI agents and automated contributors
 

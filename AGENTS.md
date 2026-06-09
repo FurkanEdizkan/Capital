@@ -39,7 +39,10 @@ in **Capital**. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 This repo's Claude skills live in the
 [`FurkanEdizkan/My-Skills`](https://github.com/FurkanEdizkan/My-Skills) plugin
-marketplace, not in `.claude/skills/`. Install them once per machine:
+marketplace, not in `.claude/skills/`. The marketplace and the `skills` plugin
+are pre-registered in [`.claude/settings.json`](.claude/settings.json), so
+Claude Code will offer to trust + install them automatically the first time you
+open this repo. If you need to install manually:
 
 ```sh
 /plugin marketplace add FurkanEdizkan/My-Skills
