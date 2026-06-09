@@ -7,7 +7,7 @@ and how to obtain API keys for paper or live trading.
 > the engine's `VenueRouter` only wires Binance today — selecting Alpaca as the
 > active venue currently falls back to Binance with a warning. This guide
 > describes credential setup so it is ready when the venue is wired in (tracked
-> in the venue-routing issue). See [venue-abstraction.md](venue-abstraction.md).
+> in the venue-routing issue). See [abstraction.md](abstraction.md).
 
 ## Modes at a glance
 
@@ -63,4 +63,4 @@ As with Binance, keys are entered through the dashboard (**Settings**), never in
 - A live Alpaca key can place orders on a real brokerage account — treat it
   like the Binance live key: admin-only, encrypted, never committed.
 - `CAPITAL_SECRET_KEY` encrypts the stored key — back it up separately from the
-  database (see [backup-and-restore.md](backup-and-restore.md)).
+  database (see [backup-and-restore.md](../operations/backup-and-restore.md)).

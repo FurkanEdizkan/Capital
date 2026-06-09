@@ -55,7 +55,7 @@ once added.
 
 ## Key decisions
 
-- **Two-trunk branching** — see [BRANCHING.md](BRANCHING.md).
+- **Two-trunk branching** — see [branching.md](branching.md).
 - **Decimal money math everywhere** — float math is a known source of PnL drift.
 - **Venue abstraction** — every venue implements the same interface so the
   engine's tick loop, executors, and reconciliation are venue-agnostic.

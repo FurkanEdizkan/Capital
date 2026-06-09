@@ -26,7 +26,7 @@ use it during review.
 ## Code
 
 - [ ] Follows the project's structure and conventions (see
-      [ARCHITECTURE.md](ARCHITECTURE.md)).
+      [architecture.md](architecture.md)).
 - [ ] No new direct dependencies without a one-line justification in the PR.
 - [ ] No secrets, credentials, or large binaries committed.
 

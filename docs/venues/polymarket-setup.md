@@ -26,7 +26,7 @@ on-chain order book (CLOB) on **Polygon**, and auth has two levels:
   is used to sign but is never sent over the wire.
 
 The `Venue` abstraction was designed for this — it does not assume a fixed
-key/secret pair (see [venue-research.md](venue-research.md)).
+key/secret pair (see [research.md](research.md)).
 
 ## 1. Prepare a wallet
 

@@ -1,6 +1,6 @@
 # Venue abstraction — design
 
-Phase 8 expands Capital beyond Binance. The [`Venue`](../engine/venues/base.py)
+Phase 8 expands Capital beyond Binance. The [`Venue`](../../engine/venues/base.py)
 interface is how: every trading venue implements one contract, and the rest of
 the engine never learns which venue it is talking to.
 
@@ -88,4 +88,4 @@ rather than a rewrite.
 - **Market-data API:** only `/klines` is venue-routed; tickers, funding and
   order-book endpoints are still Binance-specific.
 - **Testnet/Live execution** is code-complete but not yet exercised against a
-  real venue. See [venue-api-features.md](venue-api-features.md).
+  real venue. See [api-features.md](api-features.md).

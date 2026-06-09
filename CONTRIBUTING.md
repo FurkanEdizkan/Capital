@@ -70,7 +70,7 @@ contributors  ->  feature/*  ->  PR into test  ->  CI green  ->  merged into tes
 - A GitHub workflow opens (or refreshes) a PR from `test` into `main` whenever
   CI on `test` is green. Maintainers review and merge that PR to ship.
 
-See [docs/BRANCHING.md](docs/BRANCHING.md) for the full model and the
+See [docs/branching.md](docs/branching.md) for the full model and the
 branch-protection settings maintainers must configure.
 
 ## Pull request workflow
@@ -91,7 +91,7 @@ branch-protection settings maintainers must configure.
    every commit on your branch is preserved in history, write those cleanly and
    Conventionally too.
 
-Read [docs/PR_GUIDELINES.md](docs/PR_GUIDELINES.md) for the full checklist.
+Read [docs/pull-requests.md](docs/pull-requests.md) for the full checklist.
 
 ## Commit messages
 
