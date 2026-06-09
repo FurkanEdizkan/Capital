@@ -31,8 +31,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
-      - run: uv sync
+          # Pin to the same uv minor the engine Dockerfile uses
+          # (ghcr.io/astral-sh/uv:0.11) so CI and the runtime image
+          # share the resolver/lock format.
+          version: "0.11"
+          # Read the pinned Python patch from engine/.python-version.
+          python-version: "file"
+      - run: uv sync --locked
       - name: Lint (ruff)
         run: uv run ruff check .
       - name: Apply migrations
