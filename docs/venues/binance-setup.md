@@ -17,7 +17,7 @@ before considering live capital.
 ## Market data needs no key
 
 Prices, candlestick history, funding rates and order-book depth come from
-Binance's **public** endpoints — the engine's [`BinanceClient`](../engine/exchange/client.py)
+Binance's **public** endpoints — the engine's [`BinanceClient`](../../engine/exchange/client.py)
 uses a keyless client for them. The Markets page and Sim-mode paper trading
 work out of the box with nothing to configure.
 
@@ -65,7 +65,7 @@ In **Settings → Trading mode**, pick Sim, Testnet or Live.
 Order routing **is** wired to the stored mode. Each tick the engine resolves an
 executor through the `ExecutorRouter`: Sim runs the simulator, Testnet/Live run
 a `VenueExecutor` that places real orders through an authenticated
-`BinanceVenue` (see [venue-abstraction.md](venue-abstraction.md)). Switching to
+`BinanceVenue` (see [abstraction.md](abstraction.md)). Switching to
 Testnet/Live with keys configured therefore places real orders on the next tick.
 
 > ⚠ **Testnet/Live is code-complete but not yet exercised against real
@@ -77,7 +77,7 @@ Testnet/Live with keys configured therefore places real orders on the next tick.
 
 Capital uses a deliberately small slice of the Binance API — spot and USDⓈ-M
 futures market data plus **MARKET** orders. See
-[venue-api-features.md](venue-api-features.md) for the full picture of what each
+[api-features.md](api-features.md) for the full picture of what each
 venue's API offers versus what Capital currently uses.
 
 ## Security notes
@@ -85,5 +85,5 @@ venue's API offers versus what Capital currently uses.
 - Create Binance keys **without withdrawal permission**, and IP-restrict them.
 - `CAPITAL_SECRET_KEY` encrypts the stored keys. Back it up **separately** from
   the database — without it a restored database cannot decrypt them
-  (see [backup-and-restore.md](backup-and-restore.md)).
+  (see [backup-and-restore.md](../operations/backup-and-restore.md)).
 - Keys are admin-only to set and are never logged or exposed by the API.

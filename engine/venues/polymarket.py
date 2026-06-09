@@ -3,7 +3,7 @@
 Polymarket's CLOB exposes a public market-data API (midpoint, price history)
 and an authenticated order API. Reading data is open; placing an order needs
 a wallet-signed payload, so order placement is delegated to an injected
-signing client. There is no sandbox — see docs/venue-research.md.
+signing client. There is no sandbox — see docs/venues/research.md.
 
 A `symbol` here is a Polymarket outcome **token id** (an ERC-1155 token).
 Prices are probabilities in the range 0..1; collateral is USDC.

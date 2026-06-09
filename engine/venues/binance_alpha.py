@@ -1,7 +1,7 @@
 """BinanceAlphaVenue — Binance Alpha tokenized stocks behind the `Venue` interface.
 
 Binance Alpha is a separate trading surface from the Binance spot/futures API
-(see docs/venue-research.md, issue #118 spike). It hosts the Ondo Finance
+(see docs/venues/research.md, issue #118 spike). It hosts the Ondo Finance
 tokenized US equities — AAPLon, TSLAon, NVDAon, QQQon and the like.
 
 Its **public market-data** endpoints are documented and need no credentials.

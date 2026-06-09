@@ -7,7 +7,7 @@ in **Capital**. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Branch off `test`, open PRs into `test`. Never push to or PR into `main`.**
 `main` is promoted from `test` automatically once CI is green. See
-[docs/BRANCHING.md](docs/BRANCHING.md).
+[docs/branching.md](docs/branching.md).
 
 ## Conventions
 

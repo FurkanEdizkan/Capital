@@ -23,7 +23,7 @@ on:
 #
 # Create the PAT with `contents: read` + `pull-requests: write` scope on this
 # repo and add it as a repository secret named PROMOTE_TOKEN
-# (Settings -> Secrets and variables -> Actions). See docs/BRANCHING.md.
+# (Settings -> Secrets and variables -> Actions). See docs/branching.md.
 permissions:
   contents: read
 

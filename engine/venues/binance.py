@@ -3,7 +3,7 @@
 The first concrete venue: it wraps the existing `BinanceClient` (market data,
 instrument filters, account positions) and places MARKET orders through a
 python-binance client. Binance becomes simply "the first venue" — see
-docs/venue-abstraction.md.
+docs/venues/abstraction.md.
 """
 
 import logging

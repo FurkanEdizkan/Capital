@@ -1,7 +1,7 @@
 # Releases
 
 Capital releases are cut from **`main`**, which is only ever updated through
-the automated `test → main` promotion PR (see [BRANCHING.md](BRANCHING.md)).
+the automated `test → main` promotion PR (see [branching.md](branching.md)).
 So "release" means: tag a green commit on `main`.
 
 ## Versioning

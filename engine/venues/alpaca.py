@@ -3,7 +3,7 @@
 Alpaca's REST API is small enough to call directly over `httpx` (no extra
 SDK). The venue covers the trading API (orders, positions, assets) and the
 market-data API (bars, latest trade). It is the recommended first stock
-venue — see docs/venue-research.md.
+venue — see docs/venues/research.md.
 """
 
 import logging

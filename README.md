@@ -63,7 +63,7 @@ Capital is a monorepo of two long-lived services plus a database:
 - **PostgreSQL** — strategies, trades, positions, candle cache and equity
   history. Schema managed with Alembic migrations.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a fuller breakdown.
+See [docs/architecture.md](docs/architecture.md) for a fuller breakdown.
 
 ## Quick start
 
@@ -119,32 +119,21 @@ Market data needs no API key — Sim-mode paper trading works out of the box.
 Placing orders on Testnet or Live needs venue credentials, entered (encrypted)
 through the Settings page.
 
-- [docs/binance-setup.md](docs/binance-setup.md) — Binance (crypto)
-- [docs/alpaca-setup.md](docs/alpaca-setup.md) — Alpaca (US stocks)
-- [docs/polymarket-setup.md](docs/polymarket-setup.md) — Polymarket (prediction markets)
-- [docs/venue-api-features.md](docs/venue-api-features.md) — what each venue API offers vs. what Capital uses
+- [docs/venues/binance-setup.md](docs/venues/binance-setup.md) — Binance (crypto)
+- [docs/venues/alpaca-setup.md](docs/venues/alpaca-setup.md) — Alpaca (US stocks)
+- [docs/venues/polymarket-setup.md](docs/venues/polymarket-setup.md) — Polymarket (prediction markets)
+- [docs/venues/api-features.md](docs/venues/api-features.md) — what each venue API offers vs. what Capital uses
 
 ## Deployment
 
 Run the stack privately over Tailscale, or on a public cloud VM with a real
-domain and Let's Encrypt TLS — see [docs/deployment.md](docs/deployment.md).
+domain and Let's Encrypt TLS — see [docs/operations/deployment.md](docs/operations/deployment.md).
 
-## Manual setup (without Docker)
+## Working on Capital
 
-For working on a single service directly:
-
-```bash
-docker compose up -d postgres        # database only
-
-cd engine                            # Python engine — uses `uv`
-uv sync
-uv run alembic upgrade head
-uv run uvicorn main:app --reload     # http://localhost:8000
-
-cd web                               # React dashboard
-npm install
-npm run dev                          # http://localhost:5173
-```
+For local development outside Docker (running engine and web directly), the
+project structure, and the layout of `docs/`, see
+[docs/development.md](docs/development.md).
 
 ## Custom strategies
 
@@ -153,31 +142,6 @@ function that returns strategy instances — the engine auto-discovers it on
 startup. See [`engine/strategies/plugins/README.md`](engine/strategies/plugins/README.md)
 and the [`_example.py`](engine/strategies/plugins/_example.py) template.
 
-## Project structure
-
-```text
-Capital/
-├── engine/            Python trading engine + API
-│   ├── ai/            LLM provider adapters + AI strategy support
-│   ├── api/           REST + WebSocket endpoints
-│   ├── auth/          JWT login, roles, API tokens, audit log
-│   ├── backtest/      historical backtest runner
-│   ├── exchange/      Binance REST/WebSocket client
-│   ├── marketdata/    candle cache + streaming
-│   ├── notify/        Telegram notifications
-│   ├── ops/           boot recovery, watchdog, retention
-│   ├── strategies/    strategy framework, built-ins, plugin loader
-│   ├── trading/       engine loop, executors, portfolio, risk, accounting
-│   ├── mcp_server.py  MCP server — the API as agent tools
-│   └── tests/         pytest suite
-├── web/               React + Vite + TypeScript dashboard
-├── scripts/           install.sh, deploy.sh, backup/restore
-├── caddy/             reverse-proxy config for production
-├── docs/              architecture, branching, PR rules, venue setup
-├── docker-compose.yml base service definitions
-└── .github/           CI workflows, issue & PR templates
-```
-
 ## Contributing
 
 Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
@@ -185,7 +149,7 @@ Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
 
 - **Branch off `test`, open PRs into `test`.** Never PR into `main` —
   `main` is promoted from `test` automatically once CI is green. See
-  [docs/BRANCHING.md](docs/BRANCHING.md).
+  [docs/branching.md](docs/branching.md).
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org).
 - Run `ruff` + `pytest` (engine) and `npm run lint` + `build` (web) before a PR.
 - PRs are merged with a **merge commit** — branches are kept.
@@ -216,10 +180,13 @@ Capital is designed to be navigable and contributable by AI agents:
 
 ## Documentation
 
-- [Architecture](docs/ARCHITECTURE.md) — how Capital is put together
-- [Branching model](docs/BRANCHING.md) — the `test → main` workflow
-- [Pull request guidelines](docs/PR_GUIDELINES.md)
-- [Releases](docs/RELEASES.md)
+- [Architecture](docs/architecture.md) — how Capital is put together
+- [Branching model](docs/branching.md) — the `test → main` workflow
+- [Pull request guidelines](docs/pull-requests.md)
+- [Releases](docs/releases.md)
+- [Development setup](docs/development.md) — manual setup, project structure
+- [Operations](docs/operations/) — deployment, backup & restore
+- [Venues](docs/venues/) — Binance / Alpaca / Polymarket setup + design
 - [Contributing](CONTRIBUTING.md) — dev setup and PR rules
 - [Security policy](SECURITY.md)
 - [Agent guide](AGENTS.md)
