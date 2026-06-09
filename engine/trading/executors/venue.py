@@ -2,9 +2,8 @@
 
 The executor is venue-agnostic: it sizes an order against the instrument's
 trading filters, submits it through `Venue.place_order`, and records the fill
-in the shared sub-ledger. Whether the venue is Binance, Alpaca or Polymarket —
-and whether it points at a testnet or a live account — is decided by the
-`Venue` instance handed in, not by this class.
+in the shared sub-ledger. Whether the venue points at a testnet or a live
+account is decided by the `Venue` instance handed in, not by this class.
 
 `SimExecutor` (sim.py) stays separate: it never touches a venue.
 """

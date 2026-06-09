@@ -5,7 +5,7 @@ operator changes at runtime through the Settings page, persisted in the DB.
 
 Venue credentials are stored per-venue, one encrypted row per field, keyed
 `venue:{venue}:{field}` — so each venue declares its own credential shape
-(Binance/Alpaca: api_key+api_secret; Polymarket: wallet key+address).
+(Binance: api_key+api_secret).
 """
 
 from collections.abc import Iterable

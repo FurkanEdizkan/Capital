@@ -1,10 +1,11 @@
 """Venue abstraction — one interface across every trading venue.
 
 Capital's strategy framework, risk manager, accounting and capital allocator
-are venue-agnostic. Each venue — Binance today, then Alpaca / Polymarket / a
-futures broker — implements this `Venue` interface, and every venue-specific
-assumption stays behind it. See docs/venues/abstraction.md for the design and
-the migration plan.
+are venue-agnostic. Each venue implements this `Venue` interface, and every
+venue-specific assumption stays behind it. Capital today supports Binance
+only; the abstraction is preserved so re-adding a venue later is one new
+implementation file plus a registry entry. See docs/venues/abstraction.md
+for the design.
 """
 
 from abc import ABC, abstractmethod
@@ -88,8 +89,7 @@ class Venue(ABC):
     """A trading venue — market data, instruments and order placement.
 
     Concrete venues implement every abstract method. `name` identifies the
-    venue; `supports_sandbox` says whether a paper/test environment exists
-    (Polymarket, for one, has none — see docs/venues/research.md).
+    venue; `supports_sandbox` says whether a paper/test environment exists.
     `fee_rate` is a representative taker commission rate, surfaced for
     cost visibility — actual fees are recorded per fill.
     """

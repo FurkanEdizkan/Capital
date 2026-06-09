@@ -46,7 +46,7 @@ Capital/
 │   ├── releases.md         versioning + tagging
 │   ├── development.md      this file
 │   ├── operations/         deployment, backup & restore
-│   └── venues/             Binance / Alpaca / Polymarket setup + design
+│   └── venues/             Binance setup + design
 ├── docker-compose.yml      base service definitions
 └── .github/                CI workflows, issue & PR templates
 ```
