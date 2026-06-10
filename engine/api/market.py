@@ -19,7 +19,9 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from pydantic import BaseModel
 
+from appsettings.store import get_latency_warn_ms
 from auth.deps import CurrentUser, SessionDep
 from auth.security import decode_token
 from exchange.client import (
@@ -30,6 +32,7 @@ from exchange.client import (
     Ticker,
 )
 from marketdata.cache import refresh_venue_candles
+from marketdata.latency import registry as latency_registry
 from marketdata.models import Candle
 from marketdata.stream import StreamManager
 from trading.venue_router import VenueRouter
@@ -153,3 +156,37 @@ async def market_stream(websocket: WebSocket, token: str = Query(...)) -> None:
             await asyncio.sleep(1.0)
     except WebSocketDisconnect:
         pass
+
+
+class LatencyStatsRead(BaseModel):
+    """Rolling-window latency for one (market, symbol, kind)."""
+
+    market: str
+    symbol: str
+    kind: str  # ws (stream event time) | rest (candle round-trip)
+    current_ms: float
+    p50_ms: float
+    p95_ms: float
+    max_ms: float
+    samples: int
+    degraded: bool
+
+
+class LatencyRead(BaseModel):
+    """Price-feed latency — per-feed stats plus the overall degraded flag."""
+
+    warn_ms: int
+    degraded: bool
+    feeds: list[LatencyStatsRead]
+
+
+@router.get("/latency", response_model=LatencyRead)
+def feed_latency(_: CurrentUser, session: SessionDep) -> LatencyRead:
+    """How delayed the price data is, per feed (ws event time + REST RTT)."""
+    warn_ms = get_latency_warn_ms(session)
+    stats = latency_registry.stats(warn_ms=float(warn_ms))
+    return LatencyRead(
+        warn_ms=warn_ms,
+        degraded=any(s.degraded for s in stats),
+        feeds=[LatencyStatsRead(**s.__dict__) for s in stats],
+    )

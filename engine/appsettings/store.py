@@ -364,3 +364,22 @@ def get_news_interval_hours(session: Session) -> int | None:
 def set_news_interval_hours(session: Session, hours: int | None) -> None:
     """Set the news refresh interval (None/0 restores the daily schedule)."""
     set_setting(session, _NEWS_INTERVAL, str(hours) if hours else "")
+
+
+# -- feed latency ---------------------------------------------------------------
+
+_LATENCY_WARN_MS = "latency_warn_ms"
+
+
+def get_latency_warn_ms(session: Session) -> int:
+    """Feed latency above this (ms) marks the feed degraded (default 2000)."""
+    raw = get_setting(session, _LATENCY_WARN_MS)
+    try:
+        return max(100, int(raw)) if raw else 2000
+    except ValueError:
+        return 2000
+
+
+def set_latency_warn_ms(session: Session, warn_ms: int) -> None:
+    """Set the degraded-feed warning threshold in milliseconds."""
+    set_setting(session, _LATENCY_WARN_MS, str(max(100, warn_ms)))

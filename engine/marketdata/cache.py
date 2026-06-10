@@ -5,11 +5,13 @@ the latest bars and inserts only those not already stored.
 """
 
 from datetime import UTC, datetime, timedelta
+from time import perf_counter
 
 from sqlmodel import Session, select
 
 from exchange.client import BinanceClient, Market
 from marketdata.freshness import interval_seconds
+from marketdata.latency import registry as latency_registry
 from marketdata.models import Candle
 from venues.base import Venue
 
@@ -139,7 +141,12 @@ def refresh_venue_candles(
     close time, so it is derived from the open time plus the interval length.
     `market` selects the venue sub-market and is also the cache key.
     """
+    started = perf_counter()
     fetched = venue.candles(symbol, interval, limit, market=market.value)
+    # REST round-trip latency — how long fresh data takes to ask for.
+    latency_registry.record(
+        market.value, symbol, "rest", (perf_counter() - started) * 1000
+    )
     existing = _existing_open_times(
         session, market=market, symbol=symbol, interval=interval
     )
