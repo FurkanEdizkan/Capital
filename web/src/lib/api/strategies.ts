@@ -10,10 +10,14 @@ export async function fetchStrategies(): Promise<Strategy[]> {
   return data;
 }
 
-export async function updateAllocation(name: string, allocated: string): Promise<Strategy> {
+export async function updateAllocation(
+  name: string,
+  allocated: string,
+  maxLoss?: string,
+): Promise<Strategy> {
   const { data, error } = await api.PATCH("/api/strategies/{name}/allocation", {
     params: { path: { name } },
-    body: { allocated },
+    body: { allocated, max_loss: maxLoss ?? null },
   });
   if (error || !data) throw new Error("Failed to update allocation");
   return data;

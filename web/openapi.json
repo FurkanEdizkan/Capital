@@ -197,6 +197,22 @@
               }
             ],
             "title": "Allocated"
+          },
+          "max_loss": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Loss"
           }
         },
         "required": [
@@ -2273,6 +2289,11 @@
             "title": "Market",
             "type": "string"
           },
+          "max_loss": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Max Loss",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -2313,6 +2334,7 @@
           "timeframe",
           "enabled",
           "allocated",
+          "max_loss",
           "realized_pnl",
           "unrealized_pnl",
           "fees",

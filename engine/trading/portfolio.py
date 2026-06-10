@@ -163,6 +163,31 @@ def list_allocations(session: Session) -> list[StrategyAllocation]:
     return list(session.exec(select(StrategyAllocation)).all())
 
 
+def get_max_loss(session: Session, strategy: str) -> Decimal:
+    """The strategy's loss cap — `0` (the default) means no cap."""
+    row = session.exec(
+        select(StrategyAllocation).where(StrategyAllocation.strategy == strategy)
+    ).first()
+    return row.max_loss if row else Decimal(0)
+
+
+def set_max_loss(
+    session: Session, strategy: str, amount: Decimal
+) -> StrategyAllocation:
+    """Set the strategy's loss cap (`0` disables it)."""
+    row = session.exec(
+        select(StrategyAllocation).where(StrategyAllocation.strategy == strategy)
+    ).first()
+    if row is None:
+        row = StrategyAllocation(strategy=strategy, max_loss=Decimal(amount))
+    else:
+        row.max_loss = Decimal(amount)
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return row
+
+
 def record_fill(
     session: Session,
     *,

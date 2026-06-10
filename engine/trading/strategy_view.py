@@ -17,6 +17,7 @@ from appsettings.store import get_strategy_ai_config
 from strategies.base import BaseStrategy
 from trading.accounting import strategy_summary
 from trading.lifecycle import is_enabled
+from trading.portfolio import get_max_loss
 
 
 class StrategyRead(BaseModel):
@@ -29,6 +30,8 @@ class StrategyRead(BaseModel):
     timeframe: str
     enabled: bool
     allocated: Decimal
+    # Loss cap — 0 means disabled. The engine closes + disables on breach.
+    max_loss: Decimal
     realized_pnl: Decimal
     unrealized_pnl: Decimal
     fees: Decimal
@@ -62,6 +65,7 @@ def read_strategy_state(
         timeframe=strategy.timeframe,
         enabled=is_enabled(session, strategy.name),
         allocated=summary.allocated,
+        max_loss=get_max_loss(session, strategy.name),
         realized_pnl=summary.realized_pnl,
         unrealized_pnl=summary.unrealized_pnl,
         fees=summary.fees,
