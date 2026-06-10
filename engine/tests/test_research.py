@@ -239,3 +239,76 @@ def test_research_settings_round_trip(client: TestClient) -> None:
         headers=headers,
     )
     assert bad.status_code == 400
+
+
+def test_council_settings_round_trip(client: TestClient) -> None:
+    headers = _login(client)
+    resp = client.put(
+        "/api/settings/council",
+        json={
+            "members": [
+                {"provider": "claude", "model": "claude-sonnet-4-6"},
+                {"provider": "ollama", "model": "llama3"},
+            ],
+            "quorum": "0.6",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["council_members"]) == 2
+    assert body["council_members"][0]["provider"] == "claude"
+    assert Decimal(str(body["council_quorum"])) == Decimal("0.6")
+
+    bad = client.put(
+        "/api/settings/council",
+        json={"members": [{"provider": "nonsense"}]},
+        headers=headers,
+    )
+    assert bad.status_code == 400
+
+
+def test_council_review_api(
+    client: TestClient, session: Session, monkeypatch
+) -> None:
+    from ai import council
+    from tests.test_council import VotingProvider
+
+    headers = _login(client)
+    client.put(
+        "/api/settings/council",
+        json={"members": [{"provider": "claude", "model": "m"}], "quorum": "0.5"},
+        headers=headers,
+    )
+    monkeypatch.setattr(
+        research_api_module().service,
+        "resolve_writer",
+        lambda s: (FakeProvider(_NARRATIVE), None),
+    )
+    monkeypatch.setattr(
+        council, "get_provider", lambda name, **_kw: VotingProvider("buy", "0.9")
+    )
+    (report,) = client.post(
+        "/api/research/run", json={"symbol": "BTCUSDT"}, headers=headers
+    ).json()
+
+    no_review = client.get(f"/api/research/{report['id']}/review", headers=headers)
+    assert no_review.status_code == 404
+
+    resp = client.post(f"/api/research/{report['id']}/review", headers=headers)
+    assert resp.status_code == 200
+    review = resp.json()
+    assert review["verdict"] == "buy"
+    assert review["quorum_met"] is True
+    assert len(review["votes"]) == 1
+
+    fetched = client.get(
+        f"/api/research/{report['id']}/review", headers=headers
+    ).json()
+    assert fetched["id"] == review["id"]
+
+
+def research_api_module():
+    from api import research as research_api
+
+    return research_api

@@ -14,18 +14,20 @@ from pydantic import BaseModel, Field
 from ai.analyze import analyze
 from ai.providers import LLMError, get_provider
 from ai.providers.base import Decision, LLMProvider
-from ai.signals import AISignal, SignalStatus, recent_signals
+from ai.signals import (
+    AISignal,
+    SignalBlockedError,
+    SignalStatus,
+    execute_signal,
+    recent_signals,
+)
 from ai.usage import LLMUsage, ModelUsage, model_usage_summary, recent_usage, record_usage
 from api.market import get_venue_router
 from appsettings.store import get_ai_api_key, get_ai_settings
 from auth.deps import CurrentUser, SessionDep, require_admin
 from auth.models import User
-from config import settings
 from trading.executor_router import ExecutorRouter
-from trading.executors.base import ExecutionError, Order
-from trading.models import FillSide
-from trading.portfolio import get_or_create_position
-from trading.risk import RiskManager
+from trading.executors.base import ExecutionError
 from trading.venue_router import VenueRouter
 from venues.base import VenueError
 
@@ -126,41 +128,17 @@ def confirm_signal(
             status.HTTP_409_CONFLICT, f"signal is already {signal.status}"
         )
     try:
-        price = venues.resolve(session).price(signal.symbol)
+        return execute_signal(
+            session, signal, venues, executor_router=_executor_router()
+        )
     except VenueError as exc:
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY, f"could not price {signal.symbol}: {exc}"
         ) from exc
-
-    position = get_or_create_position(
-        session, signal.strategy, signal.market, signal.symbol
-    )
-    order = Order(
-        strategy=signal.strategy,
-        market=signal.market,
-        symbol=signal.symbol,
-        side=FillSide(signal.action),
-        quantity=signal.quantity,
-    )
-    reviewed = RiskManager.from_settings(settings).review(
-        session, order, position, price
-    )
-    if reviewed is None:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            "order blocked by the risk manager (size cap or kill switch)",
-        )
-    executor = _executor_router().resolve(session)
-    try:
-        executor.execute(session, reviewed, reference_price=price)
+    except SignalBlockedError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     except ExecutionError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
-
-    signal.status = SignalStatus.executed.value
-    session.add(signal)
-    session.commit()
-    session.refresh(signal)
-    return signal
 
 
 @router.post("/signals/{signal_id}/dismiss", response_model=AISignal)

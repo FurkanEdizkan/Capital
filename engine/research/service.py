@@ -228,6 +228,8 @@ def run_cycle(session_factory: Callable[[], Session]) -> int:
 
     Best-effort per symbol; stops early once the daily AI spend cap is hit.
     """
+    from ai import council  # late import — council pulls in the trading stack
+
     written = 0
     with session_factory() as session:
         for symbol in get_research_symbols(session):
@@ -238,6 +240,10 @@ def run_cycle(session_factory: Callable[[], Session]) -> int:
                 provider, model = resolve_writer(session)
                 report = write_report(session, symbol, provider=provider, model=model)
                 written += report.status == "written"
+                if report.status == "written":
+                    review = council.review_report(session, report)
+                    if review is not None:
+                        council.emit_signal(session, report, review)
             except Exception:  # noqa: BLE001 — one symbol must not abort the cycle
                 log.exception("research failed for %s", symbol)
     log.info("research cycle wrote %d reports", written)

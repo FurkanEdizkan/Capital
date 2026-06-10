@@ -872,6 +872,148 @@
         "title": "CostsRead",
         "type": "object"
       },
+      "CouncilMember": {
+        "properties": {
+          "model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "CouncilMember",
+        "type": "object"
+      },
+      "CouncilReviewRead": {
+        "description": "A council verdict plus every member's vote.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "quorum_met": {
+            "title": "Quorum Met",
+            "type": "boolean"
+          },
+          "report_id": {
+            "title": "Report Id",
+            "type": "integer"
+          },
+          "strategy_brief": {
+            "title": "Strategy Brief",
+            "type": "string"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          },
+          "votes": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilVoteRead"
+            },
+            "title": "Votes",
+            "type": "array"
+          },
+          "weighted_score": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weighted Score",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "report_id",
+          "verdict",
+          "weighted_score",
+          "quorum_met",
+          "strategy_brief",
+          "created_at",
+          "votes"
+        ],
+        "title": "CouncilReviewRead",
+        "type": "object"
+      },
+      "CouncilSettingsUpdate": {
+        "description": "Council configuration \u2014 an empty member list disables the council.",
+        "properties": {
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilMember"
+            },
+            "maxItems": 8,
+            "title": "Members",
+            "type": "array"
+          },
+          "quorum": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.5",
+            "title": "Quorum"
+          }
+        },
+        "required": [
+          "members"
+        ],
+        "title": "CouncilSettingsUpdate",
+        "type": "object"
+      },
+      "CouncilVoteRead": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "confidence": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "reasoning": {
+            "title": "Reasoning",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "action",
+          "confidence",
+          "reasoning"
+        ],
+        "title": "CouncilVoteRead",
+        "type": "object"
+      },
       "Decision": {
         "description": "A structured trading decision parsed from an LLM response.",
         "properties": {
@@ -1998,6 +2140,21 @@
             "title": "Binance Keys Configured",
             "type": "boolean"
           },
+          "council_members": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Council Members",
+            "type": "array"
+          },
+          "council_quorum": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Council Quorum",
+            "type": "string"
+          },
           "llm_providers_configured": {
             "additionalProperties": {
               "type": "boolean"
@@ -2062,7 +2219,9 @@
           "research_interval_hours",
           "research_writer_provider",
           "research_writer_model",
-          "news_interval_hours"
+          "news_interval_hours",
+          "council_members",
+          "council_quorum"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -4290,6 +4449,100 @@
         ]
       }
     },
+    "/api/research/{report_id}/review": {
+      "get": {
+        "description": "The newest council review for a report, with every vote.",
+        "operationId": "get_review_api_research__report_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Review",
+        "tags": [
+          "research"
+        ]
+      },
+      "post": {
+        "description": "Re-run the council on a report now (admin).",
+        "operationId": "rerun_review_api_research__report_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rerun Review",
+        "tags": [
+          "research"
+        ]
+      }
+    },
     "/api/settings": {
       "get": {
         "description": "Current trading mode and whether Binance keys are stored.",
@@ -4493,6 +4746,53 @@
           }
         ],
         "summary": "Update Binance Keys",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/council": {
+      "put": {
+        "description": "Configure the AI council members and quorum.",
+        "operationId": "update_council_settings_api_settings_council_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouncilSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Council Settings",
         "tags": [
           "settings"
         ]

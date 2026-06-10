@@ -26,6 +26,7 @@ import {
   updateAiActionMode,
   updateAiSettings,
   updateAiSpendCap,
+  updateCouncilSettings,
   updateLlmCredentials,
   updateMode,
   updateResearchSettings,
@@ -99,6 +100,11 @@ export function Settings() {
   const [writerProvider, setWriterProvider] = useState("claude");
   const [writerModel, setWriterModel] = useState("");
   const [newsInterval, setNewsInterval] = useState("");
+
+  const [councilMembers, setCouncilMembers] = useState<
+    { provider: string; model: string }[]
+  >([]);
+  const [councilQuorum, setCouncilQuorum] = useState("0.5");
   // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
   const [llmInputs, setLlmInputs] = useState<
     Record<string, { api_key: string; base_url: string }>
@@ -120,6 +126,13 @@ export function Settings() {
     setWriterProvider(s.research_writer_provider);
     setWriterModel(s.research_writer_model);
     setNewsInterval(s.news_interval_hours ? String(s.news_interval_hours) : "");
+    setCouncilMembers(
+      s.council_members.map((m) => ({
+        provider: m.provider ?? "claude",
+        model: m.model ?? "",
+      })),
+    );
+    setCouncilQuorum(String(s.council_quorum));
   }, []);
 
   const load = useCallback(async () => {
@@ -202,6 +215,17 @@ export function Settings() {
     run(async () => {
       applySettings(await updateAiSpendCap(aiSpendCap || "0"));
       setNotice("LLM spend cap saved.");
+    });
+
+  const saveCouncil = () =>
+    run(async () => {
+      applySettings(
+        await updateCouncilSettings({
+          members: councilMembers.filter((m) => m.provider),
+          quorum: councilQuorum || "0.5",
+        }),
+      );
+      setNotice("Council settings saved.");
     });
 
   const saveResearch = () =>
@@ -688,6 +712,90 @@ export function Settings() {
           />
           <Button kind="primary" disabled={busy} onClick={() => void saveResearch()}>
             Save research settings
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="AI council"
+          subtitle="Models that vote on each research report. The confidence-weighted majority becomes the unified verdict; an empty list disables the council."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 480,
+          }}
+        >
+          {councilMembers.map((m, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <select
+                value={m.provider}
+                onChange={(e) =>
+                  setCouncilMembers((prev) =>
+                    prev.map((row, j) =>
+                      j === i ? { ...row, provider: e.target.value } : row,
+                    ),
+                  )
+                }
+                style={selectStyle}
+              >
+                {Object.keys(settings.llm_providers_configured).map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+              <Input
+                full
+                placeholder="Model (blank = provider default)"
+                value={m.model}
+                onChange={(e) =>
+                  setCouncilMembers((prev) =>
+                    prev.map((row, j) =>
+                      j === i ? { ...row, model: e.target.value } : row,
+                    ),
+                  )
+                }
+              />
+              <Button
+                kind="outline"
+                size="sm"
+                onClick={() =>
+                  setCouncilMembers((prev) => prev.filter((_, j) => j !== i))
+                }
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button
+              kind="outline"
+              size="sm"
+              disabled={councilMembers.length >= 8}
+              onClick={() =>
+                setCouncilMembers((prev) => [
+                  ...prev,
+                  { provider: "claude", model: "" },
+                ])
+              }
+            >
+              Add member
+            </Button>
+          </div>
+          <Input
+            full
+            type="number"
+            placeholder="Quorum (0–1, default 0.5)"
+            value={councilQuorum}
+            onChange={(e) => setCouncilQuorum(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void saveCouncil()}>
+            Save council settings
           </Button>
         </div>
       </Card>

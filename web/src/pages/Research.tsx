@@ -9,8 +9,11 @@ import { I } from "../components/icons";
 import { Badge, Button, Card, EmptyState, Input, SectionHeader } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import {
+  type CouncilReview,
   fetchReports,
+  fetchReview,
   type ResearchReport,
+  rerunReview,
   runResearch,
 } from "../lib/api/research";
 
@@ -74,6 +77,92 @@ function Paragraph({ text }: { text: string }) {
   );
 }
 
+function CouncilPanel({ report }: { report: ResearchReport }) {
+  const { user } = useAuth();
+  const [review, setReview] = useState<CouncilReview | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchReview(report.id)
+      .then(setReview)
+      .catch(() => setReview(null));
+  }, [report.id]);
+
+  const rerun = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setReview(await rerunReview(report.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Council review failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verdictTone = (v: string): "green" | "red" | "muted" =>
+    v === "buy" ? "green" : v === "sell" ? "red" : "muted";
+
+  return (
+    <Section title="Council review">
+      {review ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Badge tone={verdictTone(review.verdict)} size="lg">
+              {review.verdict}
+            </Badge>
+            <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+              weighted score {(Number(review.weighted_score) * 100).toFixed(0)}%
+              {review.quorum_met ? " · quorum met" : " · below quorum"}
+            </span>
+          </div>
+          <Paragraph text={review.strategy_brief} />
+          <table style={{ borderCollapse: "collapse", fontSize: 12.5 }}>
+            <tbody>
+              {review.votes.map((v, i) => (
+                <tr key={i} style={{ borderTop: "1px solid var(--border-soft)" }}>
+                  <td style={{ padding: "4px 10px 4px 0", color: "var(--text-2)" }}>
+                    {v.provider}
+                    {v.model ? ` / ${v.model}` : ""}
+                  </td>
+                  <td style={{ padding: "4px 10px 4px 0" }}>
+                    <Badge tone={v.action === "abstain" ? "muted" : verdictTone(v.action)}>
+                      {v.action}
+                    </Badge>
+                  </td>
+                  <td style={{ padding: "4px 10px 4px 0", color: "var(--text-3)" }}>
+                    {v.action === "abstain"
+                      ? "—"
+                      : `${(Number(v.confidence) * 100).toFixed(0)}%`}
+                  </td>
+                  <td style={{ padding: "4px 0", color: "var(--text-3)" }}>
+                    {v.reasoning}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <span style={{ fontSize: 12.5, color: "var(--text-4)" }}>
+          No council review yet — configure council members in Settings.
+        </span>
+      )}
+      {error && (
+        <div style={{ color: "var(--red)", fontSize: 12.5, marginTop: 6 }}>{error}</div>
+      )}
+      {user?.role === "admin" && (
+        <div style={{ marginTop: 8 }}>
+          <Button kind="outline" size="sm" onClick={rerun} disabled={busy}>
+            {busy ? "Voting…" : review ? "Re-run council" : "Run council"}
+          </Button>
+        </div>
+      )}
+    </Section>
+  );
+}
+
 function ReportDetail({ report }: { report: ResearchReport }) {
   const s = report.sections as Record<string, unknown>;
   const str = (k: string): string => (typeof s[k] === "string" ? (s[k] as string) : "");
@@ -92,6 +181,7 @@ function ReportDetail({ report }: { report: ResearchReport }) {
       <Section title={sectionTitle.summary}>
         <Paragraph text={str("summary")} />
       </Section>
+      <CouncilPanel report={report} />
       {Object.keys(technicals).length > 0 && (
         <Section title={sectionTitle.technicals}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
