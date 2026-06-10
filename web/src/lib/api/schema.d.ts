@@ -1279,6 +1279,8 @@ export interface components {
         AllocationUpdate: {
             /** Allocated */
             allocated: number | string;
+            /** Max Loss */
+            max_loss?: number | string | null;
         };
         /** AnalyzeRequest */
         AnalyzeRequest: {
@@ -2141,6 +2143,8 @@ export interface components {
             kind: string;
             /** Market */
             market: string;
+            /** Max Loss */
+            max_loss: string;
             /** Name */
             name: string;
             /** Net Pnl */

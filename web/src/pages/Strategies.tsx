@@ -46,6 +46,7 @@ export function Strategies() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Strategy | null>(null);
   const [allocDraft, setAllocDraft] = useState("");
+  const [maxLossDraft, setMaxLossDraft] = useState("");
   const [aiEditing, setAiEditing] = useState<Strategy | null>(null);
   const [aiProviderDraft, setAiProviderDraft] = useState("claude");
   const [aiModelDraft, setAiModelDraft] = useState("");
@@ -95,7 +96,7 @@ export function Strategies() {
     const strat = editing;
     setEditing(null);
     void act(async () => {
-      await updateAllocation(strat.name, allocDraft);
+      await updateAllocation(strat.name, allocDraft, maxLossDraft || "0");
       setNotice(`Updated allocation for ${strat.name}.`);
     });
   };
@@ -144,10 +145,17 @@ export function Strategies() {
       key: "enabled",
       label: "Enabled",
       render: (r) => (
-        <Toggle
-          checked={r.enabled}
-          onChange={(v) => void act(async () => void (await updateEnabled(r.name, v)))}
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <Toggle
+            checked={r.enabled}
+            onChange={(v) => void act(async () => void (await updateEnabled(r.name, v)))}
+          />
+          {!r.enabled &&
+            Number(r.max_loss) > 0 &&
+            Number(r.net_pnl) <= -Number(r.max_loss) && (
+              <Badge tone="red">Loss cap hit</Badge>
+            )}
+        </div>
       ),
     },
     {
@@ -163,6 +171,9 @@ export function Strategies() {
             onClick={() => {
               setEditing(r);
               setAllocDraft(String(Number(r.allocated)));
+              setMaxLossDraft(
+                Number(r.max_loss) > 0 ? String(Number(r.max_loss)) : "",
+              );
             }}
           >
             Edit
@@ -370,6 +381,19 @@ export function Strategies() {
             onChange={(e) => setAllocDraft(e.target.value)}
             prefix="$"
             type="number"
+            full
+          />
+          <span style={{ fontSize: 12, color: "var(--text-2)" }}>
+            Max loss (optional). When the strategy's net PnL falls to this
+            loss, the engine closes its positions and disables it. Blank or 0
+            disables the cap.
+          </span>
+          <Input
+            value={maxLossDraft}
+            onChange={(e) => setMaxLossDraft(e.target.value)}
+            prefix="$"
+            type="number"
+            placeholder="0 (no cap)"
             full
           />
         </div>

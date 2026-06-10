@@ -19,7 +19,7 @@ from auth.deps import CurrentUser, SessionDep
 from strategies.base import BaseStrategy
 from trading.engine import TradingEngine
 from trading.lifecycle import is_enabled, set_enabled
-from trading.portfolio import get_allocation, set_allocation
+from trading.portfolio import get_allocation, set_allocation, set_max_loss
 from trading.strategy_view import StrategyRead, read_strategy_state
 
 router = APIRouter(prefix="/api/strategies", tags=["strategies"])
@@ -35,6 +35,8 @@ TradingDep = Annotated[TradingEngine, Depends(get_trading_engine)]
 
 class AllocationUpdate(BaseModel):
     allocated: Decimal = Field(ge=0)
+    # Loss cap in quote currency; 0 disables. Omitted = left unchanged.
+    max_loss: Decimal | None = Field(default=None, ge=0)
 
 
 class EnabledUpdate(BaseModel):
@@ -88,12 +90,16 @@ def update_allocation(
     strategy = _find(engine, name)
     before = get_allocation(session, name)
     set_allocation(session, name, body.allocated)
+    detail = {"from": str(before), "to": str(body.allocated)}
+    if body.max_loss is not None:
+        set_max_loss(session, name, body.max_loss)
+        detail["max_loss"] = str(body.max_loss)
     record_audit(
         session,
         actor=user.username,
         action="strategy.allocation",
         target=name,
-        detail={"from": str(before), "to": str(body.allocated)},
+        detail=detail,
     )
     return read_strategy_state(session, strategy, _marks(streams))
 

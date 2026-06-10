@@ -34,14 +34,15 @@ from ops.watchdog import record_heartbeat
 from research import service as research_service
 from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy, StrategyContext
-from trading.accounting import record_equity_snapshot
+from trading.accounting import record_equity_snapshot, strategy_summary
 from trading.executor_router import ExecutorRouter
 from trading.executors.base import ExecutionError, Order
-from trading.lifecycle import is_enabled
+from trading.lifecycle import is_enabled, set_enabled
 from trading.models import FillSide, PositionSide
 from trading.portfolio import (
     enforce_allocation,
     get_allocation,
+    get_max_loss,
     get_or_create_position,
     list_positions,
 )
@@ -177,6 +178,10 @@ class TradingEngine:
                 executor.execute(session, stop, reference_price=price)
                 log.info("risk: stopped out %r position on %s", strat.name, strat.symbol)
                 return
+            # Risk: per-strategy loss cap — losses must not exceed the
+            # operator's expectation. Also runs regardless of lifecycle state.
+            if self._loss_cap_breached(session, strat, executor):
+                return
             # Lifecycle: a disabled strategy is skipped — no new entries — but
             # its open positions are left intact for a manual close.
             if not is_enabled(session, strat.name):
@@ -274,6 +279,54 @@ class TradingEngine:
                 f"Trade — {strat.name}: {fill.side.value} "
                 f"{fill.quantity} {fill.symbol} @ {fill.price}"
             )
+
+    def _loss_cap_breached(
+        self, session: Session, strat: BaseStrategy, executor: Any
+    ) -> bool:
+        """Enforce the strategy's `max_loss` cap. True when it was breached.
+
+        On breach every open position the strategy holds is force-closed at
+        the last seen price and the strategy is disabled — re-enabling is the
+        operator's explicit choice. A cap of 0 (the default) never triggers.
+        """
+        max_loss = get_max_loss(session, strat.name)
+        if max_loss <= 0:
+            return False
+        summary = strategy_summary(session, strat.name, dict(self._last_prices))
+        if summary.net_pnl > -max_loss:
+            return False
+        log.warning(
+            "strategy %r breached its loss cap (net %s <= -%s) — closing and disabling",
+            strat.name,
+            summary.net_pnl,
+            max_loss,
+        )
+        for pos in list_positions(session, strategy=strat.name, open_only=True):
+            close_price = self._last_prices.get(pos.symbol, pos.entry_price)
+            side = (
+                FillSide.sell if pos.side == PositionSide.long.value else FillSide.buy
+            )
+            order = Order(
+                strategy=strat.name,
+                market=pos.market,
+                symbol=pos.symbol,
+                side=side,
+                quantity=pos.qty,
+            )
+            try:
+                executor.execute(session, order, reference_price=close_price)
+            except ExecutionError:
+                log.warning(
+                    "could not close %r position on %s after loss-cap breach",
+                    strat.name,
+                    pos.symbol,
+                )
+        set_enabled(session, strat.name, False)
+        self._notifier.send(
+            f"Loss cap — {strat.name}: net PnL {summary.net_pnl} breached "
+            f"max loss {max_loss}; positions closed, strategy disabled."
+        )
+        return True
 
     def start(self) -> None:
         if self._scheduler is not None:
