@@ -30,7 +30,11 @@ _NEWS_FEEDS_KEY = "news_feeds"
 
 @dataclass(frozen=True)
 class Feed:
-    """A configured RSS source. `symbol` pins every entry to one asset."""
+    """A configured RSS source. `symbol` pins every entry to one asset.
+
+    `category` is `asset` (crypto/asset coverage), `world` (general world
+    news) or `economic` (macro, central banks, markets-wide economy).
+    """
 
     name: str
     url: str
@@ -38,17 +42,37 @@ class Feed:
     symbol: str | None = None
 
 
-#: Free, no-key RSS feeds. Crypto-wide and markets-wide sources; the per-entry
-#: symbol tagger picks out specific assets from titles/summaries.
+#: Free, no-key RSS feeds. Crypto-wide, world and economic sources; the
+#: per-entry symbol tagger picks out specific assets from titles/summaries.
 DEFAULT_FEEDS: tuple[Feed, ...] = (
+    # Crypto / asset coverage.
     Feed("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/", "asset"),
     Feed("Cointelegraph", "https://cointelegraph.com/rss", "asset"),
+    # World news.
     Feed("Yahoo Finance", "https://finance.yahoo.com/news/rssindex", "world"),
     Feed(
         "Reuters Business",
         "https://www.reutersagency.com/feed/?best-topics=business-finance",
         "world",
     ),
+    Feed("CNBC World", "https://www.cnbc.com/id/100727362/device/rss/rss.html", "world"),
+    Feed("Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml", "world"),
+    Feed("Guardian World", "https://www.theguardian.com/world/rss", "world"),
+    # Economic / macro coverage — central banks, policy, markets-wide economy.
+    Feed("CNBC Economy", "https://www.cnbc.com/id/20910258/device/rss/rss.html", "economic"),
+    Feed(
+        "MarketWatch",
+        "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+        "economic",
+    ),
+    Feed(
+        "Federal Reserve",
+        "https://www.federalreserve.gov/feeds/press_all.xml",
+        "economic",
+    ),
+    Feed("ECB Press", "https://www.ecb.europa.eu/rss/press.html", "economic"),
+    Feed("BBC Business", "https://feeds.bbci.co.uk/news/business/rss.xml", "economic"),
+    Feed("Guardian Business", "https://www.theguardian.com/uk/business/rss", "economic"),
 )
 
 #: Keyword → trading symbol. Lower-cased substrings matched against the
@@ -194,11 +218,17 @@ def refresh(
 
 
 def recent(
-    session: Session, *, symbol: str | None = None, limit: int = 50
+    session: Session,
+    *,
+    symbol: str | None = None,
+    category: str | None = None,
+    limit: int = 50,
 ) -> list[NewsItem]:
-    """Newest-first headlines, optionally filtered to one asset symbol."""
+    """Newest-first headlines, optionally filtered by symbol and/or category."""
     stmt = select(NewsItem)
     if symbol:
         stmt = stmt.where(NewsItem.symbol == symbol)
+    if category:
+        stmt = stmt.where(NewsItem.category == category)
     stmt = stmt.order_by(NewsItem.fetched_at.desc()).limit(limit)  # type: ignore[attr-defined]
     return list(session.exec(stmt).all())

@@ -3636,7 +3636,7 @@
     },
     "/api/news": {
       "get": {
-        "description": "Recent headlines, newest first \u2014 optionally filtered by `symbol`.",
+        "description": "Recent headlines, newest first \u2014 filterable by `symbol` and `category`.",
         "operationId": "list_news_api_news_get",
         "parameters": [
           {
@@ -3653,6 +3653,22 @@
                 }
               ],
               "title": "Symbol"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
             }
           },
           {
