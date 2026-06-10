@@ -181,6 +181,7 @@ def recommend(
         model=completion.model,
         input_tokens=completion.input_tokens,
         output_tokens=completion.output_tokens,
+        purpose="recommend",
     )
     match = _JSON_RE.search(completion.text)
     if not match:

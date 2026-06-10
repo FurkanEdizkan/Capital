@@ -82,6 +82,14 @@ export const NAV: NavItem[] = [
     subtitle: "How assets relate",
   },
   {
+    id: "costs",
+    label: "Costs",
+    path: "/costs",
+    icon: I.Costs,
+    title: "Costs",
+    subtitle: "AI & paid-API spend, attributed",
+  },
+  {
     id: "history",
     label: "History",
     path: "/history",

@@ -69,6 +69,7 @@ def _record_ai_usage(session: Session, strat: AIStrategy) -> None:
         model=usage.model,
         input_tokens=usage.input_tokens,
         output_tokens=usage.output_tokens,
+        purpose="strategy",
         strategy=strat.name,
         action=decision.action.value if decision is not None else None,
         confidence=decision.confidence if decision is not None else None,

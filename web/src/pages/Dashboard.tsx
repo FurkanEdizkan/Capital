@@ -3,6 +3,7 @@
  * recent bot activity. Consumes the portfolio API; refreshes periodically.
  */
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { EquityChart } from "../components/EquityChart";
 import { I } from "../components/icons";
@@ -298,6 +299,11 @@ function CostsCard({ costs }: { costs: Costs }) {
           Number(costs.llm_spend_today),
           2,
         )} LLM spend today`}
+        right={
+          <Link to="/costs" style={{ fontSize: 12, color: "var(--text-2)" }}>
+            View costs →
+          </Link>
+        }
       />
       <div
         style={{

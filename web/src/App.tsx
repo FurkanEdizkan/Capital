@@ -5,6 +5,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Backtest } from "./pages/Backtest";
 import { Connections } from "./pages/Connections";
+import { Costs } from "./pages/Costs";
 import { Guide } from "./pages/Guide";
 import { History } from "./pages/History";
 import { Lab } from "./pages/Lab";
@@ -35,6 +36,7 @@ export function App() {
           <Route path="news" element={<News />} />
           <Route path="research" element={<Research />} />
           <Route path="connections" element={<Connections />} />
+          <Route path="costs" element={<Costs />} />
           <Route path="history" element={<History />} />
           <Route path="guide" element={<Guide />} />
           <Route path="settings" element={<Settings />} />

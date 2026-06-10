@@ -229,6 +229,18 @@ export const I: Record<string, IconComponent> = {
       }
     />
   ),
+  Costs: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <circle cx="8" cy="8" r="6.5" />
+          <path d="M10 5.8 C9.5 5.2 8.8 5 8 5 C6.8 5 6 5.6 6 6.5 C6 8.5 10 7.5 10 9.5 C10 10.4 9.2 11 8 11 C7.2 11 6.5 10.8 6 10.2" />
+          <path d="M8 3.8 L8 5 M8 11 L8 12.2" />
+        </>
+      }
+    />
+  ),
   Research: (p) => (
     <Icon
       {...p}

@@ -202,6 +202,7 @@ def write_report(
             model=completion.model,
             input_tokens=completion.input_tokens,
             output_tokens=completion.output_tokens,
+            purpose="report",
         )
         sections.update(_parse_narrative(completion.text))
     except Exception as exc:  # noqa: BLE001 — a failed report row beats a crash

@@ -270,6 +270,7 @@ def review_report(
                 model=completion.model,
                 input_tokens=completion.input_tokens,
                 output_tokens=completion.output_tokens,
+                purpose="council",
                 action=vote.action,
                 confidence=vote.confidence,
             )
