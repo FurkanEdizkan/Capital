@@ -7,6 +7,7 @@ import { Backtest } from "./pages/Backtest";
 import { Connections } from "./pages/Connections";
 import { Guide } from "./pages/Guide";
 import { History } from "./pages/History";
+import { Lab } from "./pages/Lab";
 import { Markets } from "./pages/Markets";
 import { News } from "./pages/News";
 import { Research } from "./pages/Research";
@@ -30,6 +31,7 @@ export function App() {
           <Route path="markets" element={<Markets />} />
           <Route path="strategies" element={<Strategies />} />
           <Route path="backtest" element={<Backtest />} />
+          <Route path="lab" element={<Lab />} />
           <Route path="news" element={<News />} />
           <Route path="research" element={<Research />} />
           <Route path="connections" element={<Connections />} />

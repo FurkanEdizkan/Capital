@@ -369,6 +369,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lab/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare Grid
+         * @description Backtest every (type × symbol) cell over the same recent range.
+         */
+        post: operations["compare_grid_api_lab_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/recommend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recommend
+         * @description Ask the configured LLM to pick a strategy for the coin, then backtest it.
+         */
+        post: operations["recommend_api_lab_recommend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/market/funding": {
         parameters: {
             query?: never;
@@ -1563,6 +1603,60 @@ export interface components {
             /** Closed */
             closed: number;
         };
+        /** CompareCellRead */
+        CompareCellRead: {
+            /** Equity Sparkline */
+            equity_sparkline: number[];
+            /** Error */
+            error: string;
+            /** Final Equity */
+            final_equity: string;
+            /** Max Drawdown Pct */
+            max_drawdown_pct: string;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Return Pct */
+            return_pct: string;
+            /** Sharpe */
+            sharpe: string;
+            /** Symbol */
+            symbol: string;
+            /** Trades */
+            trades: number;
+            /** Type */
+            type: string;
+            /** Win Rate Pct */
+            win_rate_pct: string;
+        };
+        /**
+         * CompareRequest
+         * @description A grid request — either pivot is just a different shape of the same.
+         */
+        CompareRequest: {
+            /**
+             * Capital
+             * @default 10000
+             */
+            capital: number | string;
+            /**
+             * Days
+             * @default 90
+             */
+            days: number;
+            /** Symbols */
+            symbols: string[];
+            /**
+             * Timeframe
+             * @default 1h
+             */
+            timeframe: string;
+            /** Types */
+            types?: string[];
+        };
         /**
          * CostsRead
          * @description Trading-cost breakdown, the fee-rate reference, and today's LLM spend.
@@ -2102,6 +2196,41 @@ export interface components {
             symbol: string;
             /** Updated At */
             updated_at?: string | null;
+        };
+        /** RecommendRequest */
+        RecommendRequest: {
+            /**
+             * Capital
+             * @default 10000
+             */
+            capital: number | string;
+            /**
+             * Days
+             * @default 90
+             */
+            days: number;
+            /** Symbol */
+            symbol: string;
+            /**
+             * Timeframe
+             * @default 1h
+             */
+            timeframe: string;
+        };
+        /**
+         * RecommendResponse
+         * @description The AI's pick, backtested so it ranks alongside the grid cells.
+         */
+        RecommendResponse: {
+            cell: components["schemas"]["CompareCellRead"];
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Reasoning */
+            reasoning: string;
+            /** Strategy Type */
+            strategy_type: string;
         };
         /** RefreshRequest */
         RefreshRequest: {
@@ -2998,6 +3127,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_grid_api_lab_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareCellRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recommend_api_lab_recommend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendResponse"];
                 };
             };
             /** @description Validation Error */

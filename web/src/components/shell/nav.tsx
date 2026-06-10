@@ -50,6 +50,14 @@ export const NAV: NavItem[] = [
     subtitle: "Historical simulation",
   },
   {
+    id: "lab",
+    label: "Lab",
+    path: "/lab",
+    icon: I.Backtest,
+    title: "Strategy Lab",
+    subtitle: "Compare strategies & coins by gain and risk",
+  },
+  {
     id: "news",
     label: "News",
     path: "/news",
