@@ -1927,6 +1927,60 @@
         "title": "LlmCredentialsUpdate",
         "type": "object"
       },
+      "LlmfitStatusRead": {
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "fits": {
+            "items": {
+              "$ref": "#/components/schemas/ModelFitRead"
+            },
+            "title": "Fits",
+            "type": "array"
+          },
+          "hardware": {
+            "additionalProperties": true,
+            "title": "Hardware",
+            "type": "object"
+          },
+          "install_hint": {
+            "title": "Install Hint",
+            "type": "string"
+          },
+          "installed": {
+            "title": "Installed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "installed",
+          "install_hint",
+          "hardware",
+          "fits",
+          "error"
+        ],
+        "title": "LlmfitStatusRead",
+        "type": "object"
+      },
+      "LocalAIRead": {
+        "description": "Local-model readiness \u2014 deployed (Ollama) and deployable (llmfit).",
+        "properties": {
+          "llmfit": {
+            "$ref": "#/components/schemas/LlmfitStatusRead"
+          },
+          "ollama": {
+            "$ref": "#/components/schemas/OllamaStatusRead"
+          }
+        },
+        "required": [
+          "ollama",
+          "llmfit"
+        ],
+        "title": "LocalAIRead",
+        "type": "object"
+      },
       "ManualOrderRequest": {
         "properties": {
           "market": {
@@ -1988,6 +2042,39 @@
           "mode"
         ],
         "title": "ModeUpdate",
+        "type": "object"
+      },
+      "ModelFitRead": {
+        "properties": {
+          "est_speed": {
+            "title": "Est Speed",
+            "type": "string"
+          },
+          "fit": {
+            "title": "Fit",
+            "type": "string"
+          },
+          "memory_gb": {
+            "title": "Memory Gb",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "quantization": {
+            "title": "Quantization",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "quantization",
+          "fit",
+          "est_speed",
+          "memory_gb"
+        ],
+        "title": "ModelFitRead",
         "type": "object"
       },
       "ModelUsage": {
@@ -2166,6 +2253,65 @@
           "label"
         ],
         "title": "NodeCreate",
+        "type": "object"
+      },
+      "OllamaModelRead": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parameter_size": {
+            "title": "Parameter Size",
+            "type": "string"
+          },
+          "quantization": {
+            "title": "Quantization",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "size_bytes",
+          "parameter_size",
+          "quantization"
+        ],
+        "title": "OllamaModelRead",
+        "type": "object"
+      },
+      "OllamaStatusRead": {
+        "properties": {
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/OllamaModelRead"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "reachable": {
+            "title": "Reachable",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reachable",
+          "base_url",
+          "version",
+          "models"
+        ],
+        "title": "OllamaStatusRead",
         "type": "object"
       },
       "OrderBook": {
@@ -3475,6 +3621,55 @@
           }
         ],
         "summary": "Decision Log",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/local": {
+      "get": {
+        "description": "Whether local models are deployed (Ollama) or deployable (llmfit).\n\nThe snapshot is cached for ~5 minutes; `refresh=true` re-probes now.",
+        "operationId": "local_models_api_ai_local_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalAIRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Local Models",
         "tags": [
           "ai"
         ]

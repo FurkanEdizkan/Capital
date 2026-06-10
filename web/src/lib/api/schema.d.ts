@@ -44,6 +44,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Local Models
+         * @description Whether local models are deployed (Ollama) or deployable (llmfit).
+         *
+         *     The snapshot is cached for ~5 minutes; `refresh=true` re-probes now.
+         */
+        get: operations["local_models_api_ai_local_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/models": {
         parameters: {
             query?: never;
@@ -2114,6 +2136,29 @@ export interface components {
              */
             base_url: string;
         };
+        /** LlmfitStatusRead */
+        LlmfitStatusRead: {
+            /** Error */
+            error: string;
+            /** Fits */
+            fits: components["schemas"]["ModelFitRead"][];
+            /** Hardware */
+            hardware: {
+                [key: string]: unknown;
+            };
+            /** Install Hint */
+            install_hint: string;
+            /** Installed */
+            installed: boolean;
+        };
+        /**
+         * LocalAIRead
+         * @description Local-model readiness — deployed (Ollama) and deployable (llmfit).
+         */
+        LocalAIRead: {
+            llmfit: components["schemas"]["LlmfitStatusRead"];
+            ollama: components["schemas"]["OllamaStatusRead"];
+        };
         /** ManualOrderRequest */
         ManualOrderRequest: {
             /**
@@ -2140,6 +2185,19 @@ export interface components {
              */
             confirm: boolean;
             mode: components["schemas"]["TradingMode"];
+        };
+        /** ModelFitRead */
+        ModelFitRead: {
+            /** Est Speed */
+            est_speed: string;
+            /** Fit */
+            fit: string;
+            /** Memory Gb */
+            memory_gb: string;
+            /** Model */
+            model: string;
+            /** Quantization */
+            quantization: string;
         };
         /**
          * ModelUsage
@@ -2209,6 +2267,28 @@ export interface components {
             label: string;
             /** Symbol */
             symbol?: string | null;
+        };
+        /** OllamaModelRead */
+        OllamaModelRead: {
+            /** Name */
+            name: string;
+            /** Parameter Size */
+            parameter_size: string;
+            /** Quantization */
+            quantization: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /** OllamaStatusRead */
+        OllamaStatusRead: {
+            /** Base Url */
+            base_url: string;
+            /** Models */
+            models: components["schemas"]["OllamaModelRead"][];
+            /** Reachable */
+            reachable: boolean;
+            /** Version */
+            version: string;
         };
         /** OrderBook */
         OrderBook: {
@@ -2762,6 +2842,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LLMUsage"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    local_models_api_ai_local_get: {
+        parameters: {
+            query?: {
+                refresh?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalAIRead"];
                 };
             };
             /** @description Validation Error */

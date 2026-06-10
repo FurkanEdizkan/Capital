@@ -105,3 +105,13 @@ export async function updateCouncilSettings(body: {
   }
   return data;
 }
+
+export type LocalAI = components["schemas"]["LocalAIRead"];
+
+export async function fetchLocalAI(refresh = false): Promise<LocalAI> {
+  const { data, error } = await api.GET("/api/ai/local", {
+    params: { query: { refresh } },
+  });
+  if (error || !data) throw new Error("Failed to probe local models");
+  return data;
+}
