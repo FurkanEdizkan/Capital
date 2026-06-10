@@ -1799,6 +1799,87 @@
         "title": "LLMUsage",
         "type": "object"
       },
+      "LatencyRead": {
+        "description": "Price-feed latency \u2014 per-feed stats plus the overall degraded flag.",
+        "properties": {
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "feeds": {
+            "items": {
+              "$ref": "#/components/schemas/LatencyStatsRead"
+            },
+            "title": "Feeds",
+            "type": "array"
+          },
+          "warn_ms": {
+            "title": "Warn Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "warn_ms",
+          "degraded",
+          "feeds"
+        ],
+        "title": "LatencyRead",
+        "type": "object"
+      },
+      "LatencyStatsRead": {
+        "description": "Rolling-window latency for one (market, symbol, kind).",
+        "properties": {
+          "current_ms": {
+            "title": "Current Ms",
+            "type": "number"
+          },
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "market": {
+            "title": "Market",
+            "type": "string"
+          },
+          "max_ms": {
+            "title": "Max Ms",
+            "type": "number"
+          },
+          "p50_ms": {
+            "title": "P50 Ms",
+            "type": "number"
+          },
+          "p95_ms": {
+            "title": "P95 Ms",
+            "type": "number"
+          },
+          "samples": {
+            "title": "Samples",
+            "type": "integer"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "market",
+          "symbol",
+          "kind",
+          "current_ms",
+          "p50_ms",
+          "p95_ms",
+          "max_ms",
+          "samples",
+          "degraded"
+        ],
+        "title": "LatencyStatsRead",
+        "type": "object"
+      },
       "LedgerEntry": {
         "description": "One paid call, newest first.",
         "properties": {
@@ -4805,6 +4886,33 @@
           }
         ],
         "summary": "Get Klines",
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/api/market/latency": {
+      "get": {
+        "description": "How delayed the price data is, per feed (ws event time + REST RTT).",
+        "operationId": "feed_latency_api_market_latency_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatencyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Feed Latency",
         "tags": [
           "market"
         ]

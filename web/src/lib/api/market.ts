@@ -92,3 +92,11 @@ export function useTickerStream(): TickerStream {
 
   return state;
 }
+
+export type FeedLatency = components["schemas"]["LatencyRead"];
+
+export async function fetchFeedLatency(): Promise<FeedLatency> {
+  const { data, error } = await api.GET("/api/market/latency");
+  if (error || !data) throw new Error("Failed to load feed latency");
+  return data;
+}

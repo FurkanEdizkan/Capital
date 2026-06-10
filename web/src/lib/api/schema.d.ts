@@ -511,6 +511,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/market/latency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Feed Latency
+         * @description How delayed the price data is, per feed (ws event time + REST RTT).
+         */
+        get: operations["feed_latency_api_market_latency_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/market/orderbook": {
         parameters: {
             query?: never;
@@ -2083,6 +2103,42 @@ export interface components {
             strategy?: string | null;
         };
         /**
+         * LatencyRead
+         * @description Price-feed latency — per-feed stats plus the overall degraded flag.
+         */
+        LatencyRead: {
+            /** Degraded */
+            degraded: boolean;
+            /** Feeds */
+            feeds: components["schemas"]["LatencyStatsRead"][];
+            /** Warn Ms */
+            warn_ms: number;
+        };
+        /**
+         * LatencyStatsRead
+         * @description Rolling-window latency for one (market, symbol, kind).
+         */
+        LatencyStatsRead: {
+            /** Current Ms */
+            current_ms: number;
+            /** Degraded */
+            degraded: boolean;
+            /** Kind */
+            kind: string;
+            /** Market */
+            market: string;
+            /** Max Ms */
+            max_ms: number;
+            /** P50 Ms */
+            p50_ms: number;
+            /** P95 Ms */
+            p95_ms: number;
+            /** Samples */
+            samples: number;
+            /** Symbol */
+            symbol: string;
+        };
+        /**
          * LedgerEntry
          * @description One paid call, newest first.
          */
@@ -3550,6 +3606,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_latency_api_market_latency_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatencyRead"];
                 };
             };
         };

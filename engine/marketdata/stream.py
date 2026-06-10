@@ -17,6 +17,7 @@ from typing import Any
 import websockets
 
 from exchange.client import Market, Ticker
+from marketdata.latency import record_event_time
 
 log = logging.getLogger("capital.marketdata.stream")
 
@@ -104,6 +105,8 @@ class TickerHub:
             symbol = it.get("s")
             if symbol is None:
                 continue
+            # Feed latency: `E` is the exchange event time in ms.
+            record_event_time(self.market.value, symbol, it.get("E"))
             # 24hrTicker compact keys: c=last, P=change%, q=quote volume.
             self._snapshot[symbol] = Ticker(
                 symbol=symbol,

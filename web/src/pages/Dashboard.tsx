@@ -38,8 +38,52 @@ import {
   type Position,
   type Trade,
 } from "../lib/api/portfolio";
+import { type FeedLatency, fetchFeedLatency } from "../lib/api/market";
 
 const REFRESH_MS = 15_000;
+
+function LatencyChip({ latency }: { latency: FeedLatency | null }) {
+  if (!latency || latency.feeds.length === 0) return null;
+  const ws = latency.feeds.filter((f) => f.kind === "ws");
+  const current = Math.max(...(ws.length ? ws : latency.feeds).map((f) => f.current_ms));
+  const p95 = Math.max(...(ws.length ? ws : latency.feeds).map((f) => f.p95_ms));
+  const color = latency.degraded
+    ? "var(--red)"
+    : current < 500
+      ? "var(--green)"
+      : "var(--amber, #FBBF24)";
+  const label =
+    current >= 1000 ? `${(current / 1000).toFixed(1)} s` : `${Math.round(current)} ms`;
+  return (
+    <span
+      title={`Price-feed latency — current ${Math.round(current)} ms, p95 ${Math.round(
+        p95,
+      )} ms (degraded above ${latency.warn_ms} ms)`}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        fontSize: 11.5,
+        color: "var(--text-3)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        padding: "2px 10px",
+      }}
+    >
+      <span
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: "50%",
+          background: color,
+          display: "inline-block",
+        }}
+      />
+      feed {label}
+      {latency.degraded ? " · degraded" : ""}
+    </span>
+  );
+}
 
 export function Dashboard() {
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
@@ -48,6 +92,7 @@ export function Dashboard() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [costs, setCosts] = useState<Costs | null>(null);
   const [signals, setSignals] = useState<AiSignal[]>([]);
+  const [latency, setLatency] = useState<FeedLatency | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -66,6 +111,7 @@ export function Dashboard() {
       setTrades(t);
       setCosts(c);
       setSignals(sig);
+      fetchFeedLatency().then(setLatency).catch(() => setLatency(null));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard");
@@ -130,6 +176,11 @@ export function Dashboard() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {latency && latency.feeds.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <LatencyChip latency={latency} />
+        </div>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         <StatTile
           label="Portfolio Value"

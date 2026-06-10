@@ -27,6 +27,7 @@ from appsettings.store import (
 from connections import service as connections_service
 from marketdata.cache import refresh_venue_candles
 from marketdata.freshness import feed_is_stale
+from marketdata.latency import registry as latency_registry
 from news import service as news_service
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
@@ -148,6 +149,8 @@ class TradingEngine:
                 record_equity_snapshot(session, dict(self._last_prices))
                 # Heartbeat — the watchdog uses this to detect a stalled loop.
                 record_heartbeat(session)
+                # Persist the feed-latency rollup gathered since last tick.
+                latency_registry.flush_rollups(session)
         except Exception:  # noqa: BLE001 — accounting must not abort the loop
             log.exception("equity snapshot failed")
 
