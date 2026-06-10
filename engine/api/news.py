@@ -24,10 +24,11 @@ def list_news(
     _: CurrentUser,
     session: SessionDep,
     symbol: str | None = None,
+    category: str | None = None,
     limit: int = 50,
 ) -> list[NewsItem]:
-    """Recent headlines, newest first — optionally filtered by `symbol`."""
-    return service.recent(session, symbol=symbol, limit=limit)
+    """Recent headlines, newest first — filterable by `symbol` and `category`."""
+    return service.recent(session, symbol=symbol, category=category, limit=limit)
 
 
 @router.post("/refresh")

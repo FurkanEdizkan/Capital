@@ -76,3 +76,33 @@ def test_recent_filters_by_symbol(session: Session) -> None:
     assert len(btc) == 1
     assert btc[0].symbol == "BTCUSDT"
     assert len(service.recent(session)) == 2
+
+
+def test_default_feeds_are_sane() -> None:
+    categories = {f.category for f in service.DEFAULT_FEEDS}
+    assert categories == {"asset", "world", "economic"}
+    names = [f.name for f in service.DEFAULT_FEEDS]
+    urls = [f.url for f in service.DEFAULT_FEEDS]
+    assert len(names) == len(set(names))
+    assert len(urls) == len(set(urls))
+    assert all(u.startswith("https://") for u in urls)
+
+
+def test_parse_feed_keeps_economic_category() -> None:
+    economic = Feed("Econ", "https://example.com/econ.xml", category="economic")
+    items = service.parse_feed(_RSS, economic)
+    general = next(i for i in items if "Markets" in i.title)
+    assert general.category == "economic"
+    # An entry naming an asset is still tagged to it, overriding the feed.
+    btc = next(i for i in items if "Bitcoin" in i.title)
+    assert btc.category == "asset"
+
+
+def test_recent_filters_by_category(session: Session) -> None:
+    economic = Feed("Econ", "https://example.com/econ.xml", category="economic")
+    service.refresh(session, feeds=[_FEED], fetch=_fetch)
+    econ_rss = _RSS.replace("example.com/", "example.com/econ-")
+    service.refresh(session, feeds=[economic], fetch=lambda _u: econ_rss.encode())
+    assert len(service.recent(session, category="economic")) == 1
+    assert len(service.recent(session, category="world")) == 1
+    assert len(service.recent(session, category="asset")) == 2

@@ -6,28 +6,44 @@ import { useCallback, useEffect, useState } from "react";
 
 import { GuideButton } from "../components/GuideModal";
 import { I } from "../components/icons";
-import { Badge, Button, Card, EmptyState, Input, SectionHeader } from "../components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  SectionHeader,
+  SegmentedControl,
+} from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { fetchNews, type NewsItem, refreshNews } from "../lib/api/news";
 
 const when = (iso?: string | null): string =>
   iso ? iso.slice(0, 16).replace("T", " ") : "";
 
+type Category = "all" | "asset" | "world" | "economic";
+
 export function News() {
   const { user } = useAuth();
   const [items, setItems] = useState<NewsItem[]>([]);
   const [symbol, setSymbol] = useState("");
+  const [category, setCategory] = useState<Category>("all");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      setItems(await fetchNews(symbol.trim() || undefined));
+      setItems(
+        await fetchNews(
+          symbol.trim() || undefined,
+          category === "all" ? undefined : category,
+        ),
+      );
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load news");
     }
-  }, [symbol]);
+  }, [symbol, category]);
 
   useEffect(() => {
     void load();
@@ -53,9 +69,20 @@ export function News() {
             Headlines <GuideButton slug="news" />
           </span>
         }
-        subtitle="World news and per-asset coverage"
+        subtitle="World, economic and per-asset coverage"
         right={
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <SegmentedControl
+              size="sm"
+              options={[
+                { value: "all", label: "All" },
+                { value: "asset", label: "Assets" },
+                { value: "world", label: "World" },
+                { value: "economic", label: "Economic" },
+              ]}
+              value={category}
+              onChange={setCategory}
+            />
             <Input
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}

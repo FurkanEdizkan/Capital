@@ -458,7 +458,7 @@ export interface paths {
         };
         /**
          * List News
-         * @description Recent headlines, newest first — optionally filtered by `symbol`.
+         * @description Recent headlines, newest first — filterable by `symbol` and `category`.
          */
         get: operations["list_news_api_news_get"];
         put?: never;
@@ -2759,6 +2759,7 @@ export interface operations {
         parameters: {
             query?: {
                 symbol?: string | null;
+                category?: string | null;
                 limit?: number;
             };
             header?: never;

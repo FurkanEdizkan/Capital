@@ -2,8 +2,8 @@
 
 Rows are insert-only and deduplicated on `url`: re-fetching a feed re-sees the
 same links, so an upsert keyed on the URL keeps the table free of duplicates.
-A headline is tagged `world` or `asset`; `symbol` carries the recognised asset
-(e.g. ``BTCUSDT``) when one was matched, else null.
+A headline is tagged `asset`, `world` or `economic`; `symbol` carries the
+recognised asset (e.g. ``BTCUSDT``) when one was matched, else null.
 """
 
 from datetime import datetime
@@ -21,7 +21,8 @@ class NewsItem(SQLModel, table=True):
     title: str = Field(max_length=512)
     url: str = Field(unique=True, index=True, max_length=1024)
     summary: str = Field(default="")
-    # `world` (general) or `asset` (tagged to a specific symbol).
+    # `asset` (tagged to a specific symbol), `world` (general) or
+    # `economic` (macro / central banks / markets-wide economy).
     category: str = Field(default="world", max_length=16, index=True)
     symbol: str | None = Field(default=None, max_length=24, index=True)
     sentiment: str | None = Field(default=None, max_length=16)
