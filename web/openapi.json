@@ -837,6 +837,138 @@
         "title": "CloseResult",
         "type": "object"
       },
+      "CompareCellRead": {
+        "properties": {
+          "equity_sparkline": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Equity Sparkline",
+            "type": "array"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "final_equity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Final Equity",
+            "type": "string"
+          },
+          "max_drawdown_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Max Drawdown Pct",
+            "type": "string"
+          },
+          "net_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pnl",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "return_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Return Pct",
+            "type": "string"
+          },
+          "sharpe": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sharpe",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "trades": {
+            "title": "Trades",
+            "type": "integer"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "win_rate_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Win Rate Pct",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "symbol",
+          "params",
+          "return_pct",
+          "max_drawdown_pct",
+          "sharpe",
+          "win_rate_pct",
+          "trades",
+          "net_pnl",
+          "final_equity",
+          "equity_sparkline",
+          "error"
+        ],
+        "title": "CompareCellRead",
+        "type": "object"
+      },
+      "CompareRequest": {
+        "description": "A grid request \u2014 either pivot is just a different shape of the same.",
+        "properties": {
+          "capital": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "10000",
+            "title": "Capital"
+          },
+          "days": {
+            "default": 90,
+            "maximum": 365.0,
+            "minimum": 7.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Symbols",
+            "type": "array"
+          },
+          "timeframe": {
+            "default": "1h",
+            "maxLength": 8,
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "symbols"
+        ],
+        "title": "CompareRequest",
+        "type": "object"
+      },
       "CostsRead": {
         "description": "Trading-cost breakdown, the fee-rate reference, and today's LLM spend.",
         "properties": {
@@ -2090,6 +2222,77 @@
           "symbol"
         ],
         "title": "Position",
+        "type": "object"
+      },
+      "RecommendRequest": {
+        "properties": {
+          "capital": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "10000",
+            "title": "Capital"
+          },
+          "days": {
+            "default": 90,
+            "maximum": 365.0,
+            "minimum": 7.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "timeframe": {
+            "default": "1h",
+            "maxLength": 8,
+            "title": "Timeframe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "title": "RecommendRequest",
+        "type": "object"
+      },
+      "RecommendResponse": {
+        "description": "The AI's pick, backtested so it ranks alongside the grid cells.",
+        "properties": {
+          "cell": {
+            "$ref": "#/components/schemas/CompareCellRead"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "reasoning": {
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "strategy_type": {
+            "title": "Strategy Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_type",
+          "params",
+          "reasoning",
+          "cell"
+        ],
+        "title": "RecommendResponse",
         "type": "object"
       },
       "RefreshRequest": {
@@ -3869,6 +4072,104 @@
         "summary": "Trades Csv",
         "tags": [
           "history"
+        ]
+      }
+    },
+    "/api/lab/compare": {
+      "post": {
+        "description": "Backtest every (type \u00d7 symbol) cell over the same recent range.",
+        "operationId": "compare_grid_api_lab_compare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompareCellRead"
+                  },
+                  "title": "Response Compare Grid Api Lab Compare Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Compare Grid",
+        "tags": [
+          "lab"
+        ]
+      }
+    },
+    "/api/lab/recommend": {
+      "post": {
+        "description": "Ask the configured LLM to pick a strategy for the coin, then backtest it.",
+        "operationId": "recommend_api_lab_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Recommend",
+        "tags": [
+          "lab"
         ]
       }
     },

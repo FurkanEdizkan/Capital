@@ -15,6 +15,7 @@ from api.ai import router as ai_router
 from api.backtest import router as backtest_router
 from api.connections import router as connections_router
 from api.history import router as history_router
+from api.lab import router as lab_router
 from api.market import router as market_router
 from api.market import ws_router as market_ws_router
 from api.news import router as news_router
@@ -125,6 +126,7 @@ app.include_router(venues_router)
 app.include_router(news_router)
 app.include_router(connections_router)
 app.include_router(research_router)
+app.include_router(lab_router)
 
 
 @app.get("/health", tags=["system"])
