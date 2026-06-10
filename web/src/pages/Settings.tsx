@@ -28,6 +28,7 @@ import {
   updateAiSpendCap,
   updateLlmCredentials,
   updateMode,
+  updateResearchSettings,
   updateVenueCredentials,
 } from "../lib/api/settings";
 import {
@@ -92,6 +93,12 @@ export function Settings() {
   const [aiBaseUrl, setAiBaseUrl] = useState("");
   const [aiKey, setAiKey] = useState("");
   const [aiSpendCap, setAiSpendCap] = useState("");
+
+  const [researchSymbols, setResearchSymbols] = useState("");
+  const [researchInterval, setResearchInterval] = useState("12");
+  const [writerProvider, setWriterProvider] = useState("claude");
+  const [writerModel, setWriterModel] = useState("");
+  const [newsInterval, setNewsInterval] = useState("");
   // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
   const [llmInputs, setLlmInputs] = useState<
     Record<string, { api_key: string; base_url: string }>
@@ -108,6 +115,11 @@ export function Settings() {
     setAiModel(s.ai_model);
     setAiBaseUrl(s.ai_base_url);
     setAiSpendCap(String(s.ai_spend_cap));
+    setResearchSymbols(s.research_symbols.join(", "));
+    setResearchInterval(String(s.research_interval_hours));
+    setWriterProvider(s.research_writer_provider);
+    setWriterModel(s.research_writer_model);
+    setNewsInterval(s.news_interval_hours ? String(s.news_interval_hours) : "");
   }, []);
 
   const load = useCallback(async () => {
@@ -190,6 +202,23 @@ export function Settings() {
     run(async () => {
       applySettings(await updateAiSpendCap(aiSpendCap || "0"));
       setNotice("LLM spend cap saved.");
+    });
+
+  const saveResearch = () =>
+    run(async () => {
+      applySettings(
+        await updateResearchSettings({
+          symbols: researchSymbols
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          interval_hours: Number(researchInterval) || 12,
+          writer_provider: writerProvider,
+          writer_model: writerModel,
+          news_interval_hours: newsInterval ? Number(newsInterval) : null,
+        }),
+      );
+      setNotice("Research settings saved. Interval changes apply on restart.");
     });
 
   const saveAiActionMode = (mode: string) =>
@@ -599,6 +628,67 @@ export function Settings() {
             value={settings.ai_action_mode}
             onChange={(m) => void saveAiActionMode(m)}
           />
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title={
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              Research reports <GuideButton slug="research" />
+            </span>
+          }
+          subtitle="Scheduled research per watched symbol — headlines, connections, technicals and AI-written analysis."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 420,
+          }}
+        >
+          <Input
+            full
+            placeholder="Watched symbols, comma-separated (e.g. BTCUSDT, ETHUSDT)"
+            value={researchSymbols}
+            onChange={(e) => setResearchSymbols(e.target.value.toUpperCase())}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Report interval in hours (default 12)"
+            value={researchInterval}
+            onChange={(e) => setResearchInterval(e.target.value)}
+          />
+          <select
+            value={writerProvider}
+            onChange={(e) => setWriterProvider(e.target.value)}
+            style={selectStyle}
+          >
+            {Object.keys(settings.llm_providers_configured).map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <Input
+            full
+            placeholder="Writer model (blank = global AI model)"
+            value={writerModel}
+            onChange={(e) => setWriterModel(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="News refresh interval in hours (blank = daily at 06:00)"
+            value={newsInterval}
+            onChange={(e) => setNewsInterval(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void saveResearch()}>
+            Save research settings
+          </Button>
         </div>
       </Card>
 

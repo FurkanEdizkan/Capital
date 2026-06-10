@@ -80,3 +80,17 @@ export async function updateLlmCredentials(
   }
   return data;
 }
+
+export async function updateResearchSettings(body: {
+  symbols: string[];
+  interval_hours: number;
+  writer_provider: string;
+  writer_model: string;
+  news_interval_hours: number | null;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/research", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save research settings"));
+  }
+  return data;
+}
