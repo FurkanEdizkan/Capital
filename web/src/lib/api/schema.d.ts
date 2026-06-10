@@ -911,8 +911,54 @@ export interface paths {
          */
         get: operations["list_strategies_api_strategies_get"];
         put?: never;
+        /**
+         * Create Instance
+         * @description Create a strategy instance: any registered type on any chosen coin.
+         */
+        post: operations["create_instance_api_strategies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/strategies/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Strategy Types
+         * @description Every pickable strategy type with its typed parameter schema.
+         */
+        get: operations["list_strategy_types_api_strategies_types_get"];
+        put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/strategies/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Instance
+         * @description Delete an instance-backed strategy. Built-ins cannot be deleted.
+         *
+         *     Refused while the strategy holds an open position — close it first.
+         */
+        delete: operations["delete_instance_api_strategies__name__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1766,6 +1812,42 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /**
+         * InstanceCreate
+         * @description Apply a strategy type to a coin as a new named instance.
+         */
+        InstanceCreate: {
+            /**
+             * Allocated
+             * @default 10000
+             */
+            allocated: number | string;
+            /**
+             * Market
+             * @default spot
+             */
+            market: string;
+            /**
+             * Max Loss
+             * @default 0
+             */
+            max_loss: number | string;
+            /** Name */
+            name: string;
+            /** Params */
+            params?: {
+                [key: string]: string;
+            };
+            /** Symbol */
+            symbol: string;
+            /**
+             * Timeframe
+             * @default 1h
+             */
+            timeframe: string;
+            /** Type */
+            type: string;
+        };
+        /**
          * LLMUsage
          * @description One recorded LLM completion — tokens, estimated cost, and the decision.
          */
@@ -1930,6 +2012,21 @@ export interface components {
             price: string;
             /** Qty */
             qty: string;
+        };
+        /** ParamSpecRead */
+        ParamSpecRead: {
+            /** Default */
+            default: string;
+            /** Label */
+            label: string;
+            /** Max */
+            max: string;
+            /** Min */
+            min: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
         };
         /** PasswordReset */
         PasswordReset: {
@@ -2139,6 +2236,11 @@ export interface components {
             enabled: boolean;
             /** Fees */
             fees: string;
+            /**
+             * Is Instance
+             * @default false
+             */
+            is_instance: boolean;
             /** Kind */
             kind: string;
             /** Market */
@@ -2176,6 +2278,20 @@ export interface components {
             strategy: string;
             /** Unrealized Pnl */
             unrealized_pnl: string;
+        };
+        /**
+         * StrategyTypeRead
+         * @description One pickable strategy type and its parameter schema.
+         */
+        StrategyTypeRead: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Params */
+            params: components["schemas"]["ParamSpecRead"][];
+            /** Timeframes */
+            timeframes: string[];
         };
         /** Ticker */
         Ticker: {
@@ -3713,6 +3829,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StrategyRead"][];
+                };
+            };
+        };
+    };
+    create_instance_api_strategies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstanceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_strategy_types_api_strategies_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyTypeRead"][];
+                };
+            };
+        };
+    };
+    delete_instance_api_strategies__name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

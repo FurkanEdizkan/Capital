@@ -51,6 +51,9 @@ class FakeEngine:
         self.flatten_calls.append(name)
         return 0
 
+    def replace_strategies(self, strategies: list[BaseStrategy]) -> None:
+        self._strategies = list(strategies)
+
 
 @pytest.fixture
 def strat_client(session: Session) -> Iterator[TestClient]:

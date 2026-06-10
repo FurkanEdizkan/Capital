@@ -1402,6 +1402,83 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "InstanceCreate": {
+        "description": "Apply a strategy type to a coin as a new named instance.",
+        "properties": {
+          "allocated": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "10000",
+            "title": "Allocated"
+          },
+          "market": {
+            "default": "spot",
+            "pattern": "^(spot|futures)$",
+            "title": "Market",
+            "type": "string"
+          },
+          "max_loss": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Max Loss"
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Params",
+            "type": "object"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "timeframe": {
+            "default": "1h",
+            "maxLength": 8,
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "type": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "symbol"
+        ],
+        "title": "InstanceCreate",
+        "type": "object"
+      },
       "LLMUsage": {
         "description": "One recorded LLM completion \u2014 tokens, estimated cost, and the decision.",
         "properties": {
@@ -1799,6 +1876,44 @@
           "qty"
         ],
         "title": "OrderBookLevel",
+        "type": "object"
+      },
+      "ParamSpecRead": {
+        "properties": {
+          "default": {
+            "title": "Default",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "default",
+          "min",
+          "max",
+          "label"
+        ],
+        "title": "ParamSpecRead",
         "type": "object"
       },
       "PasswordReset": {
@@ -2281,6 +2396,11 @@
             "title": "Fees",
             "type": "string"
           },
+          "is_instance": {
+            "default": false,
+            "title": "Is Instance",
+            "type": "boolean"
+          },
           "kind": {
             "title": "Kind",
             "type": "string"
@@ -2390,6 +2510,41 @@
           "open_positions"
         ],
         "title": "StrategySummary",
+        "type": "object"
+      },
+      "StrategyTypeRead": {
+        "description": "One pickable strategy type and its parameter schema.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "params": {
+            "items": {
+              "$ref": "#/components/schemas/ParamSpecRead"
+            },
+            "title": "Params",
+            "type": "array"
+          },
+          "timeframes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Timeframes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "params",
+          "timeframes"
+        ],
+        "title": "StrategyTypeRead",
         "type": "object"
       },
       "Ticker": {
@@ -5033,6 +5188,123 @@
           }
         ],
         "summary": "List Strategies",
+        "tags": [
+          "strategies"
+        ]
+      },
+      "post": {
+        "description": "Create a strategy instance: any registered type on any chosen coin.",
+        "operationId": "create_instance_api_strategies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Instance",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/types": {
+      "get": {
+        "description": "Every pickable strategy type with its typed parameter schema.",
+        "operationId": "list_strategy_types_api_strategies_types_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyTypeRead"
+                  },
+                  "title": "Response List Strategy Types Api Strategies Types Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Strategy Types",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/{name}": {
+      "delete": {
+        "description": "Delete an instance-backed strategy. Built-ins cannot be deleted.\n\nRefused while the strategy holds an open position \u2014 close it first.",
+        "operationId": "delete_instance_api_strategies__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Instance",
         "tags": [
           "strategies"
         ]

@@ -11,10 +11,11 @@ testable on its own.
 from decimal import Decimal
 
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from appsettings.store import get_strategy_ai_config
 from strategies.base import BaseStrategy
+from strategies.models import StrategyInstance
 from trading.accounting import strategy_summary
 from trading.lifecycle import is_enabled
 from trading.portfolio import get_max_loss
@@ -40,6 +41,8 @@ class StrategyRead(BaseModel):
     # The configured LLM provider + model — set only for AI strategies.
     ai_provider: str | None = None
     ai_model: str | None = None
+    # True for operator-created instances — the only deletable strategies.
+    is_instance: bool = False
 
 
 def read_strategy_state(
@@ -73,4 +76,8 @@ def read_strategy_state(
         open_positions=summary.open_positions,
         ai_provider=ai_provider,
         ai_model=ai_model,
+        is_instance=session.exec(
+            select(StrategyInstance).where(StrategyInstance.name == strategy.name)
+        ).first()
+        is not None,
     )
