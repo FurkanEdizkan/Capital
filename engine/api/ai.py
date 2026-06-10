@@ -11,6 +11,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from ai import localfit
 from ai.analyze import analyze
 from ai.providers import LLMError, get_provider
 from ai.providers.base import Decision, LLMProvider
@@ -153,3 +154,56 @@ def dismiss_signal(signal_id: int, _: AdminUser, session: SessionDep) -> AISigna
     session.commit()
     session.refresh(signal)
     return signal
+
+
+class OllamaModelRead(BaseModel):
+    name: str
+    size_bytes: int
+    parameter_size: str
+    quantization: str
+
+
+class OllamaStatusRead(BaseModel):
+    reachable: bool
+    base_url: str
+    version: str
+    models: list[OllamaModelRead]
+
+
+class ModelFitRead(BaseModel):
+    model: str
+    quantization: str
+    fit: str
+    est_speed: str
+    memory_gb: str
+
+
+class LlmfitStatusRead(BaseModel):
+    installed: bool
+    install_hint: str
+    hardware: dict
+    fits: list[ModelFitRead]
+    error: str
+
+
+class LocalAIRead(BaseModel):
+    """Local-model readiness — deployed (Ollama) and deployable (llmfit)."""
+
+    ollama: OllamaStatusRead
+    llmfit: LlmfitStatusRead
+
+
+@router.get("/local", response_model=LocalAIRead)
+def local_models(
+    _: AdminUser, session: SessionDep, refresh: bool = False
+) -> LocalAIRead:
+    """Whether local models are deployed (Ollama) or deployable (llmfit).
+
+    The snapshot is cached for ~5 minutes; `refresh=true` re-probes now.
+    """
+    snap = localfit.snapshot(session, force=refresh)
+    data = snap.as_dict()
+    return LocalAIRead(
+        ollama=OllamaStatusRead(**data["ollama"]),
+        llmfit=LlmfitStatusRead(**data["llmfit"]),
+    )

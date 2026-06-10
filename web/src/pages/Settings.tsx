@@ -20,7 +20,9 @@ import {
 } from "../components/ui";
 import { GuideButton } from "../components/GuideModal";
 import {
+  fetchLocalAI,
   fetchSettings,
+  type LocalAI,
   type Settings as SettingsData,
   type TradingMode,
   updateAiActionMode,
@@ -105,6 +107,9 @@ export function Settings() {
     { provider: string; model: string }[]
   >([]);
   const [councilQuorum, setCouncilQuorum] = useState("0.5");
+
+  const [localAi, setLocalAi] = useState<LocalAI | null>(null);
+  const [localBusy, setLocalBusy] = useState(false);
   // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
   const [llmInputs, setLlmInputs] = useState<
     Record<string, { api_key: string; base_url: string }>
@@ -153,7 +158,19 @@ export function Settings() {
 
   useEffect(() => {
     void load();
+    fetchLocalAI().then(setLocalAi).catch(() => setLocalAi(null));
   }, [load]);
+
+  const reprobeLocal = async () => {
+    setLocalBusy(true);
+    try {
+      setLocalAi(await fetchLocalAI(true));
+    } catch {
+      setLocalAi(null);
+    } finally {
+      setLocalBusy(false);
+    }
+  };
 
   const run = useCallback(
     async (fn: () => Promise<void>) => {
@@ -598,6 +615,120 @@ export function Settings() {
               );
             },
           )}
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="Local models"
+          subtitle="What's deployed on your Ollama endpoint, and what your hardware could run (scored by llmfit)."
+          right={
+            <Button kind="outline" size="sm" onClick={() => void reprobeLocal()} disabled={localBusy}>
+              {localBusy ? "Probing…" : "Re-probe"}
+            </Button>
+          }
+        />
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Ollama</span>
+            <Badge tone={localAi?.ollama.reachable ? "green" : "muted"}>
+              {localAi?.ollama.reachable
+                ? `Running${localAi.ollama.version ? ` v${localAi.ollama.version}` : ""}`
+                : "Not reachable"}
+            </Badge>
+            <span style={{ fontSize: 11.5, color: "var(--text-4)" }} className="num">
+              {localAi?.ollama.base_url}
+            </span>
+          </div>
+          {localAi?.ollama.reachable && localAi.ollama.models.length === 0 && (
+            <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+              Ollama is running but has no models yet — pull one from the
+              recommendations below.
+            </span>
+          )}
+          {(localAi?.ollama.models ?? []).map((m) => (
+            <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="num" style={{ fontSize: 12.5, minWidth: 160 }}>
+                {m.name}
+              </span>
+              <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                {m.parameter_size}
+                {m.quantization ? ` · ${m.quantization}` : ""}
+                {m.size_bytes ? ` · ${(m.size_bytes / 1e9).toFixed(1)} GB` : ""}
+              </span>
+              <Button
+                size="sm"
+                kind="ghost"
+                onClick={() => {
+                  setAiProvider("ollama");
+                  setAiModel(m.name);
+                  setNotice(
+                    `AI provider form set to ollama / ${m.name} — save it below.`,
+                  );
+                }}
+              >
+                Use as AI provider
+              </Button>
+            </div>
+          ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>
+              Deployable on this hardware
+            </span>
+            <Badge tone={localAi?.llmfit.installed ? "green" : "muted"}>
+              {localAi?.llmfit.installed ? "llmfit scanned" : "llmfit not installed"}
+            </Badge>
+          </div>
+          {!localAi?.llmfit.installed && (
+            <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+              Install llmfit to see which local models fit this machine:{" "}
+              <code style={{ fontSize: 12 }}>{localAi?.llmfit.install_hint ?? "uv tool install llmfit"}</code>
+            </span>
+          )}
+          {localAi?.llmfit.installed &&
+            Object.keys(localAi.llmfit.hardware).length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(localAi.llmfit.hardware as Record<string, unknown>).map(
+                  ([k, v]) => (
+                    <Badge key={k} tone="muted">
+                      {k}: {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                    </Badge>
+                  ),
+                )}
+              </div>
+            )}
+          {(localAi?.llmfit.fits ?? []).map((f, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="num" style={{ fontSize: 12.5, minWidth: 160 }}>
+                {f.model}
+              </span>
+              <Badge
+                tone={
+                  f.fit.toLowerCase() === "perfect" || f.fit.toLowerCase() === "good"
+                    ? "green"
+                    : f.fit.toLowerCase() === "marginal"
+                      ? "amber"
+                      : "red"
+                }
+              >
+                {f.fit || "?"}
+              </Badge>
+              <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                {f.quantization}
+                {f.est_speed ? ` · ${f.est_speed}` : ""}
+              </span>
+              <Button
+                size="sm"
+                kind="ghost"
+                onClick={() => {
+                  void navigator.clipboard.writeText(`ollama pull ${f.model}`);
+                  setNotice(`Copied "ollama pull ${f.model}" to the clipboard.`);
+                }}
+              >
+                Copy pull command
+              </Button>
+            </div>
+          ))}
         </div>
       </Card>
 
