@@ -14,6 +14,8 @@ from decimal import Decimal
 from pydantic import BaseModel
 from sqlmodel import Field, Session, SQLModel, select
 
+from appsettings.store import get_ai_spend_cap
+
 
 def _utcnow() -> datetime:
     """Current UTC time, tz-naive — matching how the other tables store time."""
@@ -157,3 +159,18 @@ def recent_usage(session: Session, limit: int = 50) -> list[LLMUsage]:
             .limit(limit)
         ).all()
     )
+
+
+def cap_reached(session: Session) -> bool:
+    """Whether today's LLM spend has reached the operator's daily cap.
+
+    Shared guard for everything that calls an LLM (strategy ticks, research
+    writing, council votes): a non-positive cap means unlimited.
+    """
+    cap = get_ai_spend_cap(session)
+    if cap <= 0:
+        return False
+    day_start = datetime.now(UTC).replace(
+        hour=0, minute=0, second=0, microsecond=0, tzinfo=None
+    )
+    return spend_since(session, day_start) >= cap

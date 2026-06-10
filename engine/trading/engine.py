@@ -9,7 +9,6 @@ engine).
 
 import logging
 from collections.abc import Callable
-from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -19,8 +18,12 @@ from sqlmodel import Session
 from ai.providers import LLMError
 from ai.resolve import strategy_ai_settings
 from ai.signals import record_signal
-from ai.usage import record_usage, spend_since
-from appsettings.store import get_ai_spend_cap, get_strategy_action_mode
+from ai.usage import cap_reached, record_usage
+from appsettings.store import (
+    get_news_interval_hours,
+    get_research_interval_hours,
+    get_strategy_action_mode,
+)
 from connections import service as connections_service
 from marketdata.cache import refresh_venue_candles
 from marketdata.freshness import feed_is_stale
@@ -28,6 +31,7 @@ from news import service as news_service
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
 from ops.watchdog import record_heartbeat
+from research import service as research_service
 from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy, StrategyContext
 from trading.accounting import record_equity_snapshot
@@ -49,13 +53,7 @@ log = logging.getLogger("capital.trading.engine")
 
 def _llm_cap_reached(session: Session) -> bool:
     """Whether today's LLM spend has reached the operator's daily cap."""
-    cap = get_ai_spend_cap(session)
-    if cap <= 0:  # a non-positive cap means unlimited
-        return False
-    day_start = datetime.now(UTC).replace(
-        hour=0, minute=0, second=0, microsecond=0, tzinfo=None
-    )
-    return spend_since(session, day_start) >= cap
+    return cap_reached(session)
 
 
 def _record_ai_usage(session: Session, strat: AIStrategy) -> None:
@@ -292,8 +290,20 @@ class TradingEngine:
         if self._retention_candle_days > 0 or self._retention_equity_days > 0:
             # Daily retention prune at 04:00 — keeps the database bounded.
             self._scheduler.add_job(self._prune, trigger="cron", hour=4, id="retention")
-        # Daily news refresh at 06:00 — populates world + per-asset headlines.
-        self._scheduler.add_job(self._refresh_news, trigger="cron", hour=6, id="news")
+        with self._session_factory() as session:
+            news_hours = get_news_interval_hours(session)
+            research_hours = get_research_interval_hours(session)
+        # News refresh — daily at 06:00 unless an interval is configured.
+        if news_hours:
+            self._scheduler.add_job(
+                self._refresh_news, trigger="interval", hours=news_hours, id="news"
+            )
+        else:
+            self._scheduler.add_job(self._refresh_news, trigger="cron", hour=6, id="news")
+        # Research reports for every watched symbol, every N hours.
+        self._scheduler.add_job(
+            self._run_research, trigger="interval", hours=research_hours, id="research"
+        )
         self._scheduler.start()
         log.info("trading engine started — %d strategies", len(self._strategies))
 
@@ -304,6 +314,13 @@ class TradingEngine:
                 news_service.refresh(session)
         except Exception:  # noqa: BLE001 — news refresh must not abort the engine
             log.exception("news refresh failed")
+
+    def _run_research(self) -> None:
+        """Scheduled research cycle — one report per watched symbol."""
+        try:
+            research_service.run_cycle(self._session_factory)
+        except Exception:  # noqa: BLE001 — research must not abort the engine
+            log.exception("research cycle failed")
 
     def _prune(self) -> None:
         """Scheduled retention prune of old candles and equity snapshots."""

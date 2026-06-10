@@ -1832,6 +1832,127 @@
         "title": "RefreshRequest",
         "type": "object"
       },
+      "ResearchReportRead": {
+        "description": "One report \u2014 `sections` is the parsed schema-formatted content.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "sections": {
+            "additionalProperties": true,
+            "title": "Sections",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "schema_version",
+          "status",
+          "provider",
+          "model",
+          "error",
+          "created_at",
+          "sections"
+        ],
+        "title": "ResearchReportRead",
+        "type": "object"
+      },
+      "ResearchRun": {
+        "description": "Manual trigger \u2014 one symbol, or blank for every watched symbol.",
+        "properties": {
+          "symbol": {
+            "default": "",
+            "maxLength": 24,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "title": "ResearchRun",
+        "type": "object"
+      },
+      "ResearchSettingsUpdate": {
+        "description": "Research configuration \u2014 watched symbols, interval and writer LLM.",
+        "properties": {
+          "interval_hours": {
+            "default": 12,
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Interval Hours",
+            "type": "integer"
+          },
+          "news_interval_hours": {
+            "anyOf": [
+              {
+                "maximum": 48.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "News Interval Hours"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Symbols",
+            "type": "array"
+          },
+          "writer_model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Writer Model",
+            "type": "string"
+          },
+          "writer_provider": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Writer Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbols",
+          "writer_provider"
+        ],
+        "title": "ResearchSettingsUpdate",
+        "type": "object"
+      },
       "Role": {
         "description": "Operator role. `admin` has full access; `user` is restricted\n(see plan: Authentication & Roles).",
         "enum": [
@@ -1887,6 +2008,36 @@
           "mode": {
             "$ref": "#/components/schemas/TradingMode"
           },
+          "news_interval_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "News Interval Hours"
+          },
+          "research_interval_hours": {
+            "title": "Research Interval Hours",
+            "type": "integer"
+          },
+          "research_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Research Symbols",
+            "type": "array"
+          },
+          "research_writer_model": {
+            "title": "Research Writer Model",
+            "type": "string"
+          },
+          "research_writer_provider": {
+            "title": "Research Writer Provider",
+            "type": "string"
+          },
           "venue_credentials_configured": {
             "additionalProperties": {
               "type": "boolean"
@@ -1906,7 +2057,12 @@
           "ai_spend_cap",
           "ai_spend_today",
           "ai_action_mode",
-          "llm_providers_configured"
+          "llm_providers_configured",
+          "research_symbols",
+          "research_interval_hours",
+          "research_writer_provider",
+          "research_writer_model",
+          "news_interval_hours"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -3966,6 +4122,174 @@
         ]
       }
     },
+    "/api/research": {
+      "get": {
+        "description": "Recent reports, newest first \u2014 optionally filtered by `symbol`.",
+        "operationId": "list_reports_api_research_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Symbol"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResearchReportRead"
+                  },
+                  "title": "Response List Reports Api Research Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Reports",
+        "tags": [
+          "research"
+        ]
+      }
+    },
+    "/api/research/run": {
+      "post": {
+        "description": "Write a report now \u2014 for `symbol`, or every watched symbol when blank.",
+        "operationId": "run_research_api_research_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchRun"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResearchReportRead"
+                  },
+                  "title": "Response Run Research Api Research Run Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Run Research",
+        "tags": [
+          "research"
+        ]
+      }
+    },
+    "/api/research/{report_id}": {
+      "get": {
+        "description": "One report with its full sections.",
+        "operationId": "get_report_api_research__report_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchReportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Report",
+        "tags": [
+          "research"
+        ]
+      }
+    },
     "/api/settings": {
       "get": {
         "description": "Current trading mode and whether Binance keys are stored.",
@@ -4274,6 +4598,53 @@
           }
         ],
         "summary": "Update Mode",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/research": {
+      "put": {
+        "description": "Configure research reports and the news refresh interval.\n\nScheduler-interval changes take effect on the next engine restart.",
+        "operationId": "update_research_settings_api_settings_research_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Research Settings",
         "tags": [
           "settings"
         ]

@@ -20,6 +20,7 @@ from api.market import ws_router as market_ws_router
 from api.news import router as news_router
 from api.orders import router as orders_router
 from api.portfolio import router as portfolio_router
+from api.research import router as research_router
 from api.settings import router as settings_router
 from api.strategies import router as strategies_router
 from api.system import router as system_router
@@ -122,6 +123,7 @@ app.include_router(tokens_router)
 app.include_router(venues_router)
 app.include_router(news_router)
 app.include_router(connections_router)
+app.include_router(research_router)
 
 
 @app.get("/health", tags=["system"])

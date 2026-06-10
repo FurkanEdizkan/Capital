@@ -15,11 +15,13 @@ import connections from "../guides/connections.md?raw";
 import deployment from "../guides/deployment.md?raw";
 import futures from "../guides/futures-trading.md?raw";
 import news from "../guides/news.md?raw";
+import research from "../guides/research.md?raw";
 
 export type GuideSlug =
   | "binance-api-key"
   | "ai-providers"
   | "news"
+  | "research"
   | "connections"
   | "futures-trading"
   | "deployment";
@@ -30,6 +32,7 @@ export const GUIDES: Guide[] = [
   { slug: "binance-api-key", title: "Getting a Binance API key", content: binanceApiKey },
   { slug: "ai-providers", title: "Connecting an AI model", content: aiProviders },
   { slug: "news", title: "News", content: news },
+  { slug: "research", title: "Research reports", content: research },
   { slug: "connections", title: "Connections", content: connections },
   { slug: "futures-trading", title: "Futures & perpetuals", content: futures },
   { slug: "deployment", title: "Running Capital", content: deployment },

@@ -8,6 +8,7 @@ Venue credentials are stored per-venue, one encrypted row per field, keyed
 (Binance: api_key+api_secret).
 """
 
+import json
 from collections.abc import Iterable
 from decimal import Decimal
 from enum import StrEnum
@@ -289,3 +290,77 @@ def get_strategy_action_mode(session: Session, strategy: str) -> str:
 def set_strategy_action_mode(session: Session, strategy: str, mode: str) -> None:
     """Pin an AI strategy to a specific action mode."""
     set_setting(session, f"ai:{strategy}:action_mode", _normalise_mode(mode))
+
+
+# -- research reports -----------------------------------------------------------
+# Scheduled research reports: which symbols are watched, how often a report is
+# written, and which LLM writes the narrative sections (falls back to the
+# global AI setting when unset).
+
+_RESEARCH_SYMBOLS = "research_symbols"
+_RESEARCH_INTERVAL = "research_interval_hours"
+_NEWS_INTERVAL = "news_interval_hours"
+
+#: Symbols researched when the operator has not configured a list.
+DEFAULT_RESEARCH_SYMBOLS: tuple[str, ...] = ("BTCUSDT", "ETHUSDT")
+
+
+def get_research_symbols(session: Session) -> list[str]:
+    """The watched symbols a research cycle reports on."""
+    raw = get_setting(session, _RESEARCH_SYMBOLS)
+    if not raw:
+        return list(DEFAULT_RESEARCH_SYMBOLS)
+    try:
+        items = json.loads(raw)
+        symbols = [str(s).upper() for s in items if str(s).strip()]
+        return symbols or list(DEFAULT_RESEARCH_SYMBOLS)
+    except (json.JSONDecodeError, TypeError):
+        return list(DEFAULT_RESEARCH_SYMBOLS)
+
+
+def set_research_symbols(session: Session, symbols: list[str]) -> None:
+    """Set the watched research symbols."""
+    set_setting(session, _RESEARCH_SYMBOLS, json.dumps([s.upper() for s in symbols]))
+
+
+def get_research_interval_hours(session: Session) -> int:
+    """Hours between scheduled research cycles (default 12, minimum 1)."""
+    raw = get_setting(session, _RESEARCH_INTERVAL)
+    try:
+        return max(1, int(raw)) if raw else 12
+    except ValueError:
+        return 12
+
+
+def set_research_interval_hours(session: Session, hours: int) -> None:
+    """Set the research cycle interval in hours."""
+    set_setting(session, _RESEARCH_INTERVAL, str(max(1, hours)))
+
+
+def get_research_writer(session: Session) -> dict[str, str]:
+    """The report-writer LLM `{provider, model}` — defaults to the AI setting."""
+    ai = get_ai_settings(session)
+    return {
+        "provider": get_setting(session, "research:writer:provider") or ai["provider"],
+        "model": get_setting(session, "research:writer:model") or ai["model"],
+    }
+
+
+def set_research_writer(session: Session, *, provider: str, model: str) -> None:
+    """Pin the report writer to a specific provider + model."""
+    set_setting(session, "research:writer:provider", provider)
+    set_setting(session, "research:writer:model", model)
+
+
+def get_news_interval_hours(session: Session) -> int | None:
+    """Hours between news refreshes — None keeps the default daily schedule."""
+    raw = get_setting(session, _NEWS_INTERVAL)
+    try:
+        return max(1, int(raw)) if raw else None
+    except ValueError:
+        return None
+
+
+def set_news_interval_hours(session: Session, hours: int | None) -> None:
+    """Set the news refresh interval (None/0 restores the daily schedule)."""
+    set_setting(session, _NEWS_INTERVAL, str(hours) if hours else "")

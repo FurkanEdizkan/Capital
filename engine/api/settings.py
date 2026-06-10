@@ -24,6 +24,10 @@ from appsettings.store import (
     get_ai_settings,
     get_ai_spend_cap,
     get_mode,
+    get_news_interval_hours,
+    get_research_interval_hours,
+    get_research_symbols,
+    get_research_writer,
     llm_provider_configured,
     set_ai_action_mode,
     set_ai_settings,
@@ -31,6 +35,10 @@ from appsettings.store import (
     set_binance_keys,
     set_llm_credentials,
     set_mode,
+    set_news_interval_hours,
+    set_research_interval_hours,
+    set_research_symbols,
+    set_research_writer,
     set_venue_credentials,
     venue_credentials_configured,
 )
@@ -67,6 +75,13 @@ class SettingsRead(BaseModel):
     ai_action_mode: str
     # Per-LLM-provider: whether it is usable (Ollama always; others need a key).
     llm_providers_configured: dict[str, bool]
+    # Research reports: watched symbols, cycle interval and the writer LLM.
+    research_symbols: list[str]
+    research_interval_hours: int
+    research_writer_provider: str
+    research_writer_model: str
+    # News refresh interval in hours; null keeps the default daily schedule.
+    news_interval_hours: int | None
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -108,8 +123,20 @@ class AiActionModeUpdate(BaseModel):
     mode: str = Field(description="notify | auto")
 
 
+class ResearchSettingsUpdate(BaseModel):
+    """Research configuration — watched symbols, interval and writer LLM."""
+
+    symbols: list[str] = Field(min_length=1, max_length=20)
+    interval_hours: int = Field(default=12, ge=1, le=168)
+    writer_provider: str = Field(min_length=1, max_length=32)
+    writer_model: str = Field(default="", max_length=64)
+    # None keeps the default daily news schedule.
+    news_interval_hours: int | None = Field(default=None, ge=1, le=48)
+
+
 def _read(session: SessionDep) -> SettingsRead:
     ai = get_ai_settings(session)
+    writer = get_research_writer(session)
     return SettingsRead(
         mode=get_mode(session),
         binance_keys_configured=binance_keys_configured(session),
@@ -127,6 +154,11 @@ def _read(session: SessionDep) -> SettingsRead:
         llm_providers_configured={
             p: llm_provider_configured(session, p) for p in LLM_PROVIDERS
         },
+        research_symbols=get_research_symbols(session),
+        research_interval_hours=get_research_interval_hours(session),
+        research_writer_provider=writer["provider"],
+        research_writer_model=writer["model"],
+        news_interval_hours=get_news_interval_hours(session),
     )
 
 
@@ -279,6 +311,43 @@ def update_ai_settings(
         actor=admin.username,
         action="settings.ai",
         detail={"provider": body.provider, "model": body.model},
+    )
+    return _read(session)
+
+
+@router.put("/research", response_model=SettingsRead)
+def update_research_settings(
+    body: ResearchSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure research reports and the news refresh interval.
+
+    Scheduler-interval changes take effect on the next engine restart.
+    """
+    if body.writer_provider not in LLM_PROVIDERS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"writer_provider must be one of {list(LLM_PROVIDERS)}",
+        )
+    symbols = [s.strip().upper() for s in body.symbols if s.strip()]
+    if not symbols:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "at least one symbol is required"
+        )
+    set_research_symbols(session, symbols)
+    set_research_interval_hours(session, body.interval_hours)
+    set_research_writer(
+        session, provider=body.writer_provider, model=body.writer_model
+    )
+    set_news_interval_hours(session, body.news_interval_hours)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.research",
+        detail={
+            "symbols": symbols,
+            "interval_hours": body.interval_hours,
+            "writer": f"{body.writer_provider}:{body.writer_model}",
+        },
     )
     return _read(session)
 

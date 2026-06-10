@@ -609,6 +609,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reports
+         * @description Recent reports, newest first — optionally filtered by `symbol`.
+         */
+        get: operations["list_reports_api_research_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Research
+         * @description Write a report now — for `symbol`, or every watched symbol when blank.
+         */
+        post: operations["run_research_api_research_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Report
+         * @description One report with its full sections.
+         */
+        get: operations["get_report_api_research__report_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -742,6 +802,28 @@ export interface paths {
          * @description Switch the trading mode (Sim / Testnet / Live).
          */
         put: operations["update_mode_api_settings_mode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Research Settings
+         * @description Configure research reports and the news refresh interval.
+         *
+         *     Scheduler-interval changes take effect on the next engine restart.
+         */
+        put: operations["update_research_settings_api_settings_research_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1823,6 +1905,68 @@ export interface components {
             refresh_token: string;
         };
         /**
+         * ResearchReportRead
+         * @description One report — `sections` is the parsed schema-formatted content.
+         */
+        ResearchReportRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error */
+            error: string;
+            /** Id */
+            id: number;
+            /** Model */
+            model: string;
+            /** Provider */
+            provider: string;
+            /** Schema Version */
+            schema_version: number;
+            /** Sections */
+            sections: {
+                [key: string]: unknown;
+            };
+            /** Status */
+            status: string;
+            /** Symbol */
+            symbol: string;
+        };
+        /**
+         * ResearchRun
+         * @description Manual trigger — one symbol, or blank for every watched symbol.
+         */
+        ResearchRun: {
+            /**
+             * Symbol
+             * @default
+             */
+            symbol: string;
+        };
+        /**
+         * ResearchSettingsUpdate
+         * @description Research configuration — watched symbols, interval and writer LLM.
+         */
+        ResearchSettingsUpdate: {
+            /**
+             * Interval Hours
+             * @default 12
+             */
+            interval_hours: number;
+            /** News Interval Hours */
+            news_interval_hours?: number | null;
+            /** Symbols */
+            symbols: string[];
+            /**
+             * Writer Model
+             * @default
+             */
+            writer_model: string;
+            /** Writer Provider */
+            writer_provider: string;
+        };
+        /**
          * Role
          * @description Operator role. `admin` has full access; `user` is restricted
          *     (see plan: Authentication & Roles).
@@ -1852,6 +1996,16 @@ export interface components {
                 [key: string]: boolean;
             };
             mode: components["schemas"]["TradingMode"];
+            /** News Interval Hours */
+            news_interval_hours: number | null;
+            /** Research Interval Hours */
+            research_interval_hours: number;
+            /** Research Symbols */
+            research_symbols: string[];
+            /** Research Writer Model */
+            research_writer_model: string;
+            /** Research Writer Provider */
+            research_writer_provider: string;
             /** Venue Credentials Configured */
             venue_credentials_configured: {
                 [key: string]: boolean;
@@ -2954,6 +3108,102 @@ export interface operations {
             };
         };
     };
+    list_reports_api_research_get: {
+        parameters: {
+            query?: {
+                symbol?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchReportRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_research_api_research_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchRun"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchReportRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_api_research__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchReportRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_settings_api_settings_get: {
         parameters: {
             query?: never;
@@ -3149,6 +3399,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ModeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_research_settings_api_settings_research_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchSettingsUpdate"];
             };
         };
         responses: {

@@ -58,6 +58,14 @@ export const NAV: NavItem[] = [
     subtitle: "World & per-asset headlines",
   },
   {
+    id: "research",
+    label: "Research",
+    path: "/research",
+    icon: I.Research,
+    title: "Research",
+    subtitle: "Scheduled asset research reports",
+  },
+  {
     id: "connections",
     label: "Connections",
     path: "/connections",
