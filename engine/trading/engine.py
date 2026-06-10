@@ -117,6 +117,14 @@ class TradingEngine:
     def register(self, strategy: BaseStrategy) -> None:
         self._strategies.append(strategy)
 
+    def replace_strategies(self, strategies: list[BaseStrategy]) -> None:
+        """Swap the strategy list — how instance create/delete takes effect.
+
+        Safe between ticks: `tick` iterates a copy, and APScheduler runs
+        ticks strictly serialized.
+        """
+        self._strategies = list(strategies)
+
     @property
     def strategies(self) -> list[BaseStrategy]:
         return list(self._strategies)

@@ -36,7 +36,7 @@ from logging_config import setup_logging
 from marketdata.stream import StreamManager
 from notify.telegram import TelegramNotifier
 from ops.recovery import recover_on_boot
-from strategies.builtin import all_strategies, seed_allocations
+from strategies.builtin import all_strategies_with_instances, seed_allocations
 from trading.engine import TradingEngine
 from trading.executor_router import ExecutorRouter
 from trading.risk import RiskManager
@@ -76,7 +76,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception:  # noqa: BLE001 — recovery must not block startup
         log.exception("Boot recovery skipped")
 
-    strategies = all_strategies()
+    with session_factory() as session:
+        strategies = all_strategies_with_instances(session)
     try:
         seed_allocations(session_factory, strategies)
     except Exception:  # noqa: BLE001 — never let seeding crash startup

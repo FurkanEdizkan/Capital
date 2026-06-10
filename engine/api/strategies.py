@@ -6,20 +6,31 @@ open positions. Any authenticated operator may use them — see plan:
 Authentication & Roles (managing strategies is allowed for both roles).
 """
 
+import json
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
+from sqlmodel import select
 
 from api.market import StreamsDep
 from appsettings.store import LLM_PROVIDERS, set_strategy_ai_config
 from auth.audit import record_audit
 from auth.deps import CurrentUser, SessionDep
 from strategies.base import BaseStrategy
+from strategies.builtin import all_strategies_with_instances
+from strategies.models import StrategyInstance
+from strategies.registry import STRATEGY_TYPES, TIMEFRAMES, build_strategy, coerce_params
 from trading.engine import TradingEngine
 from trading.lifecycle import is_enabled, set_enabled
-from trading.portfolio import get_allocation, set_allocation, set_max_loss
+from trading.portfolio import (
+    get_allocation,
+    list_positions,
+    set_allocation,
+    set_max_loss,
+)
 from trading.strategy_view import StrategyRead, read_strategy_state
 
 router = APIRouter(prefix="/api/strategies", tags=["strategies"])
@@ -52,6 +63,37 @@ class CloseResult(BaseModel):
     closed: int
 
 
+class ParamSpecRead(BaseModel):
+    name: str
+    type: str
+    default: str
+    min: str
+    max: str
+    label: str
+
+
+class StrategyTypeRead(BaseModel):
+    """One pickable strategy type and its parameter schema."""
+
+    key: str
+    label: str
+    params: list[ParamSpecRead]
+    timeframes: list[str]
+
+
+class InstanceCreate(BaseModel):
+    """Apply a strategy type to a coin as a new named instance."""
+
+    name: str = Field(min_length=1, max_length=64)
+    type: str = Field(min_length=1, max_length=32)
+    symbol: str = Field(min_length=1, max_length=24)
+    market: str = Field(default="spot", pattern="^(spot|futures)$")
+    timeframe: str = Field(default="1h", max_length=8)
+    params: dict[str, str] = Field(default_factory=dict)
+    allocated: Decimal = Field(default=Decimal(10000), ge=0)
+    max_loss: Decimal = Field(default=Decimal(0), ge=0)
+
+
 def _marks(streams: object) -> dict[str, Decimal]:
     """Build {symbol: price} from the live ticker snapshots."""
     marks: dict[str, Decimal] = {}
@@ -75,6 +117,112 @@ def list_strategies(
     """Every registered strategy with its allocation, state and PnL."""
     marks = _marks(streams)
     return [read_strategy_state(session, s, marks) for s in engine.strategies]
+
+
+@router.get("/types", response_model=list[StrategyTypeRead])
+def list_strategy_types(_: CurrentUser) -> list[StrategyTypeRead]:
+    """Every pickable strategy type with its typed parameter schema."""
+    return [
+        StrategyTypeRead(
+            key=t.key,
+            label=t.label,
+            params=[
+                ParamSpecRead(
+                    name=p.name,
+                    type=p.type,
+                    default=p.default,
+                    min=p.min,
+                    max=p.max,
+                    label=p.label,
+                )
+                for p in t.params
+            ],
+            timeframes=list(TIMEFRAMES),
+        )
+        for t in STRATEGY_TYPES.values()
+    ]
+
+
+@router.post("", response_model=StrategyRead, status_code=status.HTTP_201_CREATED)
+def create_instance(
+    body: InstanceCreate,
+    user: CurrentUser,
+    session: SessionDep,
+    engine: TradingDep,
+    streams: StreamsDep,
+) -> StrategyRead:
+    """Create a strategy instance: any registered type on any chosen coin."""
+    name = body.name.strip()
+    if any(s.name == name for s in engine.strategies):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, f"strategy name {name!r} is already in use"
+        )
+    try:
+        # Build first — params and timeframe are validated by the registry.
+        build_strategy(
+            body.type,
+            name=name,
+            symbol=body.symbol,
+            market=body.market,
+            timeframe=body.timeframe,
+            params=dict(body.params),
+        )
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    row = StrategyInstance(
+        name=name,
+        type=body.type,
+        symbol=body.symbol.upper(),
+        market=body.market,
+        timeframe=body.timeframe,
+        params=json.dumps(coerce_params(body.type, dict(body.params)), default=str),
+        created_at=datetime.now(UTC).replace(tzinfo=None),
+    )
+    session.add(row)
+    session.commit()
+    set_allocation(session, name, body.allocated)
+    if body.max_loss > 0:
+        set_max_loss(session, name, body.max_loss)
+    engine.replace_strategies(all_strategies_with_instances(session))
+    record_audit(
+        session,
+        actor=user.username,
+        action="strategy.create",
+        target=name,
+        detail={"type": body.type, "symbol": body.symbol.upper()},
+    )
+    strategy = _find(engine, name)
+    return read_strategy_state(session, strategy, _marks(streams))
+
+
+@router.delete("/{name}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_instance(
+    name: str,
+    user: CurrentUser,
+    session: SessionDep,
+    engine: TradingDep,
+) -> None:
+    """Delete an instance-backed strategy. Built-ins cannot be deleted.
+
+    Refused while the strategy holds an open position — close it first.
+    """
+    row = session.exec(
+        select(StrategyInstance).where(StrategyInstance.name == name)
+    ).first()
+    if row is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "not an instance-backed strategy (built-ins cannot be deleted)",
+        )
+    if list_positions(session, strategy=name, open_only=True):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "close the strategy's open positions before deleting it",
+        )
+    session.delete(row)
+    session.commit()
+    engine.replace_strategies(all_strategies_with_instances(session))
+    record_audit(session, actor=user.username, action="strategy.delete", target=name)
 
 
 @router.patch("/{name}/allocation", response_model=StrategyRead)
