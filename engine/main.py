@@ -14,6 +14,7 @@ from sqlmodel import Session
 from api.ai import router as ai_router
 from api.backtest import router as backtest_router
 from api.connections import router as connections_router
+from api.costs import router as costs_router
 from api.history import router as history_router
 from api.lab import router as lab_router
 from api.market import router as market_router
@@ -127,6 +128,7 @@ app.include_router(news_router)
 app.include_router(connections_router)
 app.include_router(research_router)
 app.include_router(lab_router)
+app.include_router(costs_router)
 
 
 @app.get("/health", tags=["system"])

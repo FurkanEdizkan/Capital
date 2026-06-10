@@ -309,6 +309,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/costs/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Costs Ledger
+         * @description The per-call ledger, newest first — filterable by purpose.
+         */
+        get: operations["costs_ledger_api_costs_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/costs/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Costs Summary
+         * @description Spend totals and breakdowns over the last 30 days.
+         */
+        get: operations["costs_summary_api_costs_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/history/audit": {
         parameters: {
             query?: never;
@@ -1658,6 +1698,22 @@ export interface components {
             types?: string[];
         };
         /**
+         * CostBucket
+         * @description One aggregation bucket — by model, purpose or day.
+         */
+        CostBucket: {
+            /** Calls */
+            calls: number;
+            /** Cost Usd */
+            cost_usd: string;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Key */
+            key: string;
+            /** Output Tokens */
+            output_tokens: number;
+        };
+        /**
          * CostsRead
          * @description Trading-cost breakdown, the fee-rate reference, and today's LLM spend.
          */
@@ -1678,6 +1734,26 @@ export interface components {
             venue_fee_rates: {
                 [key: string]: string;
             };
+        };
+        /**
+         * CostsSummary
+         * @description Headline spend + the breakdowns the Costs screen renders.
+         */
+        CostsSummary: {
+            /** By Day */
+            by_day: components["schemas"]["CostBucket"][];
+            /** By Model */
+            by_model: components["schemas"]["CostBucket"][];
+            /** By Purpose */
+            by_purpose: components["schemas"]["CostBucket"][];
+            /** Daily Cap Usd */
+            daily_cap_usd: string;
+            /** Last 30D Usd */
+            last_30d_usd: string;
+            /** Last 7D Usd */
+            last_7d_usd: string;
+            /** Today Usd */
+            today_usd: string;
         };
         /** CouncilMember */
         CouncilMember: {
@@ -1976,8 +2052,51 @@ export interface components {
             output_tokens: number;
             /** Provider */
             provider: string;
+            /**
+             * Purpose
+             * @default analyze
+             */
+            purpose: string;
             /** Strategy */
             strategy?: string | null;
+        };
+        /**
+         * LedgerEntry
+         * @description One paid call, newest first.
+         */
+        LedgerEntry: {
+            /** Action */
+            action: string | null;
+            /** Confidence */
+            confidence: string | null;
+            /** Cost Usd */
+            cost_usd: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Model */
+            model: string;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Provider */
+            provider: string;
+            /** Purpose */
+            purpose: string;
+            /** Strategy */
+            strategy: string | null;
+        };
+        /** LedgerPage */
+        LedgerPage: {
+            /** Entries */
+            entries: components["schemas"]["LedgerEntry"][];
+            /** Total */
+            total: number;
         };
         /**
          * LlmCredentialsUpdate
@@ -3040,6 +3159,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    costs_ledger_api_costs_ledger_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                purpose?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    costs_summary_api_costs_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostsSummary"];
                 };
             };
         };

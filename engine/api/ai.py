@@ -75,6 +75,7 @@ def analyze_and_decide(
         model=completion.model,
         input_tokens=completion.input_tokens,
         output_tokens=completion.output_tokens,
+        purpose="analyze",
         action=decision.action.value,
         confidence=decision.confidence,
     )

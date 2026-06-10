@@ -46,6 +46,8 @@ class LLMUsage(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     provider: str = Field(index=True, max_length=16)
     model: str = Field(index=True, max_length=64)
+    # What spent the money: strategy | analyze | report | council | recommend.
+    purpose: str = Field(default="analyze", index=True, max_length=16)
     strategy: str | None = Field(default=None, index=True, max_length=64)
     input_tokens: int = Field(default=0)
     output_tokens: int = Field(default=0)
@@ -80,6 +82,7 @@ def record_usage(
     model: str,
     input_tokens: int,
     output_tokens: int,
+    purpose: str = "analyze",
     strategy: str | None = None,
     action: str | None = None,
     confidence: Decimal | None = None,
@@ -88,6 +91,7 @@ def record_usage(
     row = LLMUsage(
         provider=provider,
         model=model,
+        purpose=purpose,
         strategy=strategy,
         input_tokens=input_tokens,
         output_tokens=output_tokens,

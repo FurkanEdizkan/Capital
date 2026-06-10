@@ -969,6 +969,41 @@
         "title": "CompareRequest",
         "type": "object"
       },
+      "CostBucket": {
+        "description": "One aggregation bucket \u2014 by model, purpose or day.",
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Usd",
+            "type": "string"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "calls",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd"
+        ],
+        "title": "CostBucket",
+        "type": "object"
+      },
       "CostsRead": {
         "description": "Trading-cost breakdown, the fee-rate reference, and today's LLM spend.",
         "properties": {
@@ -1018,6 +1053,63 @@
           "llm_spend_today"
         ],
         "title": "CostsRead",
+        "type": "object"
+      },
+      "CostsSummary": {
+        "description": "Headline spend + the breakdowns the Costs screen renders.",
+        "properties": {
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/CostBucket"
+            },
+            "title": "By Day",
+            "type": "array"
+          },
+          "by_model": {
+            "items": {
+              "$ref": "#/components/schemas/CostBucket"
+            },
+            "title": "By Model",
+            "type": "array"
+          },
+          "by_purpose": {
+            "items": {
+              "$ref": "#/components/schemas/CostBucket"
+            },
+            "title": "By Purpose",
+            "type": "array"
+          },
+          "daily_cap_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Daily Cap Usd",
+            "type": "string"
+          },
+          "last_30d_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Last 30D Usd",
+            "type": "string"
+          },
+          "last_7d_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Last 7D Usd",
+            "type": "string"
+          },
+          "today_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Today Usd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "today_usd",
+          "last_7d_usd",
+          "last_30d_usd",
+          "daily_cap_usd",
+          "by_model",
+          "by_purpose",
+          "by_day"
+        ],
+        "title": "CostsSummary",
         "type": "object"
       },
       "CouncilMember": {
@@ -1680,6 +1772,12 @@
             "title": "Provider",
             "type": "string"
           },
+          "purpose": {
+            "default": "analyze",
+            "maxLength": 16,
+            "title": "Purpose",
+            "type": "string"
+          },
           "strategy": {
             "anyOf": [
               {
@@ -1699,6 +1797,115 @@
           "created_at"
         ],
         "title": "LLMUsage",
+        "type": "object"
+      },
+      "LedgerEntry": {
+        "description": "One paid call, newest first.",
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "cost_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Usd",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "provider",
+          "model",
+          "purpose",
+          "strategy",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "action",
+          "confidence"
+        ],
+        "title": "LedgerEntry",
+        "type": "object"
+      },
+      "LedgerPage": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "entries"
+        ],
+        "title": "LedgerPage",
         "type": "object"
       },
       "LlmCredentialsUpdate": {
@@ -3861,6 +4068,108 @@
         "summary": "Suggest Connections",
         "tags": [
           "connections"
+        ]
+      }
+    },
+    "/api/costs/ledger": {
+      "get": {
+        "description": "The per-call ledger, newest first \u2014 filterable by purpose.",
+        "operationId": "costs_ledger_api_costs_ledger_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "purpose",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Purpose"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Costs Ledger",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
+    "/api/costs/summary": {
+      "get": {
+        "description": "Spend totals and breakdowns over the last 30 days.",
+        "operationId": "costs_summary_api_costs_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostsSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Costs Summary",
+        "tags": [
+          "costs"
         ]
       }
     },
