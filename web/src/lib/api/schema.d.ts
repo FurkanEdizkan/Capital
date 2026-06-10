@@ -669,6 +669,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research/{report_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Review
+         * @description The newest council review for a report, with every vote.
+         */
+        get: operations["get_review_api_research__report_id__review_get"];
+        put?: never;
+        /**
+         * Rerun Review
+         * @description Re-run the council on a report now (admin).
+         */
+        post: operations["rerun_review_api_research__report_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -762,6 +786,26 @@ export interface paths {
          * @description Store the Binance API credentials (encrypted at rest).
          */
         put: operations["update_binance_keys_api_settings_binance_keys_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/council": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Council Settings
+         * @description Configure the AI council members and quorum.
+         */
+        put: operations["update_council_settings_api_settings_council_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1493,6 +1537,67 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** CouncilMember */
+        CouncilMember: {
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /** Provider */
+            provider: string;
+        };
+        /**
+         * CouncilReviewRead
+         * @description A council verdict plus every member's vote.
+         */
+        CouncilReviewRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Quorum Met */
+            quorum_met: boolean;
+            /** Report Id */
+            report_id: number;
+            /** Strategy Brief */
+            strategy_brief: string;
+            /** Verdict */
+            verdict: string;
+            /** Votes */
+            votes: components["schemas"]["CouncilVoteRead"][];
+            /** Weighted Score */
+            weighted_score: string;
+        };
+        /**
+         * CouncilSettingsUpdate
+         * @description Council configuration — an empty member list disables the council.
+         */
+        CouncilSettingsUpdate: {
+            /** Members */
+            members: components["schemas"]["CouncilMember"][];
+            /**
+             * Quorum
+             * @default 0.5
+             */
+            quorum: number | string;
+        };
+        /** CouncilVoteRead */
+        CouncilVoteRead: {
+            /** Action */
+            action: string;
+            /** Confidence */
+            confidence: string;
+            /** Model */
+            model: string;
+            /** Provider */
+            provider: string;
+            /** Reasoning */
+            reasoning: string;
+        };
         /**
          * Decision
          * @description A structured trading decision parsed from an LLM response.
@@ -1991,6 +2096,12 @@ export interface components {
             ai_spend_today: string;
             /** Binance Keys Configured */
             binance_keys_configured: boolean;
+            /** Council Members */
+            council_members: {
+                [key: string]: string;
+            }[];
+            /** Council Quorum */
+            council_quorum: string;
             /** Llm Providers Configured */
             llm_providers_configured: {
                 [key: string]: boolean;
@@ -3203,6 +3314,68 @@ export interface operations {
             };
         };
     };
+    get_review_api_research__report_id__review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouncilReviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rerun_review_api_research__report_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouncilReviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_settings_api_settings_get: {
         parameters: {
             query?: never;
@@ -3341,6 +3514,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_council_settings_api_settings_council_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouncilSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
             };
             /** @description Validation Error */
             422: {

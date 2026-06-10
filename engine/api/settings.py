@@ -12,6 +12,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from ai.council import (
+    get_council_members,
+    get_council_quorum,
+    set_council_members,
+    set_council_quorum,
+)
 from ai.usage import spend_since
 from appsettings.store import (
     AI_ACTION_MODES,
@@ -82,6 +88,10 @@ class SettingsRead(BaseModel):
     research_writer_model: str
     # News refresh interval in hours; null keeps the default daily schedule.
     news_interval_hours: int | None
+    # AI council: the models that vote on each report, and the quorum a
+    # verdict must reach. An empty member list disables the council.
+    council_members: list[dict[str, str]]
+    council_quorum: Decimal
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -123,6 +133,18 @@ class AiActionModeUpdate(BaseModel):
     mode: str = Field(description="notify | auto")
 
 
+class CouncilMember(BaseModel):
+    provider: str = Field(min_length=1, max_length=32)
+    model: str = Field(default="", max_length=64)
+
+
+class CouncilSettingsUpdate(BaseModel):
+    """Council configuration — an empty member list disables the council."""
+
+    members: list[CouncilMember] = Field(max_length=8)
+    quorum: Decimal = Field(default=Decimal("0.5"), gt=0, le=1)
+
+
 class ResearchSettingsUpdate(BaseModel):
     """Research configuration — watched symbols, interval and writer LLM."""
 
@@ -159,6 +181,8 @@ def _read(session: SessionDep) -> SettingsRead:
         research_writer_provider=writer["provider"],
         research_writer_model=writer["model"],
         news_interval_hours=get_news_interval_hours(session),
+        council_members=get_council_members(session),
+        council_quorum=get_council_quorum(session),
     )
 
 
@@ -347,6 +371,34 @@ def update_research_settings(
             "symbols": symbols,
             "interval_hours": body.interval_hours,
             "writer": f"{body.writer_provider}:{body.writer_model}",
+        },
+    )
+    return _read(session)
+
+
+@router.put("/council", response_model=SettingsRead)
+def update_council_settings(
+    body: CouncilSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure the AI council members and quorum."""
+    for member in body.members:
+        if member.provider not in LLM_PROVIDERS:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"council provider must be one of {list(LLM_PROVIDERS)}",
+            )
+    set_council_members(
+        session,
+        [{"provider": m.provider, "model": m.model} for m in body.members],
+    )
+    set_council_quorum(session, body.quorum)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.council",
+        detail={
+            "members": [f"{m.provider}:{m.model}" for m in body.members],
+            "quorum": str(body.quorum),
         },
     )
     return _read(session)

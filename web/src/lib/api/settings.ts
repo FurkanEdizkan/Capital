@@ -94,3 +94,14 @@ export async function updateResearchSettings(body: {
   }
   return data;
 }
+
+export async function updateCouncilSettings(body: {
+  members: { provider: string; model: string }[];
+  quorum: string;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/council", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save council settings"));
+  }
+  return data;
+}

@@ -7,12 +7,14 @@ the whole watched list.
 
 import logging
 from datetime import datetime
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlmodel import select
 
+from ai import council
 from ai.providers import LLMError
 from appsettings.store import get_research_symbols
 from auth.deps import CurrentUser, SessionDep, require_admin
@@ -104,3 +106,86 @@ def run_research(
         row = service.write_report(session, sym, provider=provider, model=model)
         reports.append(ResearchReportRead.from_row(row))
     return reports
+
+
+class CouncilVoteRead(BaseModel):
+    provider: str
+    model: str
+    action: str
+    confidence: Decimal
+    reasoning: str
+
+
+class CouncilReviewRead(BaseModel):
+    """A council verdict plus every member's vote."""
+
+    id: int
+    report_id: int
+    verdict: str
+    weighted_score: Decimal
+    quorum_met: bool
+    strategy_brief: str
+    created_at: datetime
+    votes: list[CouncilVoteRead]
+
+    @classmethod
+    def from_rows(
+        cls, review: council.CouncilReview, votes: list[council.CouncilVote]
+    ) -> "CouncilReviewRead":
+        return cls(
+            id=review.id or 0,
+            report_id=review.report_id,
+            verdict=review.verdict,
+            weighted_score=review.weighted_score,
+            quorum_met=review.quorum_met,
+            strategy_brief=review.strategy_brief,
+            created_at=review.created_at,
+            votes=[
+                CouncilVoteRead(
+                    provider=v.provider,
+                    model=v.model,
+                    action=v.action,
+                    confidence=v.confidence,
+                    reasoning=v.reasoning,
+                )
+                for v in votes
+            ],
+        )
+
+
+@router.get("/{report_id}/review", response_model=CouncilReviewRead)
+def get_review(
+    report_id: int, _: CurrentUser, session: SessionDep
+) -> CouncilReviewRead:
+    """The newest council review for a report, with every vote."""
+    if session.get(ResearchReport, report_id) is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "report not found")
+    result = council.latest_review(session, report_id)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "report has no review yet")
+    return CouncilReviewRead.from_rows(*result)
+
+
+@router.post("/{report_id}/review", response_model=CouncilReviewRead)
+def rerun_review(
+    report_id: int, _: AdminUser, session: SessionDep
+) -> CouncilReviewRead:
+    """Re-run the council on a report now (admin)."""
+    report = session.get(ResearchReport, report_id)
+    if report is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "report not found")
+    review = council.review_report(session, report)
+    if review is None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "council unavailable — no members configured or spend cap reached",
+        )
+    council.emit_signal(session, report, review)
+    votes = list(
+        session.exec(
+            select(council.CouncilVote).where(
+                council.CouncilVote.review_id == review.id
+            )
+        ).all()
+    )
+    return CouncilReviewRead.from_rows(review, votes)
