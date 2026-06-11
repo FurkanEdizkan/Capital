@@ -48,18 +48,29 @@ class ExecutorRouter:
         # drop the venue's connection and per-symbol setup caches.
         self._cache: dict[tuple[str, TradingMode], BaseExecutor] = {}
 
-    def resolve(self, session: Session) -> BaseExecutor:
-        """The executor for the active venue and mode stored in the database."""
+    def resolve(self, session: Session, *, venue: str | None = None) -> BaseExecutor:
+        """The executor for the venue and the mode stored in the database.
+
+        An explicit `venue` (a strategy's own venue) overrides the active-venue
+        setting. In Testnet mode a venue with no sandbox falls back to Sim —
+        there is no test environment to point a real order at.
+        """
         mode = get_mode(session)
         if mode is TradingMode.sim:
             return self._sim
 
-        venue_name = get_active_venue(session)
+        venue_name = venue or get_active_venue(session)
         cached = self._cache.get((venue_name, mode))
         if cached is not None:
             return cached
 
         info = get_venue(venue_name)
+        if mode is TradingMode.testnet and info is not None and not info.supports_sandbox:
+            log.warning(
+                "mode is testnet but %s has no sandbox — falling back to Sim",
+                venue_name,
+            )
+            return self._sim
         required = info.credential_fields if info is not None else ()
         if not venue_credentials_configured(session, venue_name, required):
             log.warning(

@@ -50,6 +50,17 @@ def test_constructor_invariants_surface_as_value_error() -> None:
         build_strategy("ma_cross", name="x", symbol="BTCUSDT", timeframe="bogus")
 
 
+def test_build_strategy_assigns_and_validates_the_venue() -> None:
+    strat = build_strategy("ma_cross", name="x", symbol="BTCUSDT", venue="binance")
+    assert strat.venue == "binance"
+    # Polymarket symbols are case-sensitive token ids — never uppercased.
+    poly = build_strategy("dca", name="y", symbol="123abc", venue="polymarket")
+    assert poly.venue == "polymarket"
+    assert poly.symbol == "123abc"
+    with pytest.raises(ValueError, match="unknown venue"):
+        build_strategy("ma_cross", name="z", symbol="BTCUSDT", venue="kraken")
+
+
 def test_instance_rows_become_strategies(session: Session) -> None:
     session.add(
         StrategyInstance(

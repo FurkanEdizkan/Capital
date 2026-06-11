@@ -158,7 +158,7 @@ class TradingEngine:
         with self._session_factory() as session:
             candles = refresh_venue_candles(
                 session,
-                self._venue_router.resolve(session),
+                self._venue_router.resolve(session, venue=strat.venue),
                 market=strat.market,
                 symbol=strat.symbol,
                 interval=strat.timeframe,
@@ -180,8 +180,9 @@ class TradingEngine:
             position = get_or_create_position(
                 session, strat.name, strat.market.value, strat.symbol
             )
-            # Route orders through the executor for the active trading mode.
-            executor = self._router.resolve(session)
+            # Route orders through the executor for the strategy's venue and
+            # the active trading mode.
+            executor = self._router.resolve(session, venue=strat.venue)
             # Risk: force-close a position that breached its stop-loss or
             # take-profit. This runs regardless of lifecycle state — a stop is
             # a safety net, not a strategy-driven entry.
@@ -263,6 +264,7 @@ class TradingEngine:
                     strategy=strat.name,
                     symbol=order.symbol,
                     market=order.market,
+                    venue=strat.venue,
                     action=(decision.action.value if decision else order.side.value),
                     confidence=(decision.confidence if decision else Decimal(0)),
                     reasoning=(decision.reasoning if decision else ""),
@@ -421,8 +423,11 @@ class TradingEngine:
         last price seen for the symbol, falling back to the entry price.
         """
         closed = 0
+        venue = next(
+            (s.venue for s in self._strategies if s.name == strategy), None
+        )
         with self._session_factory() as session:
-            executor = self._router.resolve(session)
+            executor = self._router.resolve(session, venue=venue)
             for pos in list_positions(session, strategy=strategy, open_only=True):
                 price = self._last_prices.get(pos.symbol, pos.entry_price)
                 side = (

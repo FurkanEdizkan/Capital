@@ -28,7 +28,7 @@ class Candle(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     market: str = Field(max_length=8, index=True)
-    symbol: str = Field(max_length=24, index=True)
+    symbol: str = Field(max_length=80, index=True)
     interval: str = Field(max_length=8, index=True)
     open_time: datetime = Field(index=True)
     open: Decimal = Field(**_PRICE)

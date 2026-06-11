@@ -39,7 +39,7 @@ class FeedLatency(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     market: str = Field(max_length=8, index=True)
-    symbol: str = Field(max_length=24, index=True)
+    symbol: str = Field(max_length=80, index=True)
     kind: str = Field(max_length=8)  # ws | rest
     samples: int = Field(default=0)
     avg_ms: Decimal = Field(default=Decimal(0), **_AMT)

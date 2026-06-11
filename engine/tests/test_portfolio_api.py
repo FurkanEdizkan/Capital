@@ -105,5 +105,5 @@ def test_costs(pf_client: TestClient) -> None:
     # The seeded fill is a 0.1 BTC spot buy at 70000.
     assert "spot" in body["fees_by_market"]
     assert Decimal(body["traded_volume"]) == Decimal("7000")
-    assert set(body["venue_fee_rates"]) == {"binance"}
+    assert set(body["venue_fee_rates"]) == {"binance", "polymarket"}
     assert Decimal(body["venue_fee_rates"]["binance"]) >= Decimal("0")

@@ -86,7 +86,8 @@ class InstanceCreate(BaseModel):
 
     name: str = Field(min_length=1, max_length=64)
     type: str = Field(min_length=1, max_length=32)
-    symbol: str = Field(min_length=1, max_length=24)
+    symbol: str = Field(min_length=1, max_length=80)
+    venue: str = Field(default="binance", max_length=24)
     market: str = Field(default="spot", pattern="^(spot|futures)$")
     timeframe: str = Field(default="1h", max_length=8)
     params: dict[str, str] = Field(default_factory=dict)
@@ -158,11 +159,12 @@ def create_instance(
             status.HTTP_409_CONFLICT, f"strategy name {name!r} is already in use"
         )
     try:
-        # Build first — params and timeframe are validated by the registry.
-        build_strategy(
+        # Build first — params, venue and timeframe are validated by the registry.
+        built = build_strategy(
             body.type,
             name=name,
             symbol=body.symbol,
+            venue=body.venue,
             market=body.market,
             timeframe=body.timeframe,
             params=dict(body.params),
@@ -172,7 +174,8 @@ def create_instance(
     row = StrategyInstance(
         name=name,
         type=body.type,
-        symbol=body.symbol.upper(),
+        symbol=built.symbol,
+        venue=body.venue,
         market=body.market,
         timeframe=body.timeframe,
         params=json.dumps(coerce_params(body.type, dict(body.params)), default=str),
@@ -189,7 +192,7 @@ def create_instance(
         actor=user.username,
         action="strategy.create",
         target=name,
-        detail={"type": body.type, "symbol": body.symbol.upper()},
+        detail={"type": body.type, "symbol": built.symbol, "venue": body.venue},
     )
     strategy = _find(engine, name)
     return read_strategy_state(session, strategy, _marks(streams))

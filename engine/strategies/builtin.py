@@ -80,6 +80,7 @@ def instance_strategies(session: Session) -> list[BaseStrategy]:
                     row.type,
                     name=row.name,
                     symbol=row.symbol,
+                    venue=row.venue,
                     market=row.market,
                     timeframe=row.timeframe,
                     params=row.params_dict(),

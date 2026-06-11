@@ -37,6 +37,12 @@ class BaseStrategy(ABC):
     #: Strategy type label (e.g. "MA Cross") — set by subclasses.
     kind: str = "base"
 
+    #: The venue this strategy trades on. Market data and orders route through
+    #: it per strategy, so strategies on different venues run side by side.
+    #: Set post-construction by `registry.build_strategy` (or overridden by a
+    #: subclass that only makes sense on one venue).
+    venue: str = "binance"
+
     def __init__(
         self,
         name: str,

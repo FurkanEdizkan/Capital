@@ -27,6 +27,7 @@ class StrategyRead(BaseModel):
     name: str
     kind: str
     symbol: str
+    venue: str
     market: str
     timeframe: str
     enabled: bool
@@ -64,6 +65,7 @@ def read_strategy_state(
         name=strategy.name,
         kind=strategy.kind,
         symbol=strategy.symbol,
+        venue=strategy.venue,
         market=strategy.market.value,
         timeframe=strategy.timeframe,
         enabled=is_enabled(session, strategy.name),

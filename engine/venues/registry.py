@@ -30,6 +30,15 @@ AVAILABLE_VENUES: tuple[VenueInfo, ...] = (
         "binance", "crypto", supports_sandbox=True,
         credential_fields=("api_key", "api_secret"),
     ),
+    VenueInfo(
+        # Wallet-derived L2 credentials sign requests; the private key signs
+        # the orders themselves; the wallet (funder) address holds the USDC.
+        # See docs/venues/polymarket-setup.md.
+        "polymarket", "prediction-markets", supports_sandbox=False,
+        credential_fields=(
+            "private_key", "api_key", "api_secret", "passphrase", "wallet_address",
+        ),
+    ),
 )
 
 #: Venue names that exist — for validating an active-venue change.
