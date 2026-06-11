@@ -29,6 +29,7 @@ import {
   updateAiSettings,
   updateAiSpendCap,
   updateCouncilSettings,
+  updatePolymarketSettings,
   updateLlmCredentials,
   updateMode,
   updateResearchSettings,
@@ -108,6 +109,14 @@ export function Settings() {
   >([]);
   const [councilQuorum, setCouncilQuorum] = useState("0.5");
 
+  // Polymarket — discovery/screening cadence and the suggestion bars.
+  const [pmRefreshHours, setPmRefreshHours] = useState("6");
+  const [pmResearchHours, setPmResearchHours] = useState("6");
+  const [pmEdge, setPmEdge] = useState("0.05");
+  const [pmConfidence, setPmConfidence] = useState("0.6");
+  const [pmScreenTop, setPmScreenTop] = useState("10");
+  const [pmStake, setPmStake] = useState("100");
+
   const [localAi, setLocalAi] = useState<LocalAI | null>(null);
   const [localBusy, setLocalBusy] = useState(false);
   // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
@@ -138,6 +147,12 @@ export function Settings() {
       })),
     );
     setCouncilQuorum(String(s.council_quorum));
+    setPmRefreshHours(String(s.polymarket_refresh_hours));
+    setPmResearchHours(String(s.polymarket_research_hours));
+    setPmEdge(String(s.polymarket_edge_threshold));
+    setPmConfidence(String(s.polymarket_min_confidence));
+    setPmScreenTop(String(s.polymarket_screen_top));
+    setPmStake(String(s.polymarket_stake));
   }, []);
 
   const load = useCallback(async () => {
@@ -260,6 +275,21 @@ export function Settings() {
         }),
       );
       setNotice("Research settings saved. Interval changes apply on restart.");
+    });
+
+  const savePolymarket = () =>
+    run(async () => {
+      applySettings(
+        await updatePolymarketSettings({
+          refresh_hours: Number(pmRefreshHours) || 6,
+          research_hours: Number(pmResearchHours) || 6,
+          edge_threshold: pmEdge || "0.05",
+          min_confidence: pmConfidence || "0.6",
+          screen_top: Number(pmScreenTop) || 0,
+          stake: pmStake || "100",
+        }),
+      );
+      setNotice("Polymarket settings saved. Interval changes apply on restart.");
     });
 
   const saveAiActionMode = (mode: string) =>
@@ -843,6 +873,69 @@ export function Settings() {
           />
           <Button kind="primary" disabled={busy} onClick={() => void saveResearch()}>
             Save research settings
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="Polymarket"
+          subtitle="Prediction-market discovery and AI bet screening — how often the catalogue refreshes, how often bets are analysed, and the edge/confidence a suggestion must clear."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 420,
+          }}
+        >
+          <Input
+            full
+            type="number"
+            placeholder="Catalogue refresh interval in hours (default 6)"
+            value={pmRefreshHours}
+            onChange={(e) => setPmRefreshHours(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="AI screening interval in hours (default 6)"
+            value={pmResearchHours}
+            onChange={(e) => setPmResearchHours(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Edge threshold 0–1 (default 0.05)"
+            value={pmEdge}
+            onChange={(e) => setPmEdge(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Min AI confidence 0–1 (default 0.6)"
+            value={pmConfidence}
+            onChange={(e) => setPmConfidence(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Top-volume markets screened besides the watchlist (default 10)"
+            value={pmScreenTop}
+            onChange={(e) => setPmScreenTop(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            prefix="$"
+            placeholder="Suggested stake per signal in USDC (default 100)"
+            value={pmStake}
+            onChange={(e) => setPmStake(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void savePolymarket()}>
+            Save Polymarket settings
           </Button>
         </div>
       </Card>

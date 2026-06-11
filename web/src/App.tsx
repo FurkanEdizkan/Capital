@@ -11,6 +11,7 @@ import { History } from "./pages/History";
 import { Lab } from "./pages/Lab";
 import { Markets } from "./pages/Markets";
 import { News } from "./pages/News";
+import { Polymarket } from "./pages/Polymarket";
 import { Research } from "./pages/Research";
 import { Settings } from "./pages/Settings";
 import { Strategies } from "./pages/Strategies";
@@ -30,6 +31,7 @@ export function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="markets" element={<Markets />} />
+          <Route path="polymarket" element={<Polymarket />} />
           <Route path="strategies" element={<Strategies />} />
           <Route path="backtest" element={<Backtest />} />
           <Route path="lab" element={<Lab />} />

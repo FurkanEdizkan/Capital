@@ -66,8 +66,14 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
+            "type": "string"
+          },
+          "venue": {
+            "default": "binance",
+            "maxLength": 24,
+            "title": "Venue",
             "type": "string"
           }
         },
@@ -799,7 +805,7 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
             "type": "string"
           },
@@ -1677,7 +1683,7 @@
             "type": "object"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "minLength": 1,
             "title": "Symbol",
             "type": "string"
@@ -1692,6 +1698,12 @@
             "maxLength": 32,
             "minLength": 1,
             "title": "Type",
+            "type": "string"
+          },
+          "venue": {
+            "default": "binance",
+            "maxLength": 24,
+            "title": "Venue",
             "type": "string"
           }
         },
@@ -2108,6 +2120,91 @@
         "title": "Market",
         "type": "string"
       },
+      "MarketAnalysis": {
+        "description": "One AI pass over a market \u2014 estimated probability vs market price.",
+        "properties": {
+          "condition_id": {
+            "maxLength": 80,
+            "title": "Condition Id",
+            "type": "string"
+          },
+          "confidence": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "edge": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Edge",
+            "type": "string"
+          },
+          "est_probability": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Est Probability",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "market_price": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Market Price",
+            "type": "string"
+          },
+          "model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "default": "",
+            "maxLength": 16,
+            "title": "Provider",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 512,
+            "title": "Question",
+            "type": "string"
+          },
+          "reasoning": {
+            "default": "",
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "recommendation": {
+            "default": "hold",
+            "maxLength": 8,
+            "title": "Recommendation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition_id",
+          "question",
+          "created_at"
+        ],
+        "title": "MarketAnalysis",
+        "type": "object"
+      },
       "ModeUpdate": {
         "properties": {
           "confirm": {
@@ -2497,6 +2594,78 @@
         "title": "PasswordReset",
         "type": "object"
       },
+      "PolymarketSettingsUpdate": {
+        "description": "Polymarket configuration \u2014 discovery/screening cadence and bars.",
+        "properties": {
+          "edge_threshold": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.05",
+            "title": "Edge Threshold"
+          },
+          "min_confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.6",
+            "title": "Min Confidence"
+          },
+          "refresh_hours": {
+            "default": 6,
+            "maximum": 48.0,
+            "minimum": 1.0,
+            "title": "Refresh Hours",
+            "type": "integer"
+          },
+          "research_hours": {
+            "default": 6,
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Research Hours",
+            "type": "integer"
+          },
+          "screen_top": {
+            "default": 10,
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Screen Top",
+            "type": "integer"
+          },
+          "stake": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "100",
+            "title": "Stake"
+          }
+        },
+        "title": "PolymarketSettingsUpdate",
+        "type": "object"
+      },
       "PortfolioSummary": {
         "properties": {
           "deployed_capital": {
@@ -2633,7 +2802,7 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
             "type": "string"
           },
@@ -2656,6 +2825,120 @@
           "symbol"
         ],
         "title": "Position",
+        "type": "object"
+      },
+      "PredictionMarket": {
+        "description": "One Polymarket market, upserted from the Gamma API by `condition_id`.",
+        "properties": {
+          "category": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Category",
+            "type": "string"
+          },
+          "condition_id": {
+            "maxLength": 80,
+            "title": "Condition Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "liquidity": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Liquidity",
+            "type": "string"
+          },
+          "no_token_id": {
+            "default": "",
+            "maxLength": 80,
+            "title": "No Token Id",
+            "type": "string"
+          },
+          "outcomes": {
+            "default": "[]",
+            "title": "Outcomes",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 512,
+            "title": "Question",
+            "type": "string"
+          },
+          "resolved_outcome": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Resolved Outcome",
+            "type": "string"
+          },
+          "slug": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "default": "active",
+            "maxLength": 12,
+            "title": "Status",
+            "type": "string"
+          },
+          "volume_24h": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Volume 24H",
+            "type": "string"
+          },
+          "watched": {
+            "default": false,
+            "title": "Watched",
+            "type": "boolean"
+          },
+          "yes_price": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Yes Price",
+            "type": "string"
+          },
+          "yes_token_id": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Yes Token Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition_id",
+          "question",
+          "fetched_at"
+        ],
+        "title": "PredictionMarket",
         "type": "object"
       },
       "RecommendRequest": {
@@ -2944,6 +3227,33 @@
             ],
             "title": "News Interval Hours"
           },
+          "polymarket_edge_threshold": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Polymarket Edge Threshold",
+            "type": "string"
+          },
+          "polymarket_min_confidence": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Polymarket Min Confidence",
+            "type": "string"
+          },
+          "polymarket_refresh_hours": {
+            "title": "Polymarket Refresh Hours",
+            "type": "integer"
+          },
+          "polymarket_research_hours": {
+            "title": "Polymarket Research Hours",
+            "type": "integer"
+          },
+          "polymarket_screen_top": {
+            "title": "Polymarket Screen Top",
+            "type": "integer"
+          },
+          "polymarket_stake": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Polymarket Stake",
+            "type": "string"
+          },
           "research_interval_hours": {
             "title": "Research Interval Hours",
             "type": "integer"
@@ -2989,7 +3299,13 @@
           "research_writer_model",
           "news_interval_hours",
           "council_members",
-          "council_quorum"
+          "council_quorum",
+          "polymarket_refresh_hours",
+          "polymarket_research_hours",
+          "polymarket_edge_threshold",
+          "polymarket_min_confidence",
+          "polymarket_screen_top",
+          "polymarket_stake"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -3081,12 +3397,17 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Unrealized Pnl",
             "type": "string"
+          },
+          "venue": {
+            "title": "Venue",
+            "type": "string"
           }
         },
         "required": [
           "name",
           "kind",
           "symbol",
+          "venue",
           "market",
           "timeframe",
           "enabled",
@@ -3173,6 +3494,17 @@
             },
             "title": "Timeframes",
             "type": "array"
+          },
+          "venue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue"
           }
         },
         "required": [
@@ -3313,7 +3645,7 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
             "type": "string"
           }
@@ -3531,6 +3863,19 @@
           "credential_fields"
         ],
         "title": "VenueRead",
+        "type": "object"
+      },
+      "WatchUpdate": {
+        "properties": {
+          "watched": {
+            "title": "Watched",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "watched"
+        ],
+        "title": "WatchUpdate",
         "type": "object"
       },
       "WatchdogStatus": {
@@ -5202,6 +5547,330 @@
         ]
       }
     },
+    "/api/polymarket/analyses": {
+      "get": {
+        "description": "Recent AI bet analyses, newest first \u2014 optionally for one market.",
+        "operationId": "list_analyses_api_polymarket_analyses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "condition_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Condition Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MarketAnalysis"
+                  },
+                  "title": "Response List Analyses Api Polymarket Analyses Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Analyses",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/markets": {
+      "get": {
+        "description": "Discovered markets, most-traded first \u2014 filterable and searchable.",
+        "operationId": "list_markets_api_polymarket_markets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "watched",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Watched"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "active",
+              "title": "Status Filter"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionMarket"
+                  },
+                  "title": "Response List Markets Api Polymarket Markets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Markets",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/markets/{condition_id}/analyze": {
+      "post": {
+        "description": "Run one AI analysis for a market immediately (a paid LLM call).",
+        "operationId": "analyze_now_api_polymarket_markets__condition_id__analyze_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "condition_id",
+            "required": true,
+            "schema": {
+              "title": "Condition Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Analyze Now",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/markets/{condition_id}/watch": {
+      "put": {
+        "description": "Pin or unpin a market for scheduled AI analysis.",
+        "operationId": "update_watched_api_polymarket_markets__condition_id__watch_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "condition_id",
+            "required": true,
+            "schema": {
+              "title": "Condition Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionMarket"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Watched",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/refresh": {
+      "post": {
+        "description": "Pull the latest top markets from the Gamma API now.",
+        "operationId": "refresh_markets_api_polymarket_refresh_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Refresh Markets Api Polymarket Refresh Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Refresh Markets",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
     "/api/portfolio/costs": {
       "get": {
         "description": "Cost visibility \u2014 trading fees by market, fee rates, and LLM spend.",
@@ -5988,6 +6657,53 @@
           }
         ],
         "summary": "Update Mode",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/polymarket": {
+      "put": {
+        "description": "Configure Polymarket discovery and AI bet screening.\n\nScheduler-interval changes take effect on the next engine restart.",
+        "operationId": "update_polymarket_settings_api_settings_polymarket_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolymarketSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Polymarket Settings",
         "tags": [
           "settings"
         ]

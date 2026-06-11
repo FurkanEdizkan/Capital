@@ -631,6 +631,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/polymarket/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Analyses
+         * @description Recent AI bet analyses, newest first — optionally for one market.
+         */
+        get: operations["list_analyses_api_polymarket_analyses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/markets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Markets
+         * @description Discovered markets, most-traded first — filterable and searchable.
+         */
+        get: operations["list_markets_api_polymarket_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/markets/{condition_id}/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze Now
+         * @description Run one AI analysis for a market immediately (a paid LLM call).
+         */
+        post: operations["analyze_now_api_polymarket_markets__condition_id__analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/markets/{condition_id}/watch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Watched
+         * @description Pin or unpin a market for scheduled AI analysis.
+         */
+        put: operations["update_watched_api_polymarket_markets__condition_id__watch_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Markets
+         * @description Pull the latest top markets from the Gamma API now.
+         */
+        post: operations["refresh_markets_api_polymarket_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portfolio/costs": {
         parameters: {
             query?: never;
@@ -968,6 +1068,28 @@ export interface paths {
          * @description Switch the trading mode (Sim / Testnet / Live).
          */
         put: operations["update_mode_api_settings_mode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/polymarket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Polymarket Settings
+         * @description Configure Polymarket discovery and AI bet screening.
+         *
+         *     Scheduler-interval changes take effect on the next engine restart.
+         */
+        put: operations["update_polymarket_settings_api_settings_polymarket_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1394,6 +1516,11 @@ export interface components {
             strategy: string;
             /** Symbol */
             symbol: string;
+            /**
+             * Venue
+             * @default binance
+             */
+            venue: string;
         };
         /** ActiveVenueUpdate */
         ActiveVenueUpdate: {
@@ -2058,6 +2185,11 @@ export interface components {
             timeframe: string;
             /** Type */
             type: string;
+            /**
+             * Venue
+             * @default binance
+             */
+            venue: string;
         };
         /**
          * LLMUsage
@@ -2233,6 +2365,63 @@ export interface components {
          * @enum {string}
          */
         Market: "spot" | "futures";
+        /**
+         * MarketAnalysis
+         * @description One AI pass over a market — estimated probability vs market price.
+         */
+        MarketAnalysis: {
+            /** Condition Id */
+            condition_id: string;
+            /**
+             * Confidence
+             * @default 0
+             */
+            confidence: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Edge
+             * @default 0
+             */
+            edge: string;
+            /**
+             * Est Probability
+             * @default 0
+             */
+            est_probability: string;
+            /** Id */
+            id?: number | null;
+            /**
+             * Market Price
+             * @default 0
+             */
+            market_price: string;
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /**
+             * Provider
+             * @default
+             */
+            provider: string;
+            /** Question */
+            question: string;
+            /**
+             * Reasoning
+             * @default
+             */
+            reasoning: string;
+            /**
+             * Recommendation
+             * @default hold
+             */
+            recommendation: string;
+        };
         /** ModeUpdate */
         ModeUpdate: {
             /**
@@ -2382,6 +2571,42 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * PolymarketSettingsUpdate
+         * @description Polymarket configuration — discovery/screening cadence and bars.
+         */
+        PolymarketSettingsUpdate: {
+            /**
+             * Edge Threshold
+             * @default 0.05
+             */
+            edge_threshold: number | string;
+            /**
+             * Min Confidence
+             * @default 0.6
+             */
+            min_confidence: number | string;
+            /**
+             * Refresh Hours
+             * @default 6
+             */
+            refresh_hours: number;
+            /**
+             * Research Hours
+             * @default 6
+             */
+            research_hours: number;
+            /**
+             * Screen Top
+             * @default 10
+             */
+            screen_top: number;
+            /**
+             * Stake
+             * @default 100
+             */
+            stake: number | string;
+        };
         /** PortfolioSummary */
         PortfolioSummary: {
             /** Deployed Capital */
@@ -2451,6 +2676,80 @@ export interface components {
             symbol: string;
             /** Updated At */
             updated_at?: string | null;
+        };
+        /**
+         * PredictionMarket
+         * @description One Polymarket market, upserted from the Gamma API by `condition_id`.
+         */
+        PredictionMarket: {
+            /**
+             * Category
+             * @default
+             */
+            category: string;
+            /** Condition Id */
+            condition_id: string;
+            /** End Date */
+            end_date?: string | null;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
+            /** Id */
+            id?: number | null;
+            /**
+             * Liquidity
+             * @default 0
+             */
+            liquidity: string;
+            /**
+             * No Token Id
+             * @default
+             */
+            no_token_id: string;
+            /**
+             * Outcomes
+             * @default []
+             */
+            outcomes: string;
+            /** Question */
+            question: string;
+            /**
+             * Resolved Outcome
+             * @default
+             */
+            resolved_outcome: string;
+            /**
+             * Slug
+             * @default
+             */
+            slug: string;
+            /**
+             * Status
+             * @default active
+             */
+            status: string;
+            /**
+             * Volume 24H
+             * @default 0
+             */
+            volume_24h: string;
+            /**
+             * Watched
+             * @default false
+             */
+            watched: boolean;
+            /**
+             * Yes Price
+             * @default 0
+             */
+            yes_price: string;
+            /**
+             * Yes Token Id
+             * @default
+             */
+            yes_token_id: string;
         };
         /** RecommendRequest */
         RecommendRequest: {
@@ -2592,6 +2891,18 @@ export interface components {
             mode: components["schemas"]["TradingMode"];
             /** News Interval Hours */
             news_interval_hours: number | null;
+            /** Polymarket Edge Threshold */
+            polymarket_edge_threshold: string;
+            /** Polymarket Min Confidence */
+            polymarket_min_confidence: string;
+            /** Polymarket Refresh Hours */
+            polymarket_refresh_hours: number;
+            /** Polymarket Research Hours */
+            polymarket_research_hours: number;
+            /** Polymarket Screen Top */
+            polymarket_screen_top: number;
+            /** Polymarket Stake */
+            polymarket_stake: string;
             /** Research Interval Hours */
             research_interval_hours: number;
             /** Research Symbols */
@@ -2645,6 +2956,8 @@ export interface components {
             timeframe: string;
             /** Unrealized Pnl */
             unrealized_pnl: string;
+            /** Venue */
+            venue: string;
         };
         /** StrategySummary */
         StrategySummary: {
@@ -2676,6 +2989,8 @@ export interface components {
             params: components["schemas"]["ParamSpecRead"][];
             /** Timeframes */
             timeframes: string[];
+            /** Venue */
+            venue?: string | null;
         };
         /** Ticker */
         Ticker: {
@@ -2819,6 +3134,11 @@ export interface components {
             name: string;
             /** Supports Sandbox */
             supports_sandbox: boolean;
+        };
+        /** WatchUpdate */
+        WatchUpdate: {
+            /** Watched */
+            watched: boolean;
         };
         /**
          * WatchdogStatus
@@ -3782,6 +4102,161 @@ export interface operations {
             };
         };
     };
+    list_analyses_api_polymarket_analyses_get: {
+        parameters: {
+            query?: {
+                condition_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketAnalysis"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_markets_api_polymarket_markets_get: {
+        parameters: {
+            query?: {
+                watched?: boolean | null;
+                status_filter?: string | null;
+                category?: string | null;
+                search?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionMarket"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_now_api_polymarket_markets__condition_id__analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                condition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketAnalysis"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_watched_api_polymarket_markets__condition_id__watch_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                condition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionMarket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_markets_api_polymarket_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
     costs_api_portfolio_costs_get: {
         parameters: {
             query?: never;
@@ -4279,6 +4754,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ModeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_polymarket_settings_api_settings_polymarket_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolymarketSettingsUpdate"];
             };
         };
         responses: {
