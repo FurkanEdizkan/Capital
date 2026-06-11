@@ -117,6 +117,6 @@ def seed_allocations(
                 set_allocation(session, strat.name, DEFAULT_ALLOCATION)
                 # AI strategies cost money per tick — seed them disabled so
                 # the operator opts in after choosing a model.
-                if getattr(strat, "kind", "") == "AI":
+                if isinstance(strat, AIStrategy):
                     set_enabled(session, strat.name, False)
                 log.info("seeded allocation for %r: %s", strat.name, DEFAULT_ALLOCATION)

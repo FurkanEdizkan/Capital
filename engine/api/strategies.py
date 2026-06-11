@@ -19,6 +19,7 @@ from api.market import StreamsDep
 from appsettings.store import LLM_PROVIDERS, set_strategy_ai_config
 from auth.audit import record_audit
 from auth.deps import CurrentUser, SessionDep
+from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy
 from strategies.builtin import all_strategies_with_instances
 from strategies.models import StrategyInstance
@@ -79,6 +80,8 @@ class StrategyTypeRead(BaseModel):
     label: str
     params: list[ParamSpecRead]
     timeframes: list[str]
+    # The venue the type is pinned to, or null when the operator picks.
+    venue: str | None = None
 
 
 class InstanceCreate(BaseModel):
@@ -139,6 +142,7 @@ def list_strategy_types(_: CurrentUser) -> list[StrategyTypeRead]:
                 for p in t.params
             ],
             timeframes=list(TIMEFRAMES),
+            venue=t.venue,
         )
         for t in STRATEGY_TYPES.values()
     ]
@@ -175,7 +179,7 @@ def create_instance(
         name=name,
         type=body.type,
         symbol=built.symbol,
-        venue=body.venue,
+        venue=built.venue,  # the registry may pin a type to one venue
         market=body.market,
         timeframe=body.timeframe,
         params=json.dumps(coerce_params(body.type, dict(body.params)), default=str),
@@ -192,7 +196,7 @@ def create_instance(
         actor=user.username,
         action="strategy.create",
         target=name,
-        detail={"type": body.type, "symbol": built.symbol, "venue": body.venue},
+        detail={"type": body.type, "symbol": built.symbol, "venue": built.venue},
     )
     strategy = _find(engine, name)
     return read_strategy_state(session, strategy, _marks(streams))
@@ -289,7 +293,7 @@ def update_ai_model(
 ) -> StrategyRead:
     """Pin an AI strategy to a provider + model (Claude / OpenAI / Gemini / Ollama)."""
     strategy = _find(engine, name)
-    if getattr(strategy, "kind", "") != "AI":
+    if not isinstance(strategy, AIStrategy):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, "not an AI strategy"
         )

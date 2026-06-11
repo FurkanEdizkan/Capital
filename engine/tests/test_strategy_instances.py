@@ -22,9 +22,14 @@ from trading.portfolio import get_allocation, get_max_loss
 
 
 def test_every_type_builds_from_its_defaults() -> None:
-    for key in STRATEGY_TYPES:
+    for key, spec in STRATEGY_TYPES.items():
         strat = build_strategy(key, name=f"t-{key}", symbol="solusdt")
-        assert strat.symbol == "SOLUSDT"
+        if spec.venue == "polymarket":
+            # Polymarket symbols are case-sensitive token ids — never altered.
+            assert strat.symbol == "solusdt"
+            assert strat.venue == "polymarket"
+        else:
+            assert strat.symbol == "SOLUSDT"
         assert strat.timeframe == "1h"
 
 

@@ -17,6 +17,7 @@ from strategies.bollinger import BollingerStrategy
 from strategies.dca import DCAStrategy
 from strategies.ma_cross import MACrossStrategy
 from strategies.macd import MACDStrategy
+from strategies.prediction_ai import PredictionAIStrategy
 from strategies.rsi import RSIStrategy
 from venues.registry import VENUE_NAMES
 
@@ -41,6 +42,9 @@ class StrategyType:
     label: str
     cls: type[BaseStrategy]
     params: tuple[ParamSpec, ...]
+    # A venue the type is pinned to (e.g. Prediction AI → polymarket);
+    # None means the operator picks any registered venue.
+    venue: str | None = None
 
 
 STRATEGY_TYPES: dict[str, StrategyType] = {
@@ -90,6 +94,25 @@ STRATEGY_TYPES: dict[str, StrategyType] = {
             cls=DCAStrategy,
             params=(
                 ParamSpec("tranche", "decimal", "0.1", "0.01", "1", "Tranche fraction"),
+            ),
+        ),
+        # Polymarket only — symbol is an outcome token id; trades the stored
+        # AI bet analyses (edge = estimated probability vs market price).
+        StrategyType(
+            key="prediction_ai",
+            label="Prediction AI",
+            cls=PredictionAIStrategy,
+            venue="polymarket",
+            params=(
+                ParamSpec(
+                    "edge_threshold", "decimal", "0.05", "0", "0.5", "Entry edge"
+                ),
+                ParamSpec(
+                    "min_confidence", "decimal", "0.6", "0", "1", "Min AI confidence"
+                ),
+                ParamSpec(
+                    "reanalyze_hours", "int", "6", "1", "168", "Re-analysis cadence (h)"
+                ),
             ),
         ),
     )
@@ -155,6 +178,10 @@ def build_strategy(
         raise ValueError(f"unknown strategy type: {type_key!r}")
     if venue is not None and venue not in VENUE_NAMES:
         raise ValueError(f"unknown venue: {venue!r}")
+    if spec.venue is not None:
+        if venue is not None and venue != spec.venue:
+            raise ValueError(f"{type_key} runs on {spec.venue} only")
+        venue = spec.venue
     if timeframe not in TIMEFRAMES:
         interval_seconds(timeframe)  # raises ValueError on a bad format
     kwargs = coerce_params(type_key, params or {})

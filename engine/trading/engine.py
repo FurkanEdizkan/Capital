@@ -39,6 +39,7 @@ from polymarket import service as polymarket_service
 from research import service as research_service
 from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy, StrategyContext
+from strategies.prediction_ai import PredictionAIStrategy
 from trading.accounting import record_equity_snapshot, strategy_summary
 from trading.executor_router import ExecutorRouter
 from trading.executors.base import ExecutionError, Order
@@ -239,6 +240,10 @@ class TradingEngine:
                         session, sym
                     ),
                 )
+                # Prediction strategies read their stored bet analyses from
+                # the database — bind the tick's session for the lookup.
+                if isinstance(strat, PredictionAIStrategy):
+                    strat.bind(session)
             order = strat.evaluate(ctx)
             # Record the LLM call's tokens, cost and decision for tracking.
             if isinstance(strat, AIStrategy) and strat.last_usage is not None:
