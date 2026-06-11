@@ -7,9 +7,10 @@ A per-venue inventory of what each trading API *can* do, and what Capital
 > Treat this as a decision-level summary; verify specifics against each
 > provider's live docs before building on them.
 
-> Capital currently supports **Binance only**. The `Venue` abstraction is
-> preserved so additional venues can be re-added as one new implementation
-> plus a registry entry. See [abstraction.md](abstraction.md) and
+> Capital supports **Binance** and **Polymarket** (see
+> [polymarket-setup.md](polymarket-setup.md)); this page covers the Binance
+> offered-vs-used surface. Additional venues are one new implementation plus
+> a registry entry — see [abstraction.md](abstraction.md) and
 > [research.md](research.md) for the design and the broader multi-venue
 > survey.
 
