@@ -41,7 +41,8 @@ class AISignal(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     strategy: str = Field(index=True, max_length=64)
-    symbol: str = Field(index=True, max_length=24)
+    symbol: str = Field(index=True, max_length=80)  # Polymarket token ids are long
+    venue: str = Field(default="binance", max_length=24)
     market: str = Field(default="spot", max_length=8)
     action: str = Field(max_length=8)
     confidence: Decimal = Field(default=Decimal(0), **_AMT)
@@ -63,11 +64,13 @@ def record_signal(
     reasoning: str,
     reference_price: Decimal,
     quantity: Decimal,
+    venue: str = "binance",
 ) -> AISignal:
     """Insert one pending AI signal."""
     row = AISignal(
         strategy=strategy,
         symbol=symbol,
+        venue=venue,
         market=market,
         action=action,
         confidence=confidence,
@@ -113,7 +116,7 @@ def execute_signal(
     Raises `VenueError` (pricing failed), `SignalBlockedError` (risk refused)
     or `ExecutionError` (the executor rejected the order).
     """
-    price = venues.resolve(session).price(signal.symbol)
+    price = venues.resolve(session, venue=signal.venue).price(signal.symbol)
     position = get_or_create_position(
         session, signal.strategy, signal.market, signal.symbol
     )
@@ -131,7 +134,9 @@ def execute_signal(
         raise SignalBlockedError(
             "order blocked by the risk manager (size cap or kill switch)"
         )
-    executor = (executor_router or ExecutorRouter()).resolve(session)
+    executor = (executor_router or ExecutorRouter()).resolve(
+        session, venue=signal.venue
+    )
     executor.execute(session, reviewed, reference_price=price)
     signal.status = SignalStatus.executed.value
     session.add(signal)

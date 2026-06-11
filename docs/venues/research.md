@@ -1,10 +1,12 @@
 # Venue research — open trading APIs
 
-> **Status: audit trail.** Capital today supports **Binance only**. This file
-> documents the original multi-venue survey that informed the `Venue`
-> abstraction's design — kept as the rationale for the abstraction's shape,
-> not as a current to-do list. When a venue is re-introduced, revisit the
-> relevant section below and refresh it against the venue's live docs.
+> **Status: audit trail.** Capital today supports **Binance** and
+> **Polymarket** (re-introduced — see
+> [polymarket-setup.md](polymarket-setup.md)). This file documents the
+> original multi-venue survey that informed the `Venue` abstraction's design —
+> kept as the rationale for the abstraction's shape, not as a current to-do
+> list. When another venue is introduced, revisit the relevant section below
+> and refresh it against the venue's live docs.
 
 Phase 8 originally expanded Capital beyond Binance to **stocks, stock-index
 futures and prediction markets**. This was the research deliverable: a survey

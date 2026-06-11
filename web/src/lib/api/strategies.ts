@@ -71,6 +71,7 @@ export async function createStrategy(body: {
   name: string;
   type: string;
   symbol: string;
+  venue?: string;
   market?: string;
   timeframe?: string;
   params?: Record<string, string>;
@@ -80,6 +81,7 @@ export async function createStrategy(body: {
   const { data, error } = await api.POST("/api/strategies", {
     body: {
       ...body,
+      venue: body.venue ?? "binance",
       market: body.market ?? "spot",
       timeframe: body.timeframe ?? "1h",
       allocated: body.allocated ?? "10000",

@@ -60,3 +60,17 @@ def test_unknown_active_venue_falls_back_to_default(session: Session) -> None:
 def test_default_factory_resolves_binance(session: Session) -> None:
     # The production router builds a real Binance venue out of the box.
     assert VenueRouter.default().resolve(session).name == "binance"
+
+
+def test_explicit_venue_overrides_the_active_setting(session: Session) -> None:
+    # A strategy's own venue wins over the active-venue setting — this is what
+    # lets Binance and Polymarket strategies run side by side.
+    binance, poly = _FakeVenue("binance"), _FakeVenue("polymarket")
+    router = VenueRouter(builder=_builder({"binance": binance, "polymarket": poly}))
+    assert router.resolve(session, venue="polymarket") is poly
+    assert router.resolve(session) is binance
+
+
+def test_default_factory_resolves_polymarket(session: Session) -> None:
+    venue = VenueRouter.default().resolve(session, venue="polymarket")
+    assert venue.name == "polymarket"

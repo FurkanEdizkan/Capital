@@ -21,6 +21,8 @@ from ai.signals import record_signal
 from ai.usage import cap_reached, record_usage
 from appsettings.store import (
     get_news_interval_hours,
+    get_polymarket_refresh_hours,
+    get_polymarket_research_hours,
     get_research_interval_hours,
     get_strategy_action_mode,
 )
@@ -32,9 +34,12 @@ from news import service as news_service
 from notify.telegram import TelegramNotifier
 from ops.retention import prune_all
 from ops.watchdog import record_heartbeat
+from polymarket import analysis as polymarket_analysis
+from polymarket import service as polymarket_service
 from research import service as research_service
 from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy, StrategyContext
+from strategies.prediction_ai import PredictionAIStrategy
 from trading.accounting import record_equity_snapshot, strategy_summary
 from trading.executor_router import ExecutorRouter
 from trading.executors.base import ExecutionError, Order
@@ -158,7 +163,7 @@ class TradingEngine:
         with self._session_factory() as session:
             candles = refresh_venue_candles(
                 session,
-                self._venue_router.resolve(session),
+                self._venue_router.resolve(session, venue=strat.venue),
                 market=strat.market,
                 symbol=strat.symbol,
                 interval=strat.timeframe,
@@ -180,8 +185,9 @@ class TradingEngine:
             position = get_or_create_position(
                 session, strat.name, strat.market.value, strat.symbol
             )
-            # Route orders through the executor for the active trading mode.
-            executor = self._router.resolve(session)
+            # Route orders through the executor for the strategy's venue and
+            # the active trading mode.
+            executor = self._router.resolve(session, venue=strat.venue)
             # Risk: force-close a position that breached its stop-loss or
             # take-profit. This runs regardless of lifecycle state — a stop is
             # a safety net, not a strategy-driven entry.
@@ -234,6 +240,10 @@ class TradingEngine:
                         session, sym
                     ),
                 )
+                # Prediction strategies read their stored bet analyses from
+                # the database — bind the tick's session for the lookup.
+                if isinstance(strat, PredictionAIStrategy):
+                    strat.bind(session)
             order = strat.evaluate(ctx)
             # Record the LLM call's tokens, cost and decision for tracking.
             if isinstance(strat, AIStrategy) and strat.last_usage is not None:
@@ -263,6 +273,7 @@ class TradingEngine:
                     strategy=strat.name,
                     symbol=order.symbol,
                     market=order.market,
+                    venue=strat.venue,
                     action=(decision.action.value if decision else order.side.value),
                     confidence=(decision.confidence if decision else Decimal(0)),
                     reasoning=(decision.reasoning if decision else ""),
@@ -358,6 +369,8 @@ class TradingEngine:
         with self._session_factory() as session:
             news_hours = get_news_interval_hours(session)
             research_hours = get_research_interval_hours(session)
+            polymarket_hours = get_polymarket_refresh_hours(session)
+            screening_hours = get_polymarket_research_hours(session)
         # News refresh — daily at 06:00 unless an interval is configured.
         if news_hours:
             self._scheduler.add_job(
@@ -368,6 +381,27 @@ class TradingEngine:
         # Research reports for every watched symbol, every N hours.
         self._scheduler.add_job(
             self._run_research, trigger="interval", hours=research_hours, id="research"
+        )
+        # Polymarket: refresh the market catalogue, screen bets with the AI,
+        # and check held/watched markets for resolution. Deliberately slow
+        # cadences — prediction markets move on events and news, not ticks.
+        self._scheduler.add_job(
+            self._refresh_polymarkets,
+            trigger="interval",
+            hours=polymarket_hours,
+            id="polymarket_refresh",
+        )
+        self._scheduler.add_job(
+            self._screen_polymarkets,
+            trigger="interval",
+            hours=screening_hours,
+            id="polymarket_screen",
+        )
+        self._scheduler.add_job(
+            self._sync_polymarket_resolutions,
+            trigger="interval",
+            hours=1,
+            id="polymarket_resolutions",
         )
         self._scheduler.start()
         log.info("trading engine started — %d strategies", len(self._strategies))
@@ -386,6 +420,31 @@ class TradingEngine:
             research_service.run_cycle(self._session_factory)
         except Exception:  # noqa: BLE001 — research must not abort the engine
             log.exception("research cycle failed")
+
+    def _refresh_polymarkets(self) -> None:
+        """Scheduled refresh of the Polymarket market catalogue."""
+        try:
+            with self._session_factory() as session:
+                polymarket_service.refresh_markets(session)
+        except Exception:  # noqa: BLE001 — refresh must not abort the engine
+            log.exception("polymarket refresh failed")
+
+    def _screen_polymarkets(self) -> None:
+        """Scheduled AI bet screening — analyses + suggestions with edge."""
+        try:
+            polymarket_analysis.run_screening_cycle(
+                self._session_factory, notifier=self._notifier
+            )
+        except Exception:  # noqa: BLE001 — screening must not abort the engine
+            log.exception("polymarket screening failed")
+
+    def _sync_polymarket_resolutions(self) -> None:
+        """Scheduled resolution check — settle and alert on resolved markets."""
+        try:
+            with self._session_factory() as session:
+                polymarket_service.sync_resolutions(session, notifier=self._notifier)
+        except Exception:  # noqa: BLE001 — the sync must not abort the engine
+            log.exception("polymarket resolution sync failed")
 
     def _prune(self) -> None:
         """Scheduled retention prune of old candles and equity snapshots."""
@@ -421,8 +480,11 @@ class TradingEngine:
         last price seen for the symbol, falling back to the entry price.
         """
         closed = 0
+        venue = next(
+            (s.venue for s in self._strategies if s.name == strategy), None
+        )
         with self._session_factory() as session:
-            executor = self._router.resolve(session)
+            executor = self._router.resolve(session, venue=venue)
             for pos in list_positions(session, strategy=strategy, open_only=True):
                 price = self._last_prices.get(pos.symbol, pos.entry_price)
                 side = (

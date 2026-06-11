@@ -80,6 +80,7 @@ def instance_strategies(session: Session) -> list[BaseStrategy]:
                     row.type,
                     name=row.name,
                     symbol=row.symbol,
+                    venue=row.venue,
                     market=row.market,
                     timeframe=row.timeframe,
                     params=row.params_dict(),
@@ -116,6 +117,6 @@ def seed_allocations(
                 set_allocation(session, strat.name, DEFAULT_ALLOCATION)
                 # AI strategies cost money per tick — seed them disabled so
                 # the operator opts in after choosing a model.
-                if getattr(strat, "kind", "") == "AI":
+                if isinstance(strat, AIStrategy):
                     set_enabled(session, strat.name, False)
                 log.info("seeded allocation for %r: %s", strat.name, DEFAULT_ALLOCATION)

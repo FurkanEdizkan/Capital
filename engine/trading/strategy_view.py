@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from appsettings.store import get_strategy_ai_config
+from strategies.ai_strategy import AIStrategy
 from strategies.base import BaseStrategy
 from strategies.models import StrategyInstance
 from trading.accounting import strategy_summary
@@ -27,6 +28,7 @@ class StrategyRead(BaseModel):
     name: str
     kind: str
     symbol: str
+    venue: str
     market: str
     timeframe: str
     enabled: bool
@@ -57,13 +59,14 @@ def read_strategy_state(
     summary = strategy_summary(session, strategy.name, marks)
     ai_provider: str | None = None
     ai_model: str | None = None
-    if getattr(strategy, "kind", "") == "AI":
+    if isinstance(strategy, AIStrategy):
         cfg = get_strategy_ai_config(session, strategy.name)
         ai_provider, ai_model = cfg["provider"], cfg["model"]
     return StrategyRead(
         name=strategy.name,
         kind=strategy.kind,
         symbol=strategy.symbol,
+        venue=strategy.venue,
         market=strategy.market.value,
         timeframe=strategy.timeframe,
         enabled=is_enabled(session, strategy.name),

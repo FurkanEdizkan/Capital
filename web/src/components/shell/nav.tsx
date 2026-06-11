@@ -33,6 +33,14 @@ export const NAV: NavItem[] = [
     subtitle: "Spot pairs & perpetuals",
   },
   {
+    id: "polymarket",
+    label: "Polymarket",
+    path: "/polymarket",
+    icon: I.Markets,
+    title: "Polymarket",
+    subtitle: "Prediction markets & AI bet analysis",
+  },
+  {
     id: "strategies",
     label: "Strategies",
     path: "/strategies",

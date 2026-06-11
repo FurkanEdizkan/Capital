@@ -22,9 +22,14 @@ from trading.portfolio import get_allocation, get_max_loss
 
 
 def test_every_type_builds_from_its_defaults() -> None:
-    for key in STRATEGY_TYPES:
+    for key, spec in STRATEGY_TYPES.items():
         strat = build_strategy(key, name=f"t-{key}", symbol="solusdt")
-        assert strat.symbol == "SOLUSDT"
+        if spec.venue == "polymarket":
+            # Polymarket symbols are case-sensitive token ids — never altered.
+            assert strat.symbol == "solusdt"
+            assert strat.venue == "polymarket"
+        else:
+            assert strat.symbol == "SOLUSDT"
         assert strat.timeframe == "1h"
 
 
@@ -48,6 +53,17 @@ def test_constructor_invariants_surface_as_value_error() -> None:
         build_strategy("ma_cross", name="x", symbol="BTCUSDT", params={"fast": "30", "slow": "10"})
     with pytest.raises(ValueError):
         build_strategy("ma_cross", name="x", symbol="BTCUSDT", timeframe="bogus")
+
+
+def test_build_strategy_assigns_and_validates_the_venue() -> None:
+    strat = build_strategy("ma_cross", name="x", symbol="BTCUSDT", venue="binance")
+    assert strat.venue == "binance"
+    # Polymarket symbols are case-sensitive token ids — never uppercased.
+    poly = build_strategy("dca", name="y", symbol="123abc", venue="polymarket")
+    assert poly.venue == "polymarket"
+    assert poly.symbol == "123abc"
+    with pytest.raises(ValueError, match="unknown venue"):
+        build_strategy("ma_cross", name="z", symbol="BTCUSDT", venue="kraken")
 
 
 def test_instance_rows_become_strategies(session: Session) -> None:

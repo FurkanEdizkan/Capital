@@ -31,6 +31,12 @@ from appsettings.store import (
     get_ai_spend_cap,
     get_mode,
     get_news_interval_hours,
+    get_polymarket_edge_threshold,
+    get_polymarket_min_confidence,
+    get_polymarket_refresh_hours,
+    get_polymarket_research_hours,
+    get_polymarket_screen_top,
+    get_polymarket_stake,
     get_research_interval_hours,
     get_research_symbols,
     get_research_writer,
@@ -42,6 +48,12 @@ from appsettings.store import (
     set_llm_credentials,
     set_mode,
     set_news_interval_hours,
+    set_polymarket_edge_threshold,
+    set_polymarket_min_confidence,
+    set_polymarket_refresh_hours,
+    set_polymarket_research_hours,
+    set_polymarket_screen_top,
+    set_polymarket_stake,
     set_research_interval_hours,
     set_research_symbols,
     set_research_writer,
@@ -92,6 +104,14 @@ class SettingsRead(BaseModel):
     # verdict must reach. An empty member list disables the council.
     council_members: list[dict[str, str]]
     council_quorum: Decimal
+    # Polymarket: catalogue refresh + AI screening cadence, and the edge /
+    # confidence bar a screener suggestion must clear.
+    polymarket_refresh_hours: int
+    polymarket_research_hours: int
+    polymarket_edge_threshold: Decimal
+    polymarket_min_confidence: Decimal
+    polymarket_screen_top: int
+    polymarket_stake: Decimal
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -156,6 +176,17 @@ class ResearchSettingsUpdate(BaseModel):
     news_interval_hours: int | None = Field(default=None, ge=1, le=48)
 
 
+class PolymarketSettingsUpdate(BaseModel):
+    """Polymarket configuration — discovery/screening cadence and bars."""
+
+    refresh_hours: int = Field(default=6, ge=1, le=48)
+    research_hours: int = Field(default=6, ge=1, le=168)
+    edge_threshold: Decimal = Field(default=Decimal("0.05"), ge=0, le=1)
+    min_confidence: Decimal = Field(default=Decimal("0.6"), ge=0, le=1)
+    screen_top: int = Field(default=10, ge=0, le=50)
+    stake: Decimal = Field(default=Decimal("100"), gt=0)
+
+
 def _read(session: SessionDep) -> SettingsRead:
     ai = get_ai_settings(session)
     writer = get_research_writer(session)
@@ -183,6 +214,12 @@ def _read(session: SessionDep) -> SettingsRead:
         news_interval_hours=get_news_interval_hours(session),
         council_members=get_council_members(session),
         council_quorum=get_council_quorum(session),
+        polymarket_refresh_hours=get_polymarket_refresh_hours(session),
+        polymarket_research_hours=get_polymarket_research_hours(session),
+        polymarket_edge_threshold=get_polymarket_edge_threshold(session),
+        polymarket_min_confidence=get_polymarket_min_confidence(session),
+        polymarket_screen_top=get_polymarket_screen_top(session),
+        polymarket_stake=get_polymarket_stake(session),
     )
 
 
@@ -371,6 +408,36 @@ def update_research_settings(
             "symbols": symbols,
             "interval_hours": body.interval_hours,
             "writer": f"{body.writer_provider}:{body.writer_model}",
+        },
+    )
+    return _read(session)
+
+
+@router.put("/polymarket", response_model=SettingsRead)
+def update_polymarket_settings(
+    body: PolymarketSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure Polymarket discovery and AI bet screening.
+
+    Scheduler-interval changes take effect on the next engine restart.
+    """
+    set_polymarket_refresh_hours(session, body.refresh_hours)
+    set_polymarket_research_hours(session, body.research_hours)
+    set_polymarket_edge_threshold(session, body.edge_threshold)
+    set_polymarket_min_confidence(session, body.min_confidence)
+    set_polymarket_screen_top(session, body.screen_top)
+    set_polymarket_stake(session, body.stake)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.polymarket",
+        detail={
+            "refresh_hours": body.refresh_hours,
+            "research_hours": body.research_hours,
+            "edge_threshold": str(body.edge_threshold),
+            "min_confidence": str(body.min_confidence),
+            "screen_top": body.screen_top,
+            "stake": str(body.stake),
         },
     )
     return _read(session)

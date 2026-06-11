@@ -10,7 +10,7 @@ Venue credentials are stored per-venue, one encrypted row per field, keyed
 
 import json
 from collections.abc import Iterable
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 
 from sqlmodel import Session, select
@@ -364,6 +364,90 @@ def get_news_interval_hours(session: Session) -> int | None:
 def set_news_interval_hours(session: Session, hours: int | None) -> None:
     """Set the news refresh interval (None/0 restores the daily schedule)."""
     set_setting(session, _NEWS_INTERVAL, str(hours) if hours else "")
+
+
+# -- polymarket -------------------------------------------------------------------
+# Prediction-market discovery and AI bet analysis: how often the market
+# catalogue refreshes, how often the screener analyses bets, and the edge /
+# confidence bar a suggestion must clear. Deliberately slow cadences —
+# prediction markets move on events and news, not ticks.
+
+_POLYMARKET_REFRESH = "polymarket_refresh_hours"
+_POLYMARKET_RESEARCH = "polymarket_research_hours"
+_POLYMARKET_EDGE = "polymarket_edge_threshold"
+_POLYMARKET_CONFIDENCE = "polymarket_min_confidence"
+_POLYMARKET_SCREEN_TOP = "polymarket_screen_top"
+_POLYMARKET_STAKE = "polymarket_stake"
+
+
+def _int_setting(session: Session, key: str, default: int, *, minimum: int = 0) -> int:
+    raw = get_setting(session, key)
+    try:
+        return max(minimum, int(raw)) if raw else default
+    except ValueError:
+        return default
+
+
+def _decimal_setting(session: Session, key: str, default: Decimal) -> Decimal:
+    raw = get_setting(session, key)
+    try:
+        return Decimal(raw) if raw else default
+    except InvalidOperation:
+        return default
+
+
+def get_polymarket_refresh_hours(session: Session) -> int:
+    """Hours between market-catalogue refreshes (default 6, minimum 1)."""
+    return _int_setting(session, _POLYMARKET_REFRESH, 6, minimum=1)
+
+
+def set_polymarket_refresh_hours(session: Session, hours: int) -> None:
+    set_setting(session, _POLYMARKET_REFRESH, str(max(1, hours)))
+
+
+def get_polymarket_research_hours(session: Session) -> int:
+    """Hours between AI bet-screening cycles (default 6, minimum 1)."""
+    return _int_setting(session, _POLYMARKET_RESEARCH, 6, minimum=1)
+
+
+def set_polymarket_research_hours(session: Session, hours: int) -> None:
+    set_setting(session, _POLYMARKET_RESEARCH, str(max(1, hours)))
+
+
+def get_polymarket_edge_threshold(session: Session) -> Decimal:
+    """Minimum |estimated probability − market price| to suggest a bet."""
+    return _decimal_setting(session, _POLYMARKET_EDGE, Decimal("0.05"))
+
+
+def set_polymarket_edge_threshold(session: Session, threshold: Decimal) -> None:
+    set_setting(session, _POLYMARKET_EDGE, str(threshold))
+
+
+def get_polymarket_min_confidence(session: Session) -> Decimal:
+    """Minimum model confidence for a suggestion (default 0.6)."""
+    return _decimal_setting(session, _POLYMARKET_CONFIDENCE, Decimal("0.6"))
+
+
+def set_polymarket_min_confidence(session: Session, confidence: Decimal) -> None:
+    set_setting(session, _POLYMARKET_CONFIDENCE, str(confidence))
+
+
+def get_polymarket_screen_top(session: Session) -> int:
+    """How many top-volume markets the screener analyses besides the watchlist."""
+    return _int_setting(session, _POLYMARKET_SCREEN_TOP, 10)
+
+
+def set_polymarket_screen_top(session: Session, count: int) -> None:
+    set_setting(session, _POLYMARKET_SCREEN_TOP, str(max(0, count)))
+
+
+def get_polymarket_stake(session: Session) -> Decimal:
+    """Suggested stake per screener signal, in USDC (default 100)."""
+    return _decimal_setting(session, _POLYMARKET_STAKE, Decimal("100"))
+
+
+def set_polymarket_stake(session: Session, stake: Decimal) -> None:
+    set_setting(session, _POLYMARKET_STAKE, str(stake))
 
 
 # -- feed latency ---------------------------------------------------------------

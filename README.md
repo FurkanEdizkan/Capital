@@ -2,7 +2,7 @@
 
 # Capital
 
-**Self-hosted automated trading platform for Binance.**
+**Self-hosted automated trading platform for Binance and Polymarket.**
 
 [![CI](https://github.com/FurkanEdizkan/Capital/actions/workflows/ci.yml/badge.svg)](https://github.com/FurkanEdizkan/Capital/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -34,8 +34,12 @@ explicitly opt in to Testnet or live trading behind safeguards.
   net of fees, and money math uses `Decimal` throughout.
 - **Capital allocation** — assign a budget per strategy; the engine enforces it.
 - **Venue-pluggable** — a stable `Venue` interface keeps the engine
-  venue-agnostic. Binance is the first venue; others are re-added on top of a
-  solid base.
+  venue-agnostic. Binance and Polymarket ship today; each strategy carries
+  its own venue, so strategies on both run side by side.
+- **Prediction markets** — browse Polymarket's most-traded markets, pin a
+  watchlist, and let the AI estimate each bet's true probability from news
+  and market context. Enough edge becomes a suggestion (Telegram + dashboard)
+  or an automated Prediction AI trade; resolutions settle into the ledger.
 - **AI strategies** — LLM-driven strategies with per-strategy model selection,
   daily spend caps, and a per-model performance rollup.
 - **Roles & audit** — JWT login with `admin` / `user` roles; config changes are
@@ -121,6 +125,7 @@ Placing orders on Testnet or Live needs venue credentials, entered (encrypted)
 through the Settings page.
 
 - [docs/venues/binance-setup.md](docs/venues/binance-setup.md) — Binance (crypto)
+- [docs/venues/polymarket-setup.md](docs/venues/polymarket-setup.md) — Polymarket (prediction markets)
 - [docs/venues/api-features.md](docs/venues/api-features.md) — what Binance offers vs. what Capital uses
 
 ## Deployment
@@ -185,7 +190,7 @@ Capital is designed to be navigable and contributable by AI agents:
 - [Releases](docs/releases.md)
 - [Development setup](docs/development.md) — manual setup, project structure
 - [Operations](docs/operations/) — deployment, backup & restore
-- [Venues](docs/venues/) — Binance setup + design
+- [Venues](docs/venues/) — Binance & Polymarket setup + design
 - [Contributing](CONTRIBUTING.md) — dev setup and PR rules
 - [Security policy](SECURITY.md)
 - [Agent guide](AGENTS.md)
@@ -202,7 +207,7 @@ Capital is designed to be navigable and contributable by AI agents:
 | 5     | Live trading (Testnet → real)                 | Done        |
 | 6     | 24/7 hardening, resilience, deployment        | Done        |
 | 7     | AI strategies + agent/MCP integration         | Done        |
-| 8     | Multi-venue expansion (stocks, Polymarket)    | Deferred    |
+| 8     | Multi-venue expansion — Polymarket + AI bets  | In progress |
 
 ## License
 

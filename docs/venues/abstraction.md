@@ -4,11 +4,21 @@ The [`Venue`](../../engine/venues/base.py) interface is how Capital stays
 venue-pluggable: every trading venue implements one contract, and the rest of
 the engine never learns which venue it is talking to.
 
-This document is the abstraction's design (issue #46). Capital currently ships
-**Binance only**; the interface is preserved so additional venues can be
-re-added later as one new implementation file plus a registry entry. See
+This document is the abstraction's design (issue #46). Capital ships
+**Binance** (crypto) and **Polymarket** (prediction markets); additional
+venues are one new implementation file plus a registry entry. See
 [research.md](research.md) for the original multi-venue survey that informed
 the abstraction's shape.
+
+## Per-strategy venue routing
+
+Venue routing is **per strategy**, not a global switch: every strategy (and
+stored `StrategyInstance`) carries a `venue`, and the engine resolves both the
+market-data venue and the order executor per strategy each tick. Binance and
+Polymarket strategies therefore run side by side in the same loop. The
+`active_venue` setting remains the default for anything that does not name a
+venue (e.g. manual orders from the Markets page). In Testnet mode a venue
+without a sandbox (Polymarket) falls back to Sim with a warning.
 
 ## The interface
 

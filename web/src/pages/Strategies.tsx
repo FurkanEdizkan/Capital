@@ -63,6 +63,7 @@ export function Strategies() {
   const [newType, setNewType] = useState("ma_cross");
   const [newName, setNewName] = useState("");
   const [newSymbol, setNewSymbol] = useState("");
+  const [newVenue, setNewVenue] = useState("binance");
   const [newTimeframe, setNewTimeframe] = useState("1h");
   const [newParams, setNewParams] = useState<Record<string, string>>({});
   const [newAllocated, setNewAllocated] = useState("10000");
@@ -93,11 +94,16 @@ export function Strategies() {
   }, [load]);
 
   const selectedType = types.find((t) => t.key === newType);
+  // A type may be pinned to one venue (Prediction AI → polymarket); the
+  // operator picks otherwise.
+  const effectiveVenue = selectedType?.venue ?? newVenue;
+  const isPolymarket = effectiveVenue === "polymarket";
 
   const openAdd = (preset?: Partial<{ type: string; symbol: string }>) => {
     setNewType(preset?.type ?? "ma_cross");
     setNewSymbol(preset?.symbol ?? "");
     setNewName("");
+    setNewVenue("binance");
     setNewTimeframe("1h");
     setNewParams({});
     setNewAllocated("10000");
@@ -112,6 +118,7 @@ export function Strategies() {
         name: newName.trim() || `${selectedType?.label ?? newType} ${newSymbol}`,
         type: newType,
         symbol: newSymbol.trim(),
+        venue: effectiveVenue,
         timeframe: newTimeframe,
         params: Object.fromEntries(
           Object.entries(newParams).filter(([, v]) => v.trim() !== ""),
@@ -119,7 +126,7 @@ export function Strategies() {
         allocated: newAllocated || "10000",
         max_loss: newMaxLoss || "0",
       });
-      setNotice(`Strategy created on ${newSymbol.toUpperCase()}.`);
+      setNotice(`Strategy created on ${newSymbol.trim()}.`);
     });
   };
 
@@ -197,7 +204,19 @@ export function Strategies() {
         </div>
       ),
     },
-    { key: "symbol", label: "Symbol", render: (r) => <span className="num">{r.symbol}</span> },
+    {
+      key: "symbol",
+      label: "Symbol",
+      render: (r) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className="num" title={r.symbol}>
+            {/* Polymarket outcome-token ids are ~77 digits — truncate. */}
+            {r.symbol.length > 14 ? `${r.symbol.slice(0, 6)}…${r.symbol.slice(-4)}` : r.symbol}
+          </span>
+          {r.venue !== "binance" && <Badge tone="violet">{r.venue}</Badge>}
+        </div>
+      ),
+    },
     {
       key: "enabled",
       label: "Enabled",
@@ -584,11 +603,32 @@ export function Strategies() {
               </option>
             ))}
           </select>
+          <select
+            value={effectiveVenue}
+            onChange={(e) => setNewVenue(e.target.value)}
+            disabled={selectedType?.venue != null}
+            style={addSelectStyle}
+            title={
+              selectedType?.venue != null
+                ? `${selectedType.label} runs on ${selectedType.venue} only`
+                : "Trading venue for this instance"
+            }
+          >
+            <option value="binance">Binance</option>
+            <option value="polymarket">Polymarket</option>
+          </select>
           <Input
             full
-            placeholder="Symbol (e.g. SOLUSDT)"
+            placeholder={
+              isPolymarket
+                ? "Outcome token id (see the Polymarket page)"
+                : "Symbol (e.g. SOLUSDT)"
+            }
             value={newSymbol}
-            onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
+            onChange={(e) =>
+              // Polymarket token ids are case-sensitive — never uppercased.
+              setNewSymbol(isPolymarket ? e.target.value : e.target.value.toUpperCase())
+            }
           />
           <Input
             full

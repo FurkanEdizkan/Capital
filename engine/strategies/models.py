@@ -22,7 +22,10 @@ class StrategyInstance(SQLModel, table=True):
     # plugins and instances (collisions are rejected at create time).
     name: str = Field(unique=True, index=True, max_length=64)
     type: str = Field(index=True, max_length=32)
-    symbol: str = Field(index=True, max_length=24)
+    symbol: str = Field(index=True, max_length=80)
+    # The venue the instance trades on — instances on different venues run
+    # side by side in the same engine loop.
+    venue: str = Field(default="binance", max_length=24)
     market: str = Field(default="spot", max_length=8)
     timeframe: str = Field(default="1h", max_length=8)
     # JSON object of constructor params (registry-validated at create time).

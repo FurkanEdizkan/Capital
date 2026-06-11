@@ -95,6 +95,21 @@ export async function updateResearchSettings(body: {
   return data;
 }
 
+export async function updatePolymarketSettings(body: {
+  refresh_hours: number;
+  research_hours: number;
+  edge_threshold: string;
+  min_confidence: string;
+  screen_top: number;
+  stake: string;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/polymarket", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save Polymarket settings"));
+  }
+  return data;
+}
+
 export async function updateCouncilSettings(body: {
   members: { provider: string; model: string }[];
   quorum: string;

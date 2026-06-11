@@ -39,15 +39,19 @@ class VenueRouter:
         """The engine's out-of-the-box router (Binance default)."""
         return cls()
 
-    def resolve(self, session: Session) -> Venue:
-        """Build the `Venue` for the active-venue setting, or the default."""
-        name = get_active_venue(session)
+    def resolve(self, session: Session, *, venue: str | None = None) -> Venue:
+        """Build the `Venue` for `venue`, defaulting to the active-venue setting.
+
+        An explicit `venue` (a strategy's own venue) overrides the setting —
+        this is what lets strategies on different venues run side by side.
+        """
+        name = venue or get_active_venue(session)
         mode = get_mode(session)
         try:
             return self._builder(session, name, mode)
         except KeyError:
             log.warning(
-                "active venue %r is not wired — falling back to %s",
+                "venue %r is not wired — falling back to %s",
                 name,
                 self._default,
             )
