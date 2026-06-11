@@ -18,7 +18,7 @@ from time import struct_time
 
 import feedparser
 import httpx
-from sqlmodel import Session, select
+from sqlmodel import Session, col, or_, select
 
 from appsettings.store import get_setting
 from news.models import NewsItem
@@ -231,4 +231,27 @@ def recent(
     if category:
         stmt = stmt.where(NewsItem.category == category)
     stmt = stmt.order_by(NewsItem.fetched_at.desc()).limit(limit)  # type: ignore[attr-defined]
+    return list(session.exec(stmt).all())
+
+
+def search(session: Session, terms: list[str], *, limit: int = 15) -> list[NewsItem]:
+    """Newest-first headlines whose title or summary mentions any of `terms`.
+
+    Case-insensitive substring match, OR-ed across terms — how prediction
+    -market questions (about elections, sports, world events) find their
+    coverage in the stored world/economic feeds.
+    """
+    cleaned = [t.strip() for t in terms if t and t.strip()]
+    if not cleaned:
+        return []
+    clauses = [
+        col(NewsItem.title).ilike(f"%{term}%") | col(NewsItem.summary).ilike(f"%{term}%")
+        for term in cleaned
+    ]
+    stmt = (
+        select(NewsItem)
+        .where(or_(*clauses))
+        .order_by(NewsItem.fetched_at.desc())  # type: ignore[attr-defined]
+        .limit(limit)
+    )
     return list(session.exec(stmt).all())

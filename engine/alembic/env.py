@@ -19,6 +19,7 @@ from connections import models as _conn_models  # noqa: F401 — register tables
 from db import SQLModel
 from marketdata import models as _md_models  # noqa: F401 — register tables on metadata
 from news import models as _news_models  # noqa: F401 — register tables on metadata
+from polymarket import models as _polymarket_models  # noqa: F401 — register tables
 from trading import models as _trading_models  # noqa: F401 — register tables on metadata
 
 # Model modules are imported above so their tables register on

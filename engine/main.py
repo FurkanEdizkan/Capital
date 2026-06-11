@@ -21,6 +21,7 @@ from api.market import router as market_router
 from api.market import ws_router as market_ws_router
 from api.news import router as news_router
 from api.orders import router as orders_router
+from api.polymarket import router as polymarket_router
 from api.portfolio import router as portfolio_router
 from api.research import router as research_router
 from api.settings import router as settings_router
@@ -125,6 +126,7 @@ app.include_router(ai_router)
 app.include_router(tokens_router)
 app.include_router(venues_router)
 app.include_router(news_router)
+app.include_router(polymarket_router)
 app.include_router(connections_router)
 app.include_router(research_router)
 app.include_router(lab_router)
