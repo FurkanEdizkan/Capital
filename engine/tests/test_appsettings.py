@@ -1,5 +1,7 @@
 """Tests for runtime settings — encryption and the settings store."""
 
+from decimal import Decimal
+
 import pytest
 from sqlmodel import Session, select
 
@@ -128,3 +130,35 @@ def test_strategy_ai_config_round_trip(session: Session) -> None:
     set_strategy_ai_config(session, "AI BTC", provider="ollama", model="qwen2.5")
     cfg = get_strategy_ai_config(session, "AI BTC")
     assert cfg == {"provider": "ollama", "model": "qwen2.5"}
+
+
+def test_risk_limits_default_to_zero(session: Session) -> None:
+    from appsettings.store import (
+        get_risk_daily_loss_limit,
+        get_risk_max_drawdown_pct,
+        get_risk_max_position_notional,
+        get_risk_stop_loss_pct,
+        get_risk_take_profit_pct,
+    )
+    assert get_risk_stop_loss_pct(session) == Decimal(0)
+    assert get_risk_take_profit_pct(session) == Decimal(0)
+    assert get_risk_max_drawdown_pct(session) == Decimal(0)
+    assert get_risk_daily_loss_limit(session) == Decimal(0)
+    assert get_risk_max_position_notional(session) == Decimal(0)
+
+
+def test_risk_limit_round_trip(session: Session) -> None:
+    from appsettings.store import get_risk_stop_loss_pct, set_risk_stop_loss_pct
+    set_risk_stop_loss_pct(session, Decimal("5"))
+    assert get_risk_stop_loss_pct(session) == Decimal("5")
+
+
+def test_risk_getter_falls_back_to_env_default_when_unset(session: Session) -> None:
+    from appsettings.store import get_risk_stop_loss_pct
+    assert get_risk_stop_loss_pct(session, Decimal("3")) == Decimal("3")
+
+
+def test_risk_explicit_zero_overrides_env_default(session: Session) -> None:
+    from appsettings.store import get_risk_stop_loss_pct, set_risk_stop_loss_pct
+    set_risk_stop_loss_pct(session, Decimal("0"))
+    assert get_risk_stop_loss_pct(session, Decimal("3")) == Decimal("0")
