@@ -9,6 +9,7 @@ import pytest
 from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
+from appsettings.store import set_risk_max_position_notional
 from exchange.client import Market
 from strategies.base import BaseStrategy, StrategyContext
 from trading.engine import TradingEngine
@@ -119,6 +120,21 @@ def _engine(
         strategies=strategies,  # default ExecutorRouter — Sim mode
         **kwargs,
     )
+
+
+def test_engine_applies_store_risk_limits(factory: Any) -> None:
+    # BuyWhenFlat buys qty 1 at the FakeVenue price of 100 → notional 100.
+    # A stored per-order notional cap of 50 must clip the fill to qty 0.5.
+    strat = BuyWhenFlat("buyer", "BTCUSDT", market=Market.spot)
+    eng = _engine(factory, [strat])
+    with factory() as session:
+        set_risk_max_position_notional(session, Decimal("50"))
+        session.commit()
+    eng.tick()
+    with factory() as session:
+        positions = list_positions(session)
+    assert len(positions) == 1
+    assert positions[0].qty == Decimal("0.5")
 
 
 def test_tick_executes_strategy_order(db_engine: Any, factory: Any) -> None:

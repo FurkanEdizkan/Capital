@@ -107,7 +107,9 @@ class TradingEngine:
         self._router = router or ExecutorRouter()
         # Resolves an AI strategy's (provider, model) from its stored config.
         self._ai_resolver = ai_resolver
-        self._risk = risk or RiskManager()  # all limits disabled by default
+        # Optional injected RiskManager (tests). When None, limits are read from
+        # the settings store on every tick so UI changes apply without a restart.
+        self._risk_override = risk
         self._notifier = notifier or TelegramNotifier()  # disabled by default
         self._strategies: list[BaseStrategy] = list(strategies or [])
         self._tick_seconds = tick_seconds
@@ -161,6 +163,7 @@ class TradingEngine:
 
     def _tick_strategy(self, strat: BaseStrategy) -> None:
         with self._session_factory() as session:
+            risk = self._risk_override or RiskManager.from_store(session)
             candles = refresh_venue_candles(
                 session,
                 self._venue_router.resolve(session, venue=strat.venue),
@@ -191,7 +194,7 @@ class TradingEngine:
             # Risk: force-close a position that breached its stop-loss or
             # take-profit. This runs regardless of lifecycle state — a stop is
             # a safety net, not a strategy-driven entry.
-            stop = self._risk.stop_order(position, price)
+            stop = risk.stop_order(position, price)
             if stop is not None:
                 executor.execute(session, stop, reference_price=price)
                 log.info("risk: stopped out %r position on %s", strat.name, strat.symbol)
@@ -257,7 +260,7 @@ class TradingEngine:
                 log.info("strategy %r order rejected — allocation exhausted", strat.name)
                 return
             # Risk: order sizing cap + kill switch (blocks new exposure only).
-            order = self._risk.review(session, order, position, price)
+            order = risk.review(session, order, position, price)
             if order is None:
                 log.info("strategy %r order blocked by risk manager", strat.name)
                 return
