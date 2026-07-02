@@ -1,0 +1,4 @@
+# Local, regenerable AST/semantic cache — machine-specific, not for the repo
+cache/
+# Internal pipeline state written between skill steps
+.graphify_*
