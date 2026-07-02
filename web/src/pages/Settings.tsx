@@ -1180,9 +1180,13 @@ export function Settings() {
 }
 
 /**
- * RiskRow — one risk limit: a Toggle that arms/clears the value (pre-filling the
- * recommended default on enable) plus a numeric Input. A value > 0 means the
- * limit is on; blank/0 disables it.
+ * RiskRow — one risk limit. Percentage rows (those with a `recommended` default)
+ * get a Toggle that arms/clears the value, pre-filling the recommended default
+ * on enable. Currency rows have no recommended default, so the numeric Input
+ * alone controls them (a value > 0 arms the limit, blank/0 disables it) — a
+ * dead toggle there could never switch on, so it is replaced by a spacer that
+ * keeps the rows aligned. Inputs are floored at 0, and percentages capped at
+ * 100, so a stray negative can't leave the field and toggle disagreeing.
  */
 function RiskRow({
   label,
@@ -1202,12 +1206,16 @@ function RiskRow({
   placeholder?: string;
 }) {
   const enabled = Number(value) > 0;
+  const isPercent = unit === "%";
+  // Toggle width (md size) — keep the spacer the same so rows stay aligned.
+  const TOGGLE_WIDTH = 34;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <Toggle
-        checked={enabled}
-        onChange={(on) => onChange(on ? (recommended ?? "") : "")}
-      />
+      {recommended !== undefined ? (
+        <Toggle checked={enabled} onChange={(on) => onChange(on ? recommended : "")} />
+      ) : (
+        <span style={{ width: TOGGLE_WIDTH, flex: "0 0 auto" }} />
+      )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, color: "var(--text)" }}>{label}</div>
         <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{hint}</div>
@@ -1216,6 +1224,8 @@ function RiskRow({
         <Input
           full
           type="number"
+          min="0"
+          max={isPercent ? "100" : undefined}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           suffix={unit}
