@@ -219,7 +219,12 @@ def test_update_risk_settings_persists_and_returns(settings_client: TestClient) 
     assert r.status_code == 200
     assert r.json()["risk_stop_loss_pct"] == "5"
     r2 = settings_client.get("/api/settings", headers=headers)
-    assert r2.json()["risk_daily_loss_limit"] == "250"
+    body = r2.json()
+    assert body["risk_stop_loss_pct"] == "5"
+    assert body["risk_take_profit_pct"] == "10"
+    assert body["risk_max_drawdown_pct"] == "15"
+    assert body["risk_daily_loss_limit"] == "250"
+    assert body["risk_max_position_notional"] == "1000"
 
 
 def test_update_risk_settings_rejects_negative_and_over_100(

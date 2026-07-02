@@ -205,6 +205,9 @@ class PolymarketSettingsUpdate(BaseModel):
 
 
 class RiskSettingsUpdate(BaseModel):
+    """Global risk limits in percent (SL/TP/drawdown) or quote currency
+    (loss limit, notional). 0 disables a limit."""
+
     stop_loss_pct: Decimal = Field(ge=0, le=100)
     take_profit_pct: Decimal = Field(ge=0, le=100)
     max_drawdown_pct: Decimal = Field(ge=0, le=100)
