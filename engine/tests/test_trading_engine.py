@@ -16,6 +16,7 @@ from trading.engine import TradingEngine
 from trading.executors.base import Order
 from trading.models import FillSide, PositionSide, Trade
 from trading.portfolio import list_positions, set_allocation
+from trading.risk import RiskManager
 from trading.venue_router import VenueRouter
 from venues.base import Instrument, OrderResult, Venue, VenueCandle
 
@@ -104,6 +105,7 @@ def _engine(
     strategies: list[BaseStrategy],
     *,
     ai_resolver: Any = None,
+    risk: Any = None,
 ) -> TradingEngine:
     # Mirror startup seeding — every strategy gets a capital budget so the
     # allocation enforcer admits its orders.
@@ -114,6 +116,8 @@ def _engine(
     kwargs: dict[str, Any] = {}
     if ai_resolver is not None:
         kwargs["ai_resolver"] = ai_resolver
+    if risk is not None:
+        kwargs["risk"] = risk
     return TradingEngine(
         session_factory=factory,
         venue_router=VenueRouter(builder=lambda *_: venue),
@@ -135,6 +139,21 @@ def test_engine_applies_store_risk_limits(factory: Any) -> None:
         positions = list_positions(session)
     assert len(positions) == 1
     assert positions[0].qty == Decimal("0.5")
+
+
+def test_injected_risk_override_wins_over_store(factory: Any) -> None:
+    # The store says cap 50 (would clip to qty 0.5); the injected override caps
+    # at 20 (→ qty 0.2). The override must win, proving the tests/embedding path
+    # still bypasses the store even though production leaves it None.
+    strat = BuyWhenFlat("buyer", "BTCUSDT", market=Market.spot)
+    with factory() as session:
+        set_risk_max_position_notional(session, Decimal("50"))
+        session.commit()
+    eng = _engine(factory, [strat], risk=RiskManager(max_position_notional=Decimal("20")))
+    eng.tick()
+    with factory() as session:
+        positions = list_positions(session)
+    assert positions[0].qty == Decimal("0.2")  # override (20), not store (50)
 
 
 def test_tick_executes_strategy_order(db_engine: Any, factory: Any) -> None:

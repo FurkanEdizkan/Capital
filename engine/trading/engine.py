@@ -107,8 +107,9 @@ class TradingEngine:
         self._router = router or ExecutorRouter()
         # Resolves an AI strategy's (provider, model) from its stored config.
         self._ai_resolver = ai_resolver
-        # Optional injected RiskManager (tests). When None, limits are read from
-        # the settings store on every tick so UI changes apply without a restart.
+        # Injected RiskManager override (tests / embedding). Production leaves this
+        # None so limits are read from the settings store on every tick, applying
+        # UI changes without a restart.
         self._risk_override = risk
         self._notifier = notifier or TelegramNotifier()  # disabled by default
         self._strategies: list[BaseStrategy] = list(strategies or [])
