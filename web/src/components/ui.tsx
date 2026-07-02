@@ -198,6 +198,7 @@ export function Button({
   return (
     <button
       type={type}
+      className={kind === "primary" || kind === "danger" ? "focus-ring-invert" : "focus-ring"}
       onClick={onClick}
       disabled={disabled}
       onMouseEnter={() => setHover(true)}
@@ -243,6 +244,7 @@ export function IconButton({
   const [hover, setHover] = useState(false);
   return (
     <button
+      className="focus-ring"
       onClick={onClick}
       title={title}
       onMouseEnter={() => setHover(true)}
@@ -1071,6 +1073,31 @@ export function EmptyState({
       )}
       {action && <div style={{ marginTop: 14 }}>{action}</div>}
     </div>
+  );
+}
+
+/**
+ * Skeleton — a tonal shimmer placeholder shown while first data loads, so
+ * empty/zero values never masquerade as real. Decorative; hidden from a11y
+ * tree. Honors prefers-reduced-motion (freezes to a static block via CSS).
+ */
+export function Skeleton({
+  width = "100%",
+  height = 12,
+  radius,
+  style,
+}: {
+  width?: number | string;
+  height?: number | string;
+  radius?: number | string;
+  style?: CSSProperties;
+}) {
+  return (
+    <span
+      aria-hidden
+      className="skeleton"
+      style={{ display: "block", width, height, borderRadius: radius, ...style }}
+    />
   );
 }
 
