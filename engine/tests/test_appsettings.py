@@ -13,12 +13,22 @@ from appsettings.store import (
     get_binance_keys,
     get_llm_credentials,
     get_mode,
+    get_risk_daily_loss_limit,
+    get_risk_max_drawdown_pct,
+    get_risk_max_position_notional,
+    get_risk_stop_loss_pct,
+    get_risk_take_profit_pct,
     get_strategy_ai_config,
     get_venue_credentials,
     llm_provider_configured,
     set_binance_keys,
     set_llm_credentials,
     set_mode,
+    set_risk_daily_loss_limit,
+    set_risk_max_drawdown_pct,
+    set_risk_max_position_notional,
+    set_risk_stop_loss_pct,
+    set_risk_take_profit_pct,
     set_strategy_ai_config,
     set_venue_credentials,
     venue_credentials_configured,
@@ -133,13 +143,6 @@ def test_strategy_ai_config_round_trip(session: Session) -> None:
 
 
 def test_risk_limits_default_to_zero(session: Session) -> None:
-    from appsettings.store import (
-        get_risk_daily_loss_limit,
-        get_risk_max_drawdown_pct,
-        get_risk_max_position_notional,
-        get_risk_stop_loss_pct,
-        get_risk_take_profit_pct,
-    )
     assert get_risk_stop_loss_pct(session) == Decimal(0)
     assert get_risk_take_profit_pct(session) == Decimal(0)
     assert get_risk_max_drawdown_pct(session) == Decimal(0)
@@ -147,18 +150,25 @@ def test_risk_limits_default_to_zero(session: Session) -> None:
     assert get_risk_max_position_notional(session) == Decimal(0)
 
 
-def test_risk_limit_round_trip(session: Session) -> None:
-    from appsettings.store import get_risk_stop_loss_pct, set_risk_stop_loss_pct
-    set_risk_stop_loss_pct(session, Decimal("5"))
-    assert get_risk_stop_loss_pct(session) == Decimal("5")
+@pytest.mark.parametrize(
+    ("getter", "setter"),
+    [
+        (get_risk_stop_loss_pct, set_risk_stop_loss_pct),
+        (get_risk_take_profit_pct, set_risk_take_profit_pct),
+        (get_risk_max_drawdown_pct, set_risk_max_drawdown_pct),
+        (get_risk_daily_loss_limit, set_risk_daily_loss_limit),
+        (get_risk_max_position_notional, set_risk_max_position_notional),
+    ],
+)
+def test_risk_limit_round_trip(getter, setter, session: Session) -> None:
+    setter(session, Decimal("7"))
+    assert getter(session) == Decimal("7")
 
 
 def test_risk_getter_falls_back_to_env_default_when_unset(session: Session) -> None:
-    from appsettings.store import get_risk_stop_loss_pct
     assert get_risk_stop_loss_pct(session, Decimal("3")) == Decimal("3")
 
 
 def test_risk_explicit_zero_overrides_env_default(session: Session) -> None:
-    from appsettings.store import get_risk_stop_loss_pct, set_risk_stop_loss_pct
     set_risk_stop_loss_pct(session, Decimal("0"))
     assert get_risk_stop_loss_pct(session, Decimal("3")) == Decimal("0")
