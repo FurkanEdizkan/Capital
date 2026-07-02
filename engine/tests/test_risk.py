@@ -29,6 +29,25 @@ def _order(side: FillSide, qty: str) -> Order:
     return Order(strategy="S", market="spot", symbol="BTCUSDT", side=side, quantity=Decimal(qty))
 
 
+# --- construction from stores ---------------------------------------------
+
+def test_from_store_reads_stored_limits(session: Session) -> None:
+    from appsettings.store import set_risk_max_position_notional, set_risk_stop_loss_pct
+    set_risk_stop_loss_pct(session, Decimal("5"))
+    set_risk_max_position_notional(session, Decimal("1000"))
+    rm = RiskManager.from_store(session)
+    assert rm.stop_loss_pct == Decimal("5")
+    assert rm.max_position_notional == Decimal("1000")
+    assert rm.take_profit_pct == Decimal(0)  # unset → disabled
+
+
+def test_from_store_falls_back_to_env_settings(session: Session) -> None:
+    from config import Settings
+    env = Settings(risk_stop_loss_pct=Decimal("7"))  # nothing stored
+    rm = RiskManager.from_store(session, env)
+    assert rm.stop_loss_pct == Decimal("7")
+
+
 # --- stop-loss / take-profit ----------------------------------------------
 
 def test_stop_loss_closes_a_losing_long() -> None:
