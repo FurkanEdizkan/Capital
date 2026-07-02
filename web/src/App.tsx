@@ -5,10 +5,14 @@ import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Backtest } from "./pages/Backtest";
 import { Connections } from "./pages/Connections";
+import { Costs } from "./pages/Costs";
 import { Guide } from "./pages/Guide";
 import { History } from "./pages/History";
+import { Lab } from "./pages/Lab";
 import { Markets } from "./pages/Markets";
 import { News } from "./pages/News";
+import { Polymarket } from "./pages/Polymarket";
+import { Research } from "./pages/Research";
 import { Settings } from "./pages/Settings";
 import { Strategies } from "./pages/Strategies";
 import { Users } from "./pages/screens";
@@ -27,10 +31,14 @@ export function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="markets" element={<Markets />} />
+          <Route path="polymarket" element={<Polymarket />} />
           <Route path="strategies" element={<Strategies />} />
           <Route path="backtest" element={<Backtest />} />
+          <Route path="lab" element={<Lab />} />
           <Route path="news" element={<News />} />
+          <Route path="research" element={<Research />} />
           <Route path="connections" element={<Connections />} />
+          <Route path="costs" element={<Costs />} />
           <Route path="history" element={<History />} />
           <Route path="guide" element={<Guide />} />
           <Route path="settings" element={<Settings />} />

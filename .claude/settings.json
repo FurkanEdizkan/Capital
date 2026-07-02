@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "furkanedizkan-skills": {
+      "source": {
+        "source": "github",
+        "repo": "FurkanEdizkan/My-Skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "skills@furkanedizkan-skills": true
+  }
+}

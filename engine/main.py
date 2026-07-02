@@ -14,12 +14,16 @@ from sqlmodel import Session
 from api.ai import router as ai_router
 from api.backtest import router as backtest_router
 from api.connections import router as connections_router
+from api.costs import router as costs_router
 from api.history import router as history_router
+from api.lab import router as lab_router
 from api.market import router as market_router
 from api.market import ws_router as market_ws_router
 from api.news import router as news_router
 from api.orders import router as orders_router
+from api.polymarket import router as polymarket_router
 from api.portfolio import router as portfolio_router
+from api.research import router as research_router
 from api.settings import router as settings_router
 from api.strategies import router as strategies_router
 from api.system import router as system_router
@@ -35,7 +39,7 @@ from logging_config import setup_logging
 from marketdata.stream import StreamManager
 from notify.telegram import TelegramNotifier
 from ops.recovery import recover_on_boot
-from strategies.builtin import all_strategies, seed_allocations
+from strategies.builtin import all_strategies_with_instances, seed_allocations
 from trading.engine import TradingEngine
 from trading.executor_router import ExecutorRouter
 from trading.risk import RiskManager
@@ -75,7 +79,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception:  # noqa: BLE001 — recovery must not block startup
         log.exception("Boot recovery skipped")
 
-    strategies = all_strategies()
+    with session_factory() as session:
+        strategies = all_strategies_with_instances(session)
     try:
         seed_allocations(session_factory, strategies)
     except Exception:  # noqa: BLE001 — never let seeding crash startup
@@ -121,7 +126,11 @@ app.include_router(ai_router)
 app.include_router(tokens_router)
 app.include_router(venues_router)
 app.include_router(news_router)
+app.include_router(polymarket_router)
 app.include_router(connections_router)
+app.include_router(research_router)
+app.include_router(lab_router)
+app.include_router(costs_router)
 
 
 @app.get("/health", tags=["system"])

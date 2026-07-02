@@ -7,7 +7,7 @@ in **Capital**. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Branch off `test`, open PRs into `test`. Never push to or PR into `main`.**
 `main` is promoted from `test` automatically once CI is green. See
-[docs/BRANCHING.md](docs/BRANCHING.md).
+[docs/branching.md](docs/branching.md).
 
 ## Conventions
 
@@ -39,7 +39,10 @@ in **Capital**. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 This repo's Claude skills live in the
 [`FurkanEdizkan/My-Skills`](https://github.com/FurkanEdizkan/My-Skills) plugin
-marketplace, not in `.claude/skills/`. Install them once per machine:
+marketplace, not in `.claude/skills/`. The marketplace and the `skills` plugin
+are pre-registered in [`.claude/settings.json`](.claude/settings.json), so
+Claude Code will offer to trust + install them automatically the first time you
+open this repo. If you need to install manually:
 
 ```sh
 /plugin marketplace add FurkanEdizkan/My-Skills

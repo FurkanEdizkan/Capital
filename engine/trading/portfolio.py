@@ -9,6 +9,7 @@ is volume-weighted; flipping past flat opens the new leg at the fill price.
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from trading.executors.base import Fill, Order
@@ -46,44 +47,53 @@ def get_or_create_position(
     return pos
 
 
-def apply_fill(
-    session: Session,
-    *,
-    strategy: str,
-    market: str,
-    symbol: str,
-    side: FillSide | str,
-    qty: Decimal,
-    price: Decimal,
-    fee: Decimal = Decimal(0),
-) -> Position:
-    """Attribute a fill to `strategy`'s position and update it.
+class PositionFillRequest(BaseModel):
+    """Typed input contract for attributing one fill to a strategy's position.
 
-    Raises `ValueError` on a non-positive quantity.
+    Carries everything `apply_fill` needs, so the caller assembles the fill once
+    and the function never reaches for loose arguments. Distinct from
+    `executors.base.Fill`, which is an execution *output* and already carries a
+    computed `realized_pnl` that does not exist yet at attribution time.
     """
-    side = FillSide(side)
-    qty, price, fee = Decimal(qty), Decimal(price), Decimal(fee)
-    if qty <= 0:
+
+    strategy: str
+    market: str
+    symbol: str
+    side: FillSide
+    qty: Decimal
+    price: Decimal
+    fee: Decimal = Decimal(0)
+
+
+def apply_fill(session: Session, req: PositionFillRequest) -> Position:
+    """Attribute a fill to `req.strategy`'s position and update it.
+
+    `session` is the injected DB handle; `req` is the sole data input. Raises
+    `ValueError` on a non-positive quantity.
+    """
+    if req.qty <= 0:
         raise ValueError("fill quantity must be positive")
 
-    pos = get_or_create_position(session, strategy, market, symbol)
+    pos = get_or_create_position(session, req.strategy, req.market, req.symbol)
     signed = _signed_qty(pos)
-    delta = qty if side is FillSide.buy else -qty
+    delta = req.qty if req.side is FillSide.buy else -req.qty
     new_signed = signed + delta
-    pos.fees_paid += fee
+    pos.fees_paid += req.fee
 
     same_direction = signed == 0 or (signed > 0) == (delta > 0)
     if same_direction:
         # Opening or adding — volume-weighted average entry.
         prev_abs = abs(signed)
-        pos.entry_price = (prev_abs * pos.entry_price + qty * price) / (prev_abs + qty)
+        pos.entry_price = (prev_abs * pos.entry_price + req.qty * req.price) / (
+            prev_abs + req.qty
+        )
     else:
         # Reducing / closing / flipping — realize PnL on the closed portion.
-        closed = min(qty, abs(signed))
+        closed = min(req.qty, abs(signed))
         direction = Decimal(1) if signed > 0 else Decimal(-1)
-        pos.realized_pnl += (price - pos.entry_price) * closed * direction
+        pos.realized_pnl += (req.price - pos.entry_price) * closed * direction
         if abs(delta) > abs(signed):
-            pos.entry_price = price  # flipped past flat — new leg opens here
+            pos.entry_price = req.price  # flipped past flat — new leg opens here
         elif new_signed == 0:
             pos.entry_price = Decimal(0)
 
@@ -153,6 +163,31 @@ def list_allocations(session: Session) -> list[StrategyAllocation]:
     return list(session.exec(select(StrategyAllocation)).all())
 
 
+def get_max_loss(session: Session, strategy: str) -> Decimal:
+    """The strategy's loss cap — `0` (the default) means no cap."""
+    row = session.exec(
+        select(StrategyAllocation).where(StrategyAllocation.strategy == strategy)
+    ).first()
+    return row.max_loss if row else Decimal(0)
+
+
+def set_max_loss(
+    session: Session, strategy: str, amount: Decimal
+) -> StrategyAllocation:
+    """Set the strategy's loss cap (`0` disables it)."""
+    row = session.exec(
+        select(StrategyAllocation).where(StrategyAllocation.strategy == strategy)
+    ).first()
+    if row is None:
+        row = StrategyAllocation(strategy=strategy, max_loss=Decimal(amount))
+    else:
+        row.max_loss = Decimal(amount)
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return row
+
+
 def record_fill(
     session: Session,
     *,
@@ -174,13 +209,15 @@ def record_fill(
     ).realized_pnl
     pos = apply_fill(
         session,
-        strategy=order.strategy,
-        market=order.market,
-        symbol=order.symbol,
-        side=order.side,
-        qty=qty,
-        price=price,
-        fee=fee,
+        PositionFillRequest(
+            strategy=order.strategy,
+            market=order.market,
+            symbol=order.symbol,
+            side=order.side,
+            qty=qty,
+            price=price,
+            fee=fee,
+        ),
     )
     realized = pos.realized_pnl - realized_before
     trade = Trade(

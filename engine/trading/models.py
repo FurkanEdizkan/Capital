@@ -33,6 +33,9 @@ class StrategyAllocation(SQLModel, table=True):
     `allocated` is the quote-currency budget the engine caps the strategy's
     exposure to; `enabled` gates whether the engine ticks it for new entries
     (a disabled strategy keeps its open positions — see trading/lifecycle.py).
+    `max_loss` caps the strategy's total loss: when its net PnL falls to
+    `-max_loss` the engine force-closes its positions and disables it
+    (`0` — the default — disables the cap, matching the RiskManager idiom).
     """
 
     __tablename__ = "strategy_allocation"
@@ -41,6 +44,7 @@ class StrategyAllocation(SQLModel, table=True):
     strategy: str = Field(unique=True, index=True, max_length=64)
     allocated: Decimal = Field(default=Decimal(0), **_AMT)
     enabled: bool = Field(default=True)
+    max_loss: Decimal = Field(default=Decimal(0), **_AMT)
 
 
 class Position(SQLModel, table=True):
@@ -59,7 +63,7 @@ class Position(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     strategy: str = Field(index=True, max_length=64)
     market: str = Field(max_length=8)
-    symbol: str = Field(index=True, max_length=24)
+    symbol: str = Field(index=True, max_length=80)
     side: str = Field(default=PositionSide.flat.value, max_length=8)
     qty: Decimal = Field(default=Decimal(0), **_AMT)
     entry_price: Decimal = Field(default=Decimal(0), **_AMT)
@@ -81,7 +85,7 @@ class Trade(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     strategy: str = Field(index=True, max_length=64)
     market: str = Field(max_length=8)
-    symbol: str = Field(index=True, max_length=24)
+    symbol: str = Field(index=True, max_length=80)
     side: str = Field(max_length=8)
     quantity: Decimal = Field(**_AMT)
     price: Decimal = Field(**_AMT)

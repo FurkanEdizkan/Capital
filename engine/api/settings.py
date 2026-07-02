@@ -12,6 +12,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from ai.council import (
+    get_council_members,
+    get_council_quorum,
+    set_council_members,
+    set_council_quorum,
+)
 from ai.usage import spend_since
 from appsettings.store import (
     AI_ACTION_MODES,
@@ -24,6 +30,16 @@ from appsettings.store import (
     get_ai_settings,
     get_ai_spend_cap,
     get_mode,
+    get_news_interval_hours,
+    get_polymarket_edge_threshold,
+    get_polymarket_min_confidence,
+    get_polymarket_refresh_hours,
+    get_polymarket_research_hours,
+    get_polymarket_screen_top,
+    get_polymarket_stake,
+    get_research_interval_hours,
+    get_research_symbols,
+    get_research_writer,
     llm_provider_configured,
     set_ai_action_mode,
     set_ai_settings,
@@ -31,6 +47,16 @@ from appsettings.store import (
     set_binance_keys,
     set_llm_credentials,
     set_mode,
+    set_news_interval_hours,
+    set_polymarket_edge_threshold,
+    set_polymarket_min_confidence,
+    set_polymarket_refresh_hours,
+    set_polymarket_research_hours,
+    set_polymarket_screen_top,
+    set_polymarket_stake,
+    set_research_interval_hours,
+    set_research_symbols,
+    set_research_writer,
     set_venue_credentials,
     venue_credentials_configured,
 )
@@ -67,6 +93,25 @@ class SettingsRead(BaseModel):
     ai_action_mode: str
     # Per-LLM-provider: whether it is usable (Ollama always; others need a key).
     llm_providers_configured: dict[str, bool]
+    # Research reports: watched symbols, cycle interval and the writer LLM.
+    research_symbols: list[str]
+    research_interval_hours: int
+    research_writer_provider: str
+    research_writer_model: str
+    # News refresh interval in hours; null keeps the default daily schedule.
+    news_interval_hours: int | None
+    # AI council: the models that vote on each report, and the quorum a
+    # verdict must reach. An empty member list disables the council.
+    council_members: list[dict[str, str]]
+    council_quorum: Decimal
+    # Polymarket: catalogue refresh + AI screening cadence, and the edge /
+    # confidence bar a screener suggestion must clear.
+    polymarket_refresh_hours: int
+    polymarket_research_hours: int
+    polymarket_edge_threshold: Decimal
+    polymarket_min_confidence: Decimal
+    polymarket_screen_top: int
+    polymarket_stake: Decimal
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -108,8 +153,43 @@ class AiActionModeUpdate(BaseModel):
     mode: str = Field(description="notify | auto")
 
 
+class CouncilMember(BaseModel):
+    provider: str = Field(min_length=1, max_length=32)
+    model: str = Field(default="", max_length=64)
+
+
+class CouncilSettingsUpdate(BaseModel):
+    """Council configuration — an empty member list disables the council."""
+
+    members: list[CouncilMember] = Field(max_length=8)
+    quorum: Decimal = Field(default=Decimal("0.5"), gt=0, le=1)
+
+
+class ResearchSettingsUpdate(BaseModel):
+    """Research configuration — watched symbols, interval and writer LLM."""
+
+    symbols: list[str] = Field(min_length=1, max_length=20)
+    interval_hours: int = Field(default=12, ge=1, le=168)
+    writer_provider: str = Field(min_length=1, max_length=32)
+    writer_model: str = Field(default="", max_length=64)
+    # None keeps the default daily news schedule.
+    news_interval_hours: int | None = Field(default=None, ge=1, le=48)
+
+
+class PolymarketSettingsUpdate(BaseModel):
+    """Polymarket configuration — discovery/screening cadence and bars."""
+
+    refresh_hours: int = Field(default=6, ge=1, le=48)
+    research_hours: int = Field(default=6, ge=1, le=168)
+    edge_threshold: Decimal = Field(default=Decimal("0.05"), ge=0, le=1)
+    min_confidence: Decimal = Field(default=Decimal("0.6"), ge=0, le=1)
+    screen_top: int = Field(default=10, ge=0, le=50)
+    stake: Decimal = Field(default=Decimal("100"), gt=0)
+
+
 def _read(session: SessionDep) -> SettingsRead:
     ai = get_ai_settings(session)
+    writer = get_research_writer(session)
     return SettingsRead(
         mode=get_mode(session),
         binance_keys_configured=binance_keys_configured(session),
@@ -127,6 +207,19 @@ def _read(session: SessionDep) -> SettingsRead:
         llm_providers_configured={
             p: llm_provider_configured(session, p) for p in LLM_PROVIDERS
         },
+        research_symbols=get_research_symbols(session),
+        research_interval_hours=get_research_interval_hours(session),
+        research_writer_provider=writer["provider"],
+        research_writer_model=writer["model"],
+        news_interval_hours=get_news_interval_hours(session),
+        council_members=get_council_members(session),
+        council_quorum=get_council_quorum(session),
+        polymarket_refresh_hours=get_polymarket_refresh_hours(session),
+        polymarket_research_hours=get_polymarket_research_hours(session),
+        polymarket_edge_threshold=get_polymarket_edge_threshold(session),
+        polymarket_min_confidence=get_polymarket_min_confidence(session),
+        polymarket_screen_top=get_polymarket_screen_top(session),
+        polymarket_stake=get_polymarket_stake(session),
     )
 
 
@@ -279,6 +372,101 @@ def update_ai_settings(
         actor=admin.username,
         action="settings.ai",
         detail={"provider": body.provider, "model": body.model},
+    )
+    return _read(session)
+
+
+@router.put("/research", response_model=SettingsRead)
+def update_research_settings(
+    body: ResearchSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure research reports and the news refresh interval.
+
+    Scheduler-interval changes take effect on the next engine restart.
+    """
+    if body.writer_provider not in LLM_PROVIDERS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"writer_provider must be one of {list(LLM_PROVIDERS)}",
+        )
+    symbols = [s.strip().upper() for s in body.symbols if s.strip()]
+    if not symbols:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "at least one symbol is required"
+        )
+    set_research_symbols(session, symbols)
+    set_research_interval_hours(session, body.interval_hours)
+    set_research_writer(
+        session, provider=body.writer_provider, model=body.writer_model
+    )
+    set_news_interval_hours(session, body.news_interval_hours)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.research",
+        detail={
+            "symbols": symbols,
+            "interval_hours": body.interval_hours,
+            "writer": f"{body.writer_provider}:{body.writer_model}",
+        },
+    )
+    return _read(session)
+
+
+@router.put("/polymarket", response_model=SettingsRead)
+def update_polymarket_settings(
+    body: PolymarketSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure Polymarket discovery and AI bet screening.
+
+    Scheduler-interval changes take effect on the next engine restart.
+    """
+    set_polymarket_refresh_hours(session, body.refresh_hours)
+    set_polymarket_research_hours(session, body.research_hours)
+    set_polymarket_edge_threshold(session, body.edge_threshold)
+    set_polymarket_min_confidence(session, body.min_confidence)
+    set_polymarket_screen_top(session, body.screen_top)
+    set_polymarket_stake(session, body.stake)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.polymarket",
+        detail={
+            "refresh_hours": body.refresh_hours,
+            "research_hours": body.research_hours,
+            "edge_threshold": str(body.edge_threshold),
+            "min_confidence": str(body.min_confidence),
+            "screen_top": body.screen_top,
+            "stake": str(body.stake),
+        },
+    )
+    return _read(session)
+
+
+@router.put("/council", response_model=SettingsRead)
+def update_council_settings(
+    body: CouncilSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Configure the AI council members and quorum."""
+    for member in body.members:
+        if member.provider not in LLM_PROVIDERS:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"council provider must be one of {list(LLM_PROVIDERS)}",
+            )
+    set_council_members(
+        session,
+        [{"provider": m.provider, "model": m.model} for m in body.members],
+    )
+    set_council_quorum(session, body.quorum)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.council",
+        detail={
+            "members": [f"{m.provider}:{m.model}" for m in body.members],
+            "quorum": str(body.quorum),
+        },
     )
     return _read(session)
 

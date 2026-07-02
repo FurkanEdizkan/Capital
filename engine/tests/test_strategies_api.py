@@ -18,7 +18,7 @@ from strategies.base import BaseStrategy
 from strategies.ma_cross import MACrossStrategy
 from tests.conftest import ADMIN_PASSWORD, login
 from trading.lifecycle import is_enabled
-from trading.portfolio import get_allocation, set_allocation
+from trading.portfolio import get_allocation, get_max_loss, set_allocation
 
 STRAT = "MA Cross BTC"
 
@@ -50,6 +50,9 @@ class FakeEngine:
     def flatten(self, name: str) -> int:
         self.flatten_calls.append(name)
         return 0
+
+    def replace_strategies(self, strategies: list[BaseStrategy]) -> None:
+        self._strategies = list(strategies)
 
 
 @pytest.fixture
@@ -178,3 +181,29 @@ def test_ai_model_rejects_unknown_provider(strat_client: TestClient) -> None:
         headers=_auth(strat_client),
     )
     assert resp.status_code == 400
+
+
+def test_update_allocation_with_max_loss(
+    strat_client: TestClient, session: Session
+) -> None:
+    resp = strat_client.patch(
+        f"/api/strategies/{STRAT}/allocation",
+        json={"allocated": "8000", "max_loss": "250"},
+        headers=_auth(strat_client),
+    )
+    assert resp.status_code == 200
+    assert Decimal(resp.json()["max_loss"]) == Decimal("250")
+    assert get_max_loss(session, STRAT) == Decimal("250")
+    # Omitting max_loss leaves the stored cap unchanged.
+    resp = strat_client.patch(
+        f"/api/strategies/{STRAT}/allocation",
+        json={"allocated": "9000"},
+        headers=_auth(strat_client),
+    )
+    assert Decimal(resp.json()["max_loss"]) == Decimal("250")
+    bad = strat_client.patch(
+        f"/api/strategies/{STRAT}/allocation",
+        json={"allocated": "1", "max_loss": "-5"},
+        headers=_auth(strat_client),
+    )
+    assert bad.status_code == 422

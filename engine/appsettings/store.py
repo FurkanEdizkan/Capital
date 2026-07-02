@@ -5,11 +5,12 @@ operator changes at runtime through the Settings page, persisted in the DB.
 
 Venue credentials are stored per-venue, one encrypted row per field, keyed
 `venue:{venue}:{field}` — so each venue declares its own credential shape
-(Binance/Alpaca: api_key+api_secret; Polymarket: wallet key+address).
+(Binance: api_key+api_secret).
 """
 
+import json
 from collections.abc import Iterable
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 
 from sqlmodel import Session, select
@@ -289,3 +290,180 @@ def get_strategy_action_mode(session: Session, strategy: str) -> str:
 def set_strategy_action_mode(session: Session, strategy: str, mode: str) -> None:
     """Pin an AI strategy to a specific action mode."""
     set_setting(session, f"ai:{strategy}:action_mode", _normalise_mode(mode))
+
+
+# -- research reports -----------------------------------------------------------
+# Scheduled research reports: which symbols are watched, how often a report is
+# written, and which LLM writes the narrative sections (falls back to the
+# global AI setting when unset).
+
+_RESEARCH_SYMBOLS = "research_symbols"
+_RESEARCH_INTERVAL = "research_interval_hours"
+_NEWS_INTERVAL = "news_interval_hours"
+
+#: Symbols researched when the operator has not configured a list.
+DEFAULT_RESEARCH_SYMBOLS: tuple[str, ...] = ("BTCUSDT", "ETHUSDT")
+
+
+def get_research_symbols(session: Session) -> list[str]:
+    """The watched symbols a research cycle reports on."""
+    raw = get_setting(session, _RESEARCH_SYMBOLS)
+    if not raw:
+        return list(DEFAULT_RESEARCH_SYMBOLS)
+    try:
+        items = json.loads(raw)
+        symbols = [str(s).upper() for s in items if str(s).strip()]
+        return symbols or list(DEFAULT_RESEARCH_SYMBOLS)
+    except (json.JSONDecodeError, TypeError):
+        return list(DEFAULT_RESEARCH_SYMBOLS)
+
+
+def set_research_symbols(session: Session, symbols: list[str]) -> None:
+    """Set the watched research symbols."""
+    set_setting(session, _RESEARCH_SYMBOLS, json.dumps([s.upper() for s in symbols]))
+
+
+def get_research_interval_hours(session: Session) -> int:
+    """Hours between scheduled research cycles (default 12, minimum 1)."""
+    raw = get_setting(session, _RESEARCH_INTERVAL)
+    try:
+        return max(1, int(raw)) if raw else 12
+    except ValueError:
+        return 12
+
+
+def set_research_interval_hours(session: Session, hours: int) -> None:
+    """Set the research cycle interval in hours."""
+    set_setting(session, _RESEARCH_INTERVAL, str(max(1, hours)))
+
+
+def get_research_writer(session: Session) -> dict[str, str]:
+    """The report-writer LLM `{provider, model}` — defaults to the AI setting."""
+    ai = get_ai_settings(session)
+    return {
+        "provider": get_setting(session, "research:writer:provider") or ai["provider"],
+        "model": get_setting(session, "research:writer:model") or ai["model"],
+    }
+
+
+def set_research_writer(session: Session, *, provider: str, model: str) -> None:
+    """Pin the report writer to a specific provider + model."""
+    set_setting(session, "research:writer:provider", provider)
+    set_setting(session, "research:writer:model", model)
+
+
+def get_news_interval_hours(session: Session) -> int | None:
+    """Hours between news refreshes — None keeps the default daily schedule."""
+    raw = get_setting(session, _NEWS_INTERVAL)
+    try:
+        return max(1, int(raw)) if raw else None
+    except ValueError:
+        return None
+
+
+def set_news_interval_hours(session: Session, hours: int | None) -> None:
+    """Set the news refresh interval (None/0 restores the daily schedule)."""
+    set_setting(session, _NEWS_INTERVAL, str(hours) if hours else "")
+
+
+# -- polymarket -------------------------------------------------------------------
+# Prediction-market discovery and AI bet analysis: how often the market
+# catalogue refreshes, how often the screener analyses bets, and the edge /
+# confidence bar a suggestion must clear. Deliberately slow cadences —
+# prediction markets move on events and news, not ticks.
+
+_POLYMARKET_REFRESH = "polymarket_refresh_hours"
+_POLYMARKET_RESEARCH = "polymarket_research_hours"
+_POLYMARKET_EDGE = "polymarket_edge_threshold"
+_POLYMARKET_CONFIDENCE = "polymarket_min_confidence"
+_POLYMARKET_SCREEN_TOP = "polymarket_screen_top"
+_POLYMARKET_STAKE = "polymarket_stake"
+
+
+def _int_setting(session: Session, key: str, default: int, *, minimum: int = 0) -> int:
+    raw = get_setting(session, key)
+    try:
+        return max(minimum, int(raw)) if raw else default
+    except ValueError:
+        return default
+
+
+def _decimal_setting(session: Session, key: str, default: Decimal) -> Decimal:
+    raw = get_setting(session, key)
+    try:
+        return Decimal(raw) if raw else default
+    except InvalidOperation:
+        return default
+
+
+def get_polymarket_refresh_hours(session: Session) -> int:
+    """Hours between market-catalogue refreshes (default 6, minimum 1)."""
+    return _int_setting(session, _POLYMARKET_REFRESH, 6, minimum=1)
+
+
+def set_polymarket_refresh_hours(session: Session, hours: int) -> None:
+    set_setting(session, _POLYMARKET_REFRESH, str(max(1, hours)))
+
+
+def get_polymarket_research_hours(session: Session) -> int:
+    """Hours between AI bet-screening cycles (default 6, minimum 1)."""
+    return _int_setting(session, _POLYMARKET_RESEARCH, 6, minimum=1)
+
+
+def set_polymarket_research_hours(session: Session, hours: int) -> None:
+    set_setting(session, _POLYMARKET_RESEARCH, str(max(1, hours)))
+
+
+def get_polymarket_edge_threshold(session: Session) -> Decimal:
+    """Minimum |estimated probability − market price| to suggest a bet."""
+    return _decimal_setting(session, _POLYMARKET_EDGE, Decimal("0.05"))
+
+
+def set_polymarket_edge_threshold(session: Session, threshold: Decimal) -> None:
+    set_setting(session, _POLYMARKET_EDGE, str(threshold))
+
+
+def get_polymarket_min_confidence(session: Session) -> Decimal:
+    """Minimum model confidence for a suggestion (default 0.6)."""
+    return _decimal_setting(session, _POLYMARKET_CONFIDENCE, Decimal("0.6"))
+
+
+def set_polymarket_min_confidence(session: Session, confidence: Decimal) -> None:
+    set_setting(session, _POLYMARKET_CONFIDENCE, str(confidence))
+
+
+def get_polymarket_screen_top(session: Session) -> int:
+    """How many top-volume markets the screener analyses besides the watchlist."""
+    return _int_setting(session, _POLYMARKET_SCREEN_TOP, 10)
+
+
+def set_polymarket_screen_top(session: Session, count: int) -> None:
+    set_setting(session, _POLYMARKET_SCREEN_TOP, str(max(0, count)))
+
+
+def get_polymarket_stake(session: Session) -> Decimal:
+    """Suggested stake per screener signal, in USDC (default 100)."""
+    return _decimal_setting(session, _POLYMARKET_STAKE, Decimal("100"))
+
+
+def set_polymarket_stake(session: Session, stake: Decimal) -> None:
+    set_setting(session, _POLYMARKET_STAKE, str(stake))
+
+
+# -- feed latency ---------------------------------------------------------------
+
+_LATENCY_WARN_MS = "latency_warn_ms"
+
+
+def get_latency_warn_ms(session: Session) -> int:
+    """Feed latency above this (ms) marks the feed degraded (default 2000)."""
+    raw = get_setting(session, _LATENCY_WARN_MS)
+    try:
+        return max(100, int(raw)) if raw else 2000
+    except ValueError:
+        return 2000
+
+
+def set_latency_warn_ms(session: Session, warn_ms: int) -> None:
+    """Set the degraded-feed warning threshold in milliseconds."""
+    set_setting(session, _LATENCY_WARN_MS, str(max(100, warn_ms)))

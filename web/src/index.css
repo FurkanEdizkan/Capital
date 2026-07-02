@@ -113,6 +113,14 @@ a {
   outline-offset: 1px;
 }
 
+/* For filled buttons (primary green / danger red) a green ring vanishes into
+ * the fill — use a light ring with a larger offset so focus stays visible on
+ * the most consequential actions. */
+.focus-ring-invert:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
 /* Subtle grid background for empty regions */
 .grid-bg {
   background-image:
@@ -165,4 +173,41 @@ a {
 }
 .pulse-red {
   animation: pulseRed 1.6s infinite;
+}
+
+/* Loading skeleton — a subtle tonal shimmer while first data is in flight.
+ * Animates background-position only (never layout). */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--card-2) 25%,
+    var(--elev) 37%,
+    var(--card-2) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduced motion: freeze the ambient animations to a static state. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .pulse-dot,
+  .pulse-red {
+    animation: none;
+  }
+  .caret {
+    animation: none;
+    opacity: 1;
+  }
 }

@@ -23,8 +23,12 @@ import {
 import { fmt } from "../lib/format";
 import {
   closeStrategy,
+  createStrategy,
+  deleteStrategy,
   fetchStrategies,
+  fetchStrategyTypes,
   type Strategy,
+  type StrategyType,
   updateAiModel,
   updateAllocation,
   updateEnabled,
@@ -46,12 +50,25 @@ export function Strategies() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Strategy | null>(null);
   const [allocDraft, setAllocDraft] = useState("");
+  const [maxLossDraft, setMaxLossDraft] = useState("");
   const [aiEditing, setAiEditing] = useState<Strategy | null>(null);
   const [aiProviderDraft, setAiProviderDraft] = useState("claude");
   const [aiModelDraft, setAiModelDraft] = useState("");
   const [closing, setClosing] = useState<Strategy | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const [types, setTypes] = useState<StrategyType[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [newType, setNewType] = useState("ma_cross");
+  const [newName, setNewName] = useState("");
+  const [newSymbol, setNewSymbol] = useState("");
+  const [newVenue, setNewVenue] = useState("binance");
+  const [newTimeframe, setNewTimeframe] = useState("1h");
+  const [newParams, setNewParams] = useState<Record<string, string>>({});
+  const [newAllocated, setNewAllocated] = useState("10000");
+  const [newMaxLoss, setNewMaxLoss] = useState("");
+  const [deleting, setDeleting] = useState<Strategy | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -71,9 +88,57 @@ export function Strategies() {
 
   useEffect(() => {
     void load();
+    fetchStrategyTypes().then(setTypes).catch(() => setTypes([]));
     const id = setInterval(() => void load(), REFRESH_MS);
     return () => clearInterval(id);
   }, [load]);
+
+  const selectedType = types.find((t) => t.key === newType);
+  // A type may be pinned to one venue (Prediction AI → polymarket); the
+  // operator picks otherwise.
+  const effectiveVenue = selectedType?.venue ?? newVenue;
+  const isPolymarket = effectiveVenue === "polymarket";
+
+  const openAdd = (preset?: Partial<{ type: string; symbol: string }>) => {
+    setNewType(preset?.type ?? "ma_cross");
+    setNewSymbol(preset?.symbol ?? "");
+    setNewName("");
+    setNewVenue("binance");
+    setNewTimeframe("1h");
+    setNewParams({});
+    setNewAllocated("10000");
+    setNewMaxLoss("");
+    setAdding(true);
+  };
+
+  const submitAdd = () => {
+    setAdding(false);
+    void act(async () => {
+      await createStrategy({
+        name: newName.trim() || `${selectedType?.label ?? newType} ${newSymbol}`,
+        type: newType,
+        symbol: newSymbol.trim(),
+        venue: effectiveVenue,
+        timeframe: newTimeframe,
+        params: Object.fromEntries(
+          Object.entries(newParams).filter(([, v]) => v.trim() !== ""),
+        ),
+        allocated: newAllocated || "10000",
+        max_loss: newMaxLoss || "0",
+      });
+      setNotice(`Strategy created on ${newSymbol.trim()}.`);
+    });
+  };
+
+  const confirmDelete = () => {
+    if (!deleting) return;
+    const strat = deleting;
+    setDeleting(null);
+    void act(async () => {
+      await deleteStrategy(strat.name);
+      setNotice(`Deleted ${strat.name}.`);
+    });
+  };
 
   const act = useCallback(
     async (fn: () => Promise<void>) => {
@@ -95,7 +160,7 @@ export function Strategies() {
     const strat = editing;
     setEditing(null);
     void act(async () => {
-      await updateAllocation(strat.name, allocDraft);
+      await updateAllocation(strat.name, allocDraft, maxLossDraft || "0");
       setNotice(`Updated allocation for ${strat.name}.`);
     });
   };
@@ -139,15 +204,34 @@ export function Strategies() {
         </div>
       ),
     },
-    { key: "symbol", label: "Symbol", render: (r) => <span className="num">{r.symbol}</span> },
+    {
+      key: "symbol",
+      label: "Symbol",
+      render: (r) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className="num" title={r.symbol}>
+            {/* Polymarket outcome-token ids are ~77 digits — truncate. */}
+            {r.symbol.length > 14 ? `${r.symbol.slice(0, 6)}…${r.symbol.slice(-4)}` : r.symbol}
+          </span>
+          {r.venue !== "binance" && <Badge tone="violet">{r.venue}</Badge>}
+        </div>
+      ),
+    },
     {
       key: "enabled",
       label: "Enabled",
       render: (r) => (
-        <Toggle
-          checked={r.enabled}
-          onChange={(v) => void act(async () => void (await updateEnabled(r.name, v)))}
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <Toggle
+            checked={r.enabled}
+            onChange={(v) => void act(async () => void (await updateEnabled(r.name, v)))}
+          />
+          {!r.enabled &&
+            Number(r.max_loss) > 0 &&
+            Number(r.net_pnl) <= -Number(r.max_loss) && (
+              <Badge tone="red">Loss cap hit</Badge>
+            )}
+        </div>
       ),
     },
     {
@@ -163,6 +247,9 @@ export function Strategies() {
             onClick={() => {
               setEditing(r);
               setAllocDraft(String(Number(r.allocated)));
+              setMaxLossDraft(
+                Number(r.max_loss) > 0 ? String(Number(r.max_loss)) : "",
+              );
             }}
           >
             Edit
@@ -224,14 +311,26 @@ export function Strategies() {
       label: "",
       align: "right",
       render: (r) => (
-        <Button
-          size="sm"
-          kind="outline"
-          disabled={r.open_positions === 0 || busy}
-          onClick={() => setClosing(r)}
-        >
-          Close
-        </Button>
+        <div style={{ display: "inline-flex", gap: 6 }}>
+          <Button
+            size="sm"
+            kind="outline"
+            disabled={r.open_positions === 0 || busy}
+            onClick={() => setClosing(r)}
+          >
+            Close
+          </Button>
+          {r.is_instance && (
+            <Button
+              size="sm"
+              kind="outline"
+              disabled={r.open_positions > 0 || busy}
+              onClick={() => setDeleting(r)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
@@ -300,7 +399,14 @@ export function Strategies() {
         <SectionHeader
           title="Strategies"
           subtitle="Set capital allocation, enable or disable, and close open positions."
-          right={<VenueBadge />}
+          right={
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <VenueBadge />
+              <Button size="sm" kind="primary" onClick={() => openAdd()}>
+                Add strategy
+              </Button>
+            </div>
+          }
         />
         {strategies.length === 0 ? (
           <EmptyState
@@ -370,6 +476,19 @@ export function Strategies() {
             onChange={(e) => setAllocDraft(e.target.value)}
             prefix="$"
             type="number"
+            full
+          />
+          <span style={{ fontSize: 12, color: "var(--text-2)" }}>
+            Max loss (optional). When the strategy's net PnL falls to this
+            loss, the engine closes its positions and disables it. Blank or 0
+            disables the cap.
+          </span>
+          <Input
+            value={maxLossDraft}
+            onChange={(e) => setMaxLossDraft(e.target.value)}
+            prefix="$"
+            type="number"
+            placeholder="0 (no cap)"
             full
           />
         </div>
@@ -445,6 +564,156 @@ export function Strategies() {
           latest price.
         </span>
       </Modal>
+
+      <Modal
+        open={adding}
+        onClose={() => setAdding(false)}
+        title="Add strategy"
+        footer={
+          <>
+            <Button kind="ghost" onClick={() => setAdding(false)}>
+              Cancel
+            </Button>
+            <Button
+              kind="primary"
+              onClick={submitAdd}
+              disabled={busy || !newSymbol.trim()}
+            >
+              Create
+            </Button>
+          </>
+        }
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <span style={{ fontSize: 12, color: "var(--text-2)" }}>
+            Apply any strategy type to any coin. The instance trades on its
+            own allocation, independent of the built-ins.
+          </span>
+          <select
+            value={newType}
+            onChange={(e) => {
+              setNewType(e.target.value);
+              setNewParams({});
+            }}
+            style={addSelectStyle}
+          >
+            {types.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={effectiveVenue}
+            onChange={(e) => setNewVenue(e.target.value)}
+            disabled={selectedType?.venue != null}
+            style={addSelectStyle}
+            title={
+              selectedType?.venue != null
+                ? `${selectedType.label} runs on ${selectedType.venue} only`
+                : "Trading venue for this instance"
+            }
+          >
+            <option value="binance">Binance</option>
+            <option value="polymarket">Polymarket</option>
+          </select>
+          <Input
+            full
+            placeholder={
+              isPolymarket
+                ? "Outcome token id (see the Polymarket page)"
+                : "Symbol (e.g. SOLUSDT)"
+            }
+            value={newSymbol}
+            onChange={(e) =>
+              // Polymarket token ids are case-sensitive — never uppercased.
+              setNewSymbol(isPolymarket ? e.target.value : e.target.value.toUpperCase())
+            }
+          />
+          <Input
+            full
+            placeholder={`Name (blank = "${selectedType?.label ?? ""} ${newSymbol || "…"}")`}
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <select
+            value={newTimeframe}
+            onChange={(e) => setNewTimeframe(e.target.value)}
+            style={addSelectStyle}
+          >
+            {(selectedType?.timeframes ?? ["1h"]).map((tf) => (
+              <option key={tf} value={tf}>
+                {tf}
+              </option>
+            ))}
+          </select>
+          {selectedType?.params.map((p) => (
+            <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--text-2)", minWidth: 140 }}>
+                {p.label || p.name}
+              </span>
+              <Input
+                full
+                type="number"
+                placeholder={`${p.default} (${p.min}–${p.max})`}
+                value={newParams[p.name] ?? ""}
+                onChange={(e) =>
+                  setNewParams((prev) => ({ ...prev, [p.name]: e.target.value }))
+                }
+              />
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: 8 }}>
+            <Input
+              full
+              type="number"
+              prefix="$"
+              placeholder="Allocation (default 10000)"
+              value={newAllocated}
+              onChange={(e) => setNewAllocated(e.target.value)}
+            />
+            <Input
+              full
+              type="number"
+              prefix="$"
+              placeholder="Max loss (0 = no cap)"
+              value={newMaxLoss}
+              onChange={(e) => setNewMaxLoss(e.target.value)}
+            />
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title="Delete strategy"
+        footer={
+          <>
+            <Button kind="ghost" onClick={() => setDeleting(null)}>
+              Cancel
+            </Button>
+            <Button kind="danger" onClick={confirmDelete} disabled={busy}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <span style={{ fontSize: 13 }}>
+          Delete <strong>{deleting?.name}</strong>? Its trade history is kept,
+          but the strategy stops trading and is removed from this list.
+        </span>
+      </Modal>
     </div>
   );
 }
+
+const addSelectStyle = {
+  height: 34,
+  padding: "0 10px",
+  background: "#18181B",
+  border: "1px solid #27272A",
+  borderRadius: 8,
+  color: "#E4E4E7",
+  fontSize: 12.5,
+} as const;

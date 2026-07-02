@@ -4,9 +4,13 @@ import type { components } from "./schema";
 
 export type NewsItem = components["schemas"]["NewsItem"];
 
-export async function fetchNews(symbol?: string, limit = 50): Promise<NewsItem[]> {
+export async function fetchNews(
+  symbol?: string,
+  category?: string,
+  limit = 50,
+): Promise<NewsItem[]> {
   const { data, error } = await api.GET("/api/news", {
-    params: { query: { symbol, limit } },
+    params: { query: { symbol, category, limit } },
   });
   if (error || !data) throw new Error("Failed to load news");
   return data;

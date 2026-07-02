@@ -33,6 +33,14 @@ export const NAV: NavItem[] = [
     subtitle: "Spot pairs & perpetuals",
   },
   {
+    id: "polymarket",
+    label: "Polymarket",
+    path: "/polymarket",
+    icon: I.Markets,
+    title: "Polymarket",
+    subtitle: "Prediction markets & AI bet analysis",
+  },
+  {
     id: "strategies",
     label: "Strategies",
     path: "/strategies",
@@ -50,6 +58,14 @@ export const NAV: NavItem[] = [
     subtitle: "Historical simulation",
   },
   {
+    id: "lab",
+    label: "Lab",
+    path: "/lab",
+    icon: I.Backtest,
+    title: "Strategy Lab",
+    subtitle: "Compare strategies & coins by gain and risk",
+  },
+  {
     id: "news",
     label: "News",
     path: "/news",
@@ -58,12 +74,28 @@ export const NAV: NavItem[] = [
     subtitle: "World & per-asset headlines",
   },
   {
+    id: "research",
+    label: "Research",
+    path: "/research",
+    icon: I.Research,
+    title: "Research",
+    subtitle: "Scheduled asset research reports",
+  },
+  {
     id: "connections",
     label: "Connections",
     path: "/connections",
     icon: I.Connections,
     title: "Connections",
     subtitle: "How assets relate",
+  },
+  {
+    id: "costs",
+    label: "Costs",
+    path: "/costs",
+    icon: I.Costs,
+    title: "Costs",
+    subtitle: "AI & paid-API spend, attributed",
   },
   {
     id: "history",

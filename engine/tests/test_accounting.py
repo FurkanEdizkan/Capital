@@ -13,7 +13,7 @@ from trading.accounting import (
     strategy_summary,
 )
 from trading.models import Trade
-from trading.portfolio import apply_fill, set_allocation
+from trading.portfolio import PositionFillRequest, apply_fill, set_allocation
 
 MARK = {"BTCUSDT": Decimal("110")}
 
@@ -22,12 +22,18 @@ def _scenario(session: Session) -> None:
     """alpha: long 0.5 BTC @ entry 100, +10 realized, 1.5 fees."""
     set_allocation(session, "alpha", Decimal("10000"))
     apply_fill(
-        session, strategy="alpha", market="spot", symbol="BTCUSDT",
-        side="buy", qty=Decimal("1"), price=Decimal("100"), fee=Decimal("1"),
+        session,
+        PositionFillRequest(
+            strategy="alpha", market="spot", symbol="BTCUSDT",
+            side="buy", qty=Decimal("1"), price=Decimal("100"), fee=Decimal("1"),
+        ),
     )
     apply_fill(
-        session, strategy="alpha", market="spot", symbol="BTCUSDT",
-        side="sell", qty=Decimal("0.5"), price=Decimal("120"), fee=Decimal("0.5"),
+        session,
+        PositionFillRequest(
+            strategy="alpha", market="spot", symbol="BTCUSDT",
+            side="sell", qty=Decimal("0.5"), price=Decimal("120"), fee=Decimal("0.5"),
+        ),
     )
 
 

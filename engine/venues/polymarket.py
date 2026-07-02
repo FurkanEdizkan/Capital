@@ -3,7 +3,7 @@
 Polymarket's CLOB exposes a public market-data API (midpoint, price history)
 and an authenticated order API. Reading data is open; placing an order needs
 a wallet-signed payload, so order placement is delegated to an injected
-signing client. There is no sandbox — see docs/venue-research.md.
+signing client. There is no sandbox — see docs/venues/research.md.
 
 A `symbol` here is a Polymarket outcome **token id** (an ERC-1155 token).
 Prices are probabilities in the range 0..1; collateral is USDC.
@@ -149,4 +149,75 @@ class PolymarketVenue(Venue):
             row["asset"]: Decimal(str(row["size"]))
             for row in rows
             if Decimal(str(row.get("size", "0"))) != 0
+        }
+
+
+class PolymarketOrderClient:
+    """Signs and submits CLOB market orders — the venue's `order_client` seam.
+
+    Wraps the official `py_clob_client.ClobClient`. The venue talks shares
+    (`size`); the CLOB's market BUY takes a USDC amount instead, so a buy is
+    converted at the current ask before submission. Responses are normalised
+    to the `{orderID, size, price, fee}` dict `PolymarketVenue` consumes.
+    """
+
+    def __init__(self, client: Any) -> None:
+        self._client = client
+
+    @classmethod
+    def from_credentials(
+        cls,
+        *,
+        private_key: str,
+        api_key: str,
+        api_secret: str,
+        passphrase: str,
+        wallet_address: str,
+    ) -> "PolymarketOrderClient":
+        """Build the signing client from Capital's stored credential fields.
+
+        `wallet_address` is the Polymarket proxy wallet that holds the funds
+        (the *funder*); orders are signed with `private_key` on its behalf.
+        """
+        from py_clob_client.client import ClobClient
+        from py_clob_client.clob_types import ApiCreds
+
+        client = ClobClient(
+            _CLOB_API,
+            key=private_key,
+            chain_id=137,  # Polygon mainnet — the only chain Polymarket runs on
+            creds=ApiCreds(api_key, api_secret, passphrase),
+            # Proxy-wallet signing when a funder is given, plain EOA otherwise.
+            signature_type=2 if wallet_address else 0,
+            funder=wallet_address or None,
+        )
+        return cls(client)
+
+    def place_market_order(
+        self, *, token_id: str, side: str, size: Decimal
+    ) -> dict[str, Any]:
+        from py_clob_client.clob_types import MarketOrderArgs
+        from py_clob_client.clob_types import OrderType as ClobOrderType
+
+        if side == "BUY":
+            ask = Decimal(str(self._client.get_price(token_id, side="BUY")["price"]))
+            amount = float(size * ask)  # market BUY is sized in USDC
+        else:
+            amount = float(size)  # market SELL is sized in shares
+        signed = self._client.create_market_order(
+            MarketOrderArgs(token_id=token_id, amount=amount, side=side)
+        )
+        resp = self._client.post_order(signed, ClobOrderType.FOK)
+        if not resp.get("success", False):
+            raise VenueError(f"CLOB rejected order: {resp.get('errorMsg', resp)}")
+        # For a BUY the maker amount is USDC paid and the taker amount is
+        # shares received; a SELL is the mirror image.
+        making = Decimal(str(resp.get("makingAmount") or "0"))
+        taking = Decimal(str(resp.get("takingAmount") or "0"))
+        shares, collateral = (taking, making) if side == "BUY" else (making, taking)
+        return {
+            "orderID": str(resp.get("orderID", "")),
+            "size": shares,
+            "price": collateral / shares if shares > 0 else Decimal("0"),
+            "fee": "0",
         }

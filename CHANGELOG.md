@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Polymarket section** — prediction markets alongside the Binance side:
+  - Restored `PolymarketVenue` (CLOB market data + wallet-signed live orders
+    via `py-clob-client`) with per-venue encrypted credentials
+    (`private_key`, `api_key`, `api_secret`, `passphrase`, `wallet_address`).
+  - **Per-strategy venue routing**: strategies (and AI signals) carry a
+    `venue`, so Binance and Polymarket strategies run side by side; Testnet
+    mode falls back to Sim for venues without a sandbox. Symbol columns
+    widened to 80 chars for outcome-token ids (migrations 0022–0023).
+  - **Market discovery**: scheduled Gamma-API refresh into a local catalogue
+    with a watchlist; new Polymarket page to browse, search and pin markets.
+  - **AI bet analysis**: the report-writer LLM estimates each market's true
+    probability from question-matched news headlines and market context; the
+    edge (estimate − price) is stored per analysis and shown on the page.
+  - **Suggestions & alerts**: a scheduled screener analyses the watchlist +
+    top-volume markets; analyses clearing the configurable edge/confidence
+    bars become pending AI signals (Telegram + dashboard) that execute
+    through the existing risk-gated confirmation path.
+  - **Prediction AI strategy**: a pickable, Polymarket-pinned strategy type
+    that trades one outcome token on the stored analyses with notify/auto
+    action modes, allocation, risk and loss-cap enforcement.
+  - **Resolution settlement**: watched/held markets are re-checked hourly;
+    on resolution, held tokens settle at 1/0 USDC into the ledger and the
+    operator is alerted.
+
 ### Changed
 
 - Adopted the [Dev-Template](https://github.com/FurkanEdizkan/Dev-Template)
@@ -17,6 +43,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sourced Claude skills (`conventional-commits`, `conventional-branches`,
   `modular-services`) from the [My-Skills](https://github.com/FurkanEdizkan/My-Skills)
   plugin marketplace instead of vendoring them locally.
+- Reorganized `docs/` by topic into `docs/operations/` and `docs/venues/`;
+  normalized naming to lowercase-kebab; trimmed `README.md` by moving manual
+  setup and the project-structure tree to a new `docs/development.md`; added
+  a topical `docs/README.md` index.
+- Consolidated three open engine refactors (#139, #140, #141) into a single
+  modular-services pass: typed `PositionFillRequest`, extracted
+  `manual_order` service, and extracted `strategy_view` projection.
+
+### Removed
+
+- **Platform reduced to Binance only.** Removed the `AlpacaVenue`,
+  `PolymarketVenue`, and `BinanceAlphaVenue` implementations and their
+  dedicated tests. The `Venue` ABC and registry/factory shape are preserved
+  so re-adding a venue later is one new implementation file plus a registry
+  entry. Multi-venue parametrize blocks in cross-cutting tests have been
+  trimmed to Binance.
 
 ## [0.2.0](https://github.com/FurkanEdizkan/Capital/compare/v0.1.0...v0.2.0) - 2026-05-22
 

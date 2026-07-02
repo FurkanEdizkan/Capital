@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T00:00:00Z",
+  "title": "Design System: Capital",
+  "extensions": {
+    "colorMeta": {
+      "bg": { "role": "neutral", "displayName": "Void", "canonical": "#08080a", "tonalRamp": ["#08080a", "#101012", "#141416", "#18181b", "#1c1c20", "#232328", "#2a2a2f", "#36363b"] },
+      "text": { "role": "neutral", "displayName": "Primary Ink", "canonical": "#f4f4f5", "tonalRamp": ["#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5", "#fafafa", "#ffffff"] },
+      "signal-green": { "role": "primary", "displayName": "Signal Green", "canonical": "#10b981", "tonalRamp": ["#052e22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"] },
+      "signal-red": { "role": "primary", "displayName": "Signal Red", "canonical": "#ef4444", "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"] }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Title", "purpose": "Section headers and panel titles." },
+      "body": { "displayName": "Body", "purpose": "Default UI text and prose (cap prose at 65-75ch)." },
+      "label": { "displayName": "Label", "purpose": "Uppercase badges and status tags; the only tracked/uppercase role." },
+      "mono": { "displayName": "Mono", "purpose": "Every number: prices, quantities, P&L, %, timestamps, IDs." }
+    },
+    "shadows": [
+      { "name": "terminal", "value": "0 1px 0 rgba(255,255,255,0.02) inset, 0 1px 2px rgba(0,0,0,0.4)", "purpose": "Only for true overlays (modal, drawer, popover). Never on resting cards." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "120ms ease", "purpose": "Button/tab/input state transitions (bg, border, color)." },
+      { "name": "state-toggle", "value": "140ms ease", "purpose": "Toggle track/knob transition." },
+      { "name": "pulse-dot", "value": "1.8s infinite", "purpose": "Live/healthy status pulse (green). Needs a reduced-motion fallback." },
+      { "name": "pulse-red", "value": "1.6s infinite", "purpose": "Alert/stale status pulse (red). Needs a reduced-motion fallback." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Primary action button — filled with the card-2 tone.",
+      "html": "<button class=\"ds-btn-default\">Run Backtest</button>",
+      "css": ".ds-btn-default { height: 32px; padding: 0 12px; font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--text); background: var(--card-2); border: 1px solid var(--border); border-radius: 6px; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-default:hover { background: #1f1f22; } .ds-btn-default:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-chrome secondary/toolbar action.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { height: 32px; padding: 0 12px; font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent; border: 1px solid transparent; border-radius: 6px; transition: background 120ms ease, color 120ms ease; } .ds-btn-ghost:hover { background: #1b1b1f; color: var(--text); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard field with transparent inner input on a card-2 shell.",
+      "html": "<div class=\"ds-input\"><input placeholder=\"Symbol\" /></div>",
+      "css": ".ds-input { display: inline-flex; align-items: center; height: 32px; padding: 0 10px; background: var(--card-2); border: 1px solid var(--border); border-radius: 6px; } .ds-input input { background: transparent; border: none; outline: none; color: var(--text); font-family: var(--sans); font-size: 13px; } .ds-input input::placeholder { color: var(--text-3); } .ds-input:focus-within { outline: 2px solid var(--green); outline-offset: 1px; }"
+    },
+    {
+      "name": "Green Badge",
+      "kind": "chip",
+      "refersTo": "badge-green",
+      "description": "Buy/profit/up signal tag — hue plus explicit text, never color alone.",
+      "html": "<span class=\"ds-badge-green\">BUY</span>",
+      "css": ".ds-badge-green { display: inline-flex; align-items: center; font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: #34d399; background: var(--green-bg); border: 1px solid rgba(16,185,129,0.30); border-radius: 4px; padding: 2px 6px; }"
+    },
+    {
+      "name": "Red Badge",
+      "kind": "chip",
+      "refersTo": "badge-red",
+      "description": "Sell/loss/down signal tag — hue plus explicit text, never color alone.",
+      "html": "<span class=\"ds-badge-red\">SELL</span>",
+      "css": ".ds-badge-red { display: inline-flex; align-items: center; font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: #f87171; background: var(--red-bg); border: 1px solid rgba(239,68,68,0.30); border-radius: 4px; padding: 2px 6px; }"
+    },
+    {
+      "name": "Toggle",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Pill toggle — off is neutral, on is Signal Green.",
+      "html": "<button class=\"ds-toggle\" aria-pressed=\"true\"><span class=\"ds-toggle-knob\"></span></button>",
+      "css": ".ds-toggle { position: relative; width: 36px; height: 20px; background: #27272a; border: none; border-radius: 999px; transition: background 140ms ease; } .ds-toggle[aria-pressed=\"true\"] { background: #10b981; } .ds-toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 140ms ease; } .ds-toggle[aria-pressed=\"true\"] .ds-toggle-knob { transform: translateX(16px); }"
+    },
+    {
+      "name": "Money (P&L)",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Signed monetary value — mono tabular, colored by sign, with a leading sign so it reads without color.",
+      "html": "<span class=\"ds-money ds-pos\">+$1,240.50</span>",
+      "css": ".ds-money { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; font-size: 13px; } .ds-money.ds-pos { color: #34d399; } .ds-money.ds-neg { color: #f87171; }"
+    },
+    {
+      "name": "Keycap",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Monospace keyboard shortcut hint.",
+      "html": "<kbd class=\"ds-kbd\">⌘K</kbd>",
+      "css": ".ds-kbd { font-family: var(--mono); font-size: 11px; color: var(--text-2); background: var(--card-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Trading Terminal",
+    "overview": "Capital is an instrument, not an app. It borrows the lineage of the professional trading terminal, where the screen is a precision tool a professional relies on with real capital at stake. The interface is near-black, monochrome, and dense; it recedes so that numbers, positions, and charts are the loudest thing on screen. Color is almost absent by design: the only hues are one green and one red, meaning direction and outcome. Everything else is a calibrated grayscale. The personality is precise, calm, and trustworthy: it never celebrates, gamifies, or decorates. Motion is fast and functional, never choreographed.",
+    "keyCharacteristics": [
+      "Near-black tonal surfaces, monochrome grayscale ramp, flat by default.",
+      "Signal-only color: one green, one red, meaning direction/outcome — nothing else.",
+      "Inter for UI, JetBrains Mono with tabular figures for every number.",
+      "Compact 13px base; small radii (4-8px); 1px borders instead of shadows.",
+      "Fast, state-only motion; no page-load choreography."
+    ],
+    "rules": [
+      { "name": "The Two-Signal Rule", "body": "The only chromatic colors in the entire UI are Signal Green and Signal Red. Amber, blue, and violet were deliberately neutralized to grays and must stay that way. If a new element needs a color, it doesn't — it needs a place on the grayscale ramp.", "section": "colors" },
+      { "name": "The Signal-Not-Decoration Rule", "body": "Green and red never appear for emphasis, branding, or flavor. They appear only where they carry directional/outcome meaning, and always alongside a non-color cue.", "section": "colors" },
+      { "name": "The Tabular Numbers Rule", "body": "Every figure a user reads or compares is set in JetBrains Mono with font-variant-numeric: tabular-nums. Financial data in a proportional font is forbidden.", "section": "typography" },
+      { "name": "The One-Family Rule", "body": "Inter does headings, labels, and body. No display face, no second sans. Contrast comes from weight and the mono axis, not from a new typeface.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat and matte at rest. If you reach for a shadow to separate two resting elements, use a tonal step and a 1px border instead. Shadow appears only when a layer truly overlays the page.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep color to the Two-Signal Rule: one green, one red, meaning direction/outcome only. Everything else lives on the grayscale ramp.",
+      "Do pair every green/red signal with a non-color cue — a +/- sign, arrow, BUY/SELL text, or position — so P&L and side read correctly under red-green color-vision deficiency and in grayscale. This is a hard accessibility requirement.",
+      "Do set every number in JetBrains Mono with tabular figures so columns align.",
+      "Do convey depth with the tonal ramp + 1px borders; reserve the terminal shadow for true overlays.",
+      "Do keep motion fast (120-150ms) and tied to state; provide a prefers-reduced-motion alternative for the pulse dots and caret blink.",
+      "Do hit WCAG AA contrast; keep readable body text at text-2 or brighter, never text-3/text-4."
+    ],
+    "donts": [
+      "Don't ship gamified retail-crypto patterns: no confetti, gradient hero numbers, celebratory animations, or dopamine streaks.",
+      "Don't fall into the generic SaaS dashboard: no card-grid-everything, no blue primary accent, no hero-metric template blocks.",
+      "Don't drift toward consumer fintech softness: no pastels, mascots, illustrations, or playful onboarding wizards.",
+      "Don't become the overloaded legacy terminal: density is welcome, but never at the cost of hierarchy and breathing room.",
+      "Don't introduce a third hue, gradient text, or background-clip: text. If it needs a color, it needs a grayscale value.",
+      "Don't use a display font or a second typeface in UI, labels, or data — Inter + mono only.",
+      "Don't add decorative shadows or glassmorphism to resting surfaces."
+    ]
+  }
+}

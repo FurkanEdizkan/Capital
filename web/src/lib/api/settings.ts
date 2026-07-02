@@ -80,3 +80,53 @@ export async function updateLlmCredentials(
   }
   return data;
 }
+
+export async function updateResearchSettings(body: {
+  symbols: string[];
+  interval_hours: number;
+  writer_provider: string;
+  writer_model: string;
+  news_interval_hours: number | null;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/research", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save research settings"));
+  }
+  return data;
+}
+
+export async function updatePolymarketSettings(body: {
+  refresh_hours: number;
+  research_hours: number;
+  edge_threshold: string;
+  min_confidence: string;
+  screen_top: number;
+  stake: string;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/polymarket", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save Polymarket settings"));
+  }
+  return data;
+}
+
+export async function updateCouncilSettings(body: {
+  members: { provider: string; model: string }[];
+  quorum: string;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/council", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to save council settings"));
+  }
+  return data;
+}
+
+export type LocalAI = components["schemas"]["LocalAIRead"];
+
+export async function fetchLocalAI(refresh = false): Promise<LocalAI> {
+  const { data, error } = await api.GET("/api/ai/local", {
+    params: { query: { refresh } },
+  });
+  if (error || !data) throw new Error("Failed to probe local models");
+  return data;
+}

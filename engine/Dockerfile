@@ -12,6 +12,11 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
+# llmfit (optional) — scores which local LLMs fit the host hardware, shown on
+# Settings → Local models. Best-effort: the image builds fine without it.
+RUN uv tool install llmfit && ln -s /root/.local/bin/llmfit /usr/local/bin/llmfit \
+    || echo "llmfit install skipped"
+
 # App source.
 COPY . .
 

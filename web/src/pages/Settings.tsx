@@ -20,14 +20,19 @@ import {
 } from "../components/ui";
 import { GuideButton } from "../components/GuideModal";
 import {
+  fetchLocalAI,
   fetchSettings,
+  type LocalAI,
   type Settings as SettingsData,
   type TradingMode,
   updateAiActionMode,
   updateAiSettings,
   updateAiSpendCap,
+  updateCouncilSettings,
+  updatePolymarketSettings,
   updateLlmCredentials,
   updateMode,
+  updateResearchSettings,
   updateVenueCredentials,
 } from "../lib/api/settings";
 import {
@@ -92,6 +97,28 @@ export function Settings() {
   const [aiBaseUrl, setAiBaseUrl] = useState("");
   const [aiKey, setAiKey] = useState("");
   const [aiSpendCap, setAiSpendCap] = useState("");
+
+  const [researchSymbols, setResearchSymbols] = useState("");
+  const [researchInterval, setResearchInterval] = useState("12");
+  const [writerProvider, setWriterProvider] = useState("claude");
+  const [writerModel, setWriterModel] = useState("");
+  const [newsInterval, setNewsInterval] = useState("");
+
+  const [councilMembers, setCouncilMembers] = useState<
+    { provider: string; model: string }[]
+  >([]);
+  const [councilQuorum, setCouncilQuorum] = useState("0.5");
+
+  // Polymarket — discovery/screening cadence and the suggestion bars.
+  const [pmRefreshHours, setPmRefreshHours] = useState("6");
+  const [pmResearchHours, setPmResearchHours] = useState("6");
+  const [pmEdge, setPmEdge] = useState("0.05");
+  const [pmConfidence, setPmConfidence] = useState("0.6");
+  const [pmScreenTop, setPmScreenTop] = useState("10");
+  const [pmStake, setPmStake] = useState("100");
+
+  const [localAi, setLocalAi] = useState<LocalAI | null>(null);
+  const [localBusy, setLocalBusy] = useState(false);
   // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
   const [llmInputs, setLlmInputs] = useState<
     Record<string, { api_key: string; base_url: string }>
@@ -108,6 +135,24 @@ export function Settings() {
     setAiModel(s.ai_model);
     setAiBaseUrl(s.ai_base_url);
     setAiSpendCap(String(s.ai_spend_cap));
+    setResearchSymbols(s.research_symbols.join(", "));
+    setResearchInterval(String(s.research_interval_hours));
+    setWriterProvider(s.research_writer_provider);
+    setWriterModel(s.research_writer_model);
+    setNewsInterval(s.news_interval_hours ? String(s.news_interval_hours) : "");
+    setCouncilMembers(
+      s.council_members.map((m) => ({
+        provider: m.provider ?? "claude",
+        model: m.model ?? "",
+      })),
+    );
+    setCouncilQuorum(String(s.council_quorum));
+    setPmRefreshHours(String(s.polymarket_refresh_hours));
+    setPmResearchHours(String(s.polymarket_research_hours));
+    setPmEdge(String(s.polymarket_edge_threshold));
+    setPmConfidence(String(s.polymarket_min_confidence));
+    setPmScreenTop(String(s.polymarket_screen_top));
+    setPmStake(String(s.polymarket_stake));
   }, []);
 
   const load = useCallback(async () => {
@@ -128,7 +173,19 @@ export function Settings() {
 
   useEffect(() => {
     void load();
+    fetchLocalAI().then(setLocalAi).catch(() => setLocalAi(null));
   }, [load]);
+
+  const reprobeLocal = async () => {
+    setLocalBusy(true);
+    try {
+      setLocalAi(await fetchLocalAI(true));
+    } catch {
+      setLocalAi(null);
+    } finally {
+      setLocalBusy(false);
+    }
+  };
 
   const run = useCallback(
     async (fn: () => Promise<void>) => {
@@ -190,6 +247,49 @@ export function Settings() {
     run(async () => {
       applySettings(await updateAiSpendCap(aiSpendCap || "0"));
       setNotice("LLM spend cap saved.");
+    });
+
+  const saveCouncil = () =>
+    run(async () => {
+      applySettings(
+        await updateCouncilSettings({
+          members: councilMembers.filter((m) => m.provider),
+          quorum: councilQuorum || "0.5",
+        }),
+      );
+      setNotice("Council settings saved.");
+    });
+
+  const saveResearch = () =>
+    run(async () => {
+      applySettings(
+        await updateResearchSettings({
+          symbols: researchSymbols
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          interval_hours: Number(researchInterval) || 12,
+          writer_provider: writerProvider,
+          writer_model: writerModel,
+          news_interval_hours: newsInterval ? Number(newsInterval) : null,
+        }),
+      );
+      setNotice("Research settings saved. Interval changes apply on restart.");
+    });
+
+  const savePolymarket = () =>
+    run(async () => {
+      applySettings(
+        await updatePolymarketSettings({
+          refresh_hours: Number(pmRefreshHours) || 6,
+          research_hours: Number(pmResearchHours) || 6,
+          edge_threshold: pmEdge || "0.05",
+          min_confidence: pmConfidence || "0.6",
+          screen_top: Number(pmScreenTop) || 0,
+          stake: pmStake || "100",
+        }),
+      );
+      setNotice("Polymarket settings saved. Interval changes apply on restart.");
     });
 
   const saveAiActionMode = (mode: string) =>
@@ -550,6 +650,120 @@ export function Settings() {
 
       <Card>
         <SectionHeader
+          title="Local models"
+          subtitle="What's deployed on your Ollama endpoint, and what your hardware could run (scored by llmfit)."
+          right={
+            <Button kind="outline" size="sm" onClick={() => void reprobeLocal()} disabled={localBusy}>
+              {localBusy ? "Probing…" : "Re-probe"}
+            </Button>
+          }
+        />
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Ollama</span>
+            <Badge tone={localAi?.ollama.reachable ? "green" : "muted"}>
+              {localAi?.ollama.reachable
+                ? `Running${localAi.ollama.version ? ` v${localAi.ollama.version}` : ""}`
+                : "Not reachable"}
+            </Badge>
+            <span style={{ fontSize: 11.5, color: "var(--text-4)" }} className="num">
+              {localAi?.ollama.base_url}
+            </span>
+          </div>
+          {localAi?.ollama.reachable && localAi.ollama.models.length === 0 && (
+            <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+              Ollama is running but has no models yet — pull one from the
+              recommendations below.
+            </span>
+          )}
+          {(localAi?.ollama.models ?? []).map((m) => (
+            <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="num" style={{ fontSize: 12.5, minWidth: 160 }}>
+                {m.name}
+              </span>
+              <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                {m.parameter_size}
+                {m.quantization ? ` · ${m.quantization}` : ""}
+                {m.size_bytes ? ` · ${(m.size_bytes / 1e9).toFixed(1)} GB` : ""}
+              </span>
+              <Button
+                size="sm"
+                kind="ghost"
+                onClick={() => {
+                  setAiProvider("ollama");
+                  setAiModel(m.name);
+                  setNotice(
+                    `AI provider form set to ollama / ${m.name} — save it below.`,
+                  );
+                }}
+              >
+                Use as AI provider
+              </Button>
+            </div>
+          ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>
+              Deployable on this hardware
+            </span>
+            <Badge tone={localAi?.llmfit.installed ? "green" : "muted"}>
+              {localAi?.llmfit.installed ? "llmfit scanned" : "llmfit not installed"}
+            </Badge>
+          </div>
+          {!localAi?.llmfit.installed && (
+            <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+              Install llmfit to see which local models fit this machine:{" "}
+              <code style={{ fontSize: 12 }}>{localAi?.llmfit.install_hint ?? "uv tool install llmfit"}</code>
+            </span>
+          )}
+          {localAi?.llmfit.installed &&
+            Object.keys(localAi.llmfit.hardware).length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(localAi.llmfit.hardware as Record<string, unknown>).map(
+                  ([k, v]) => (
+                    <Badge key={k} tone="muted">
+                      {k}: {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                    </Badge>
+                  ),
+                )}
+              </div>
+            )}
+          {(localAi?.llmfit.fits ?? []).map((f, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="num" style={{ fontSize: 12.5, minWidth: 160 }}>
+                {f.model}
+              </span>
+              <Badge
+                tone={
+                  f.fit.toLowerCase() === "perfect" || f.fit.toLowerCase() === "good"
+                    ? "green"
+                    : f.fit.toLowerCase() === "marginal"
+                      ? "amber"
+                      : "red"
+                }
+              >
+                {f.fit || "?"}
+              </Badge>
+              <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                {f.quantization}
+                {f.est_speed ? ` · ${f.est_speed}` : ""}
+              </span>
+              <Button
+                size="sm"
+                kind="ghost"
+                onClick={() => {
+                  void navigator.clipboard.writeText(`ollama pull ${f.model}`);
+                  setNotice(`Copied "ollama pull ${f.model}" to the clipboard.`);
+                }}
+              >
+                Copy pull command
+              </Button>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
           title="LLM spend cap"
           subtitle="A daily cap on AI spend — AI strategies pause once it is reached, and resume the next day. 0 means unlimited."
         />
@@ -599,6 +813,214 @@ export function Settings() {
             value={settings.ai_action_mode}
             onChange={(m) => void saveAiActionMode(m)}
           />
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title={
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              Research reports <GuideButton slug="research" />
+            </span>
+          }
+          subtitle="Scheduled research per watched symbol — headlines, connections, technicals and AI-written analysis."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 420,
+          }}
+        >
+          <Input
+            full
+            placeholder="Watched symbols, comma-separated (e.g. BTCUSDT, ETHUSDT)"
+            value={researchSymbols}
+            onChange={(e) => setResearchSymbols(e.target.value.toUpperCase())}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Report interval in hours (default 12)"
+            value={researchInterval}
+            onChange={(e) => setResearchInterval(e.target.value)}
+          />
+          <select
+            value={writerProvider}
+            onChange={(e) => setWriterProvider(e.target.value)}
+            style={selectStyle}
+          >
+            {Object.keys(settings.llm_providers_configured).map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <Input
+            full
+            placeholder="Writer model (blank = global AI model)"
+            value={writerModel}
+            onChange={(e) => setWriterModel(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="News refresh interval in hours (blank = daily at 06:00)"
+            value={newsInterval}
+            onChange={(e) => setNewsInterval(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void saveResearch()}>
+            Save research settings
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="Polymarket"
+          subtitle="Prediction-market discovery and AI bet screening — how often the catalogue refreshes, how often bets are analysed, and the edge/confidence a suggestion must clear."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 420,
+          }}
+        >
+          <Input
+            full
+            type="number"
+            placeholder="Catalogue refresh interval in hours (default 6)"
+            value={pmRefreshHours}
+            onChange={(e) => setPmRefreshHours(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="AI screening interval in hours (default 6)"
+            value={pmResearchHours}
+            onChange={(e) => setPmResearchHours(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Edge threshold 0–1 (default 0.05)"
+            value={pmEdge}
+            onChange={(e) => setPmEdge(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Min AI confidence 0–1 (default 0.6)"
+            value={pmConfidence}
+            onChange={(e) => setPmConfidence(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            placeholder="Top-volume markets screened besides the watchlist (default 10)"
+            value={pmScreenTop}
+            onChange={(e) => setPmScreenTop(e.target.value)}
+          />
+          <Input
+            full
+            type="number"
+            prefix="$"
+            placeholder="Suggested stake per signal in USDC (default 100)"
+            value={pmStake}
+            onChange={(e) => setPmStake(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void savePolymarket()}>
+            Save Polymarket settings
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="AI council"
+          subtitle="Models that vote on each research report. The confidence-weighted majority becomes the unified verdict; an empty list disables the council."
+        />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxWidth: 480,
+          }}
+        >
+          {councilMembers.map((m, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <select
+                value={m.provider}
+                onChange={(e) =>
+                  setCouncilMembers((prev) =>
+                    prev.map((row, j) =>
+                      j === i ? { ...row, provider: e.target.value } : row,
+                    ),
+                  )
+                }
+                style={selectStyle}
+              >
+                {Object.keys(settings.llm_providers_configured).map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+              <Input
+                full
+                placeholder="Model (blank = provider default)"
+                value={m.model}
+                onChange={(e) =>
+                  setCouncilMembers((prev) =>
+                    prev.map((row, j) =>
+                      j === i ? { ...row, model: e.target.value } : row,
+                    ),
+                  )
+                }
+              />
+              <Button
+                kind="outline"
+                size="sm"
+                onClick={() =>
+                  setCouncilMembers((prev) => prev.filter((_, j) => j !== i))
+                }
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button
+              kind="outline"
+              size="sm"
+              disabled={councilMembers.length >= 8}
+              onClick={() =>
+                setCouncilMembers((prev) => [
+                  ...prev,
+                  { provider: "claude", model: "" },
+                ])
+              }
+            >
+              Add member
+            </Button>
+          </div>
+          <Input
+            full
+            type="number"
+            placeholder="Quorum (0–1, default 0.5)"
+            value={councilQuorum}
+            onChange={(e) => setCouncilQuorum(e.target.value)}
+          />
+          <Button kind="primary" disabled={busy} onClick={() => void saveCouncil()}>
+            Save council settings
+          </Button>
         </div>
       </Card>
 

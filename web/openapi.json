@@ -66,8 +66,14 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
+            "type": "string"
+          },
+          "venue": {
+            "default": "binance",
+            "maxLength": 24,
+            "title": "Venue",
             "type": "string"
           }
         },
@@ -197,6 +203,22 @@
               }
             ],
             "title": "Allocated"
+          },
+          "max_loss": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Loss"
           }
         },
         "required": [
@@ -783,7 +805,7 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
             "type": "string"
           },
@@ -819,6 +841,173 @@
           "closed"
         ],
         "title": "CloseResult",
+        "type": "object"
+      },
+      "CompareCellRead": {
+        "properties": {
+          "equity_sparkline": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Equity Sparkline",
+            "type": "array"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "final_equity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Final Equity",
+            "type": "string"
+          },
+          "max_drawdown_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Max Drawdown Pct",
+            "type": "string"
+          },
+          "net_pnl": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pnl",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "return_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Return Pct",
+            "type": "string"
+          },
+          "sharpe": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Sharpe",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "trades": {
+            "title": "Trades",
+            "type": "integer"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "win_rate_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Win Rate Pct",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "symbol",
+          "params",
+          "return_pct",
+          "max_drawdown_pct",
+          "sharpe",
+          "win_rate_pct",
+          "trades",
+          "net_pnl",
+          "final_equity",
+          "equity_sparkline",
+          "error"
+        ],
+        "title": "CompareCellRead",
+        "type": "object"
+      },
+      "CompareRequest": {
+        "description": "A grid request \u2014 either pivot is just a different shape of the same.",
+        "properties": {
+          "capital": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "10000",
+            "title": "Capital"
+          },
+          "days": {
+            "default": 90,
+            "maximum": 365.0,
+            "minimum": 7.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Symbols",
+            "type": "array"
+          },
+          "timeframe": {
+            "default": "1h",
+            "maxLength": 8,
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "symbols"
+        ],
+        "title": "CompareRequest",
+        "type": "object"
+      },
+      "CostBucket": {
+        "description": "One aggregation bucket \u2014 by model, purpose or day.",
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Usd",
+            "type": "string"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "calls",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd"
+        ],
+        "title": "CostBucket",
         "type": "object"
       },
       "CostsRead": {
@@ -870,6 +1059,205 @@
           "llm_spend_today"
         ],
         "title": "CostsRead",
+        "type": "object"
+      },
+      "CostsSummary": {
+        "description": "Headline spend + the breakdowns the Costs screen renders.",
+        "properties": {
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/CostBucket"
+            },
+            "title": "By Day",
+            "type": "array"
+          },
+          "by_model": {
+            "items": {
+              "$ref": "#/components/schemas/CostBucket"
+            },
+            "title": "By Model",
+            "type": "array"
+          },
+          "by_purpose": {
+            "items": {
+              "$ref": "#/components/schemas/CostBucket"
+            },
+            "title": "By Purpose",
+            "type": "array"
+          },
+          "daily_cap_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Daily Cap Usd",
+            "type": "string"
+          },
+          "last_30d_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Last 30D Usd",
+            "type": "string"
+          },
+          "last_7d_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Last 7D Usd",
+            "type": "string"
+          },
+          "today_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Today Usd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "today_usd",
+          "last_7d_usd",
+          "last_30d_usd",
+          "daily_cap_usd",
+          "by_model",
+          "by_purpose",
+          "by_day"
+        ],
+        "title": "CostsSummary",
+        "type": "object"
+      },
+      "CouncilMember": {
+        "properties": {
+          "model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "CouncilMember",
+        "type": "object"
+      },
+      "CouncilReviewRead": {
+        "description": "A council verdict plus every member's vote.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "quorum_met": {
+            "title": "Quorum Met",
+            "type": "boolean"
+          },
+          "report_id": {
+            "title": "Report Id",
+            "type": "integer"
+          },
+          "strategy_brief": {
+            "title": "Strategy Brief",
+            "type": "string"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          },
+          "votes": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilVoteRead"
+            },
+            "title": "Votes",
+            "type": "array"
+          },
+          "weighted_score": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weighted Score",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "report_id",
+          "verdict",
+          "weighted_score",
+          "quorum_met",
+          "strategy_brief",
+          "created_at",
+          "votes"
+        ],
+        "title": "CouncilReviewRead",
+        "type": "object"
+      },
+      "CouncilSettingsUpdate": {
+        "description": "Council configuration \u2014 an empty member list disables the council.",
+        "properties": {
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilMember"
+            },
+            "maxItems": 8,
+            "title": "Members",
+            "type": "array"
+          },
+          "quorum": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.5",
+            "title": "Quorum"
+          }
+        },
+        "required": [
+          "members"
+        ],
+        "title": "CouncilSettingsUpdate",
+        "type": "object"
+      },
+      "CouncilVoteRead": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "confidence": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "reasoning": {
+            "title": "Reasoning",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "action",
+          "confidence",
+          "reasoning"
+        ],
+        "title": "CouncilVoteRead",
         "type": "object"
       },
       "Decision": {
@@ -1244,6 +1632,89 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "InstanceCreate": {
+        "description": "Apply a strategy type to a coin as a new named instance.",
+        "properties": {
+          "allocated": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "10000",
+            "title": "Allocated"
+          },
+          "market": {
+            "default": "spot",
+            "pattern": "^(spot|futures)$",
+            "title": "Market",
+            "type": "string"
+          },
+          "max_loss": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Max Loss"
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Params",
+            "type": "object"
+          },
+          "symbol": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "timeframe": {
+            "default": "1h",
+            "maxLength": 8,
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "type": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          },
+          "venue": {
+            "default": "binance",
+            "maxLength": 24,
+            "title": "Venue",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "symbol"
+        ],
+        "title": "InstanceCreate",
+        "type": "object"
+      },
       "LLMUsage": {
         "description": "One recorded LLM completion \u2014 tokens, estimated cost, and the decision.",
         "properties": {
@@ -1313,6 +1784,12 @@
             "title": "Provider",
             "type": "string"
           },
+          "purpose": {
+            "default": "analyze",
+            "maxLength": 16,
+            "title": "Purpose",
+            "type": "string"
+          },
           "strategy": {
             "anyOf": [
               {
@@ -1334,6 +1811,196 @@
         "title": "LLMUsage",
         "type": "object"
       },
+      "LatencyRead": {
+        "description": "Price-feed latency \u2014 per-feed stats plus the overall degraded flag.",
+        "properties": {
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "feeds": {
+            "items": {
+              "$ref": "#/components/schemas/LatencyStatsRead"
+            },
+            "title": "Feeds",
+            "type": "array"
+          },
+          "warn_ms": {
+            "title": "Warn Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "warn_ms",
+          "degraded",
+          "feeds"
+        ],
+        "title": "LatencyRead",
+        "type": "object"
+      },
+      "LatencyStatsRead": {
+        "description": "Rolling-window latency for one (market, symbol, kind).",
+        "properties": {
+          "current_ms": {
+            "title": "Current Ms",
+            "type": "number"
+          },
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "market": {
+            "title": "Market",
+            "type": "string"
+          },
+          "max_ms": {
+            "title": "Max Ms",
+            "type": "number"
+          },
+          "p50_ms": {
+            "title": "P50 Ms",
+            "type": "number"
+          },
+          "p95_ms": {
+            "title": "P95 Ms",
+            "type": "number"
+          },
+          "samples": {
+            "title": "Samples",
+            "type": "integer"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "market",
+          "symbol",
+          "kind",
+          "current_ms",
+          "p50_ms",
+          "p95_ms",
+          "max_ms",
+          "samples",
+          "degraded"
+        ],
+        "title": "LatencyStatsRead",
+        "type": "object"
+      },
+      "LedgerEntry": {
+        "description": "One paid call, newest first.",
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "cost_usd": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Usd",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "provider",
+          "model",
+          "purpose",
+          "strategy",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "action",
+          "confidence"
+        ],
+        "title": "LedgerEntry",
+        "type": "object"
+      },
+      "LedgerPage": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "entries"
+        ],
+        "title": "LedgerPage",
+        "type": "object"
+      },
       "LlmCredentialsUpdate": {
         "description": "One LLM provider's credentials \u2014 both fields optional.",
         "properties": {
@@ -1351,6 +2018,60 @@
           }
         },
         "title": "LlmCredentialsUpdate",
+        "type": "object"
+      },
+      "LlmfitStatusRead": {
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "fits": {
+            "items": {
+              "$ref": "#/components/schemas/ModelFitRead"
+            },
+            "title": "Fits",
+            "type": "array"
+          },
+          "hardware": {
+            "additionalProperties": true,
+            "title": "Hardware",
+            "type": "object"
+          },
+          "install_hint": {
+            "title": "Install Hint",
+            "type": "string"
+          },
+          "installed": {
+            "title": "Installed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "installed",
+          "install_hint",
+          "hardware",
+          "fits",
+          "error"
+        ],
+        "title": "LlmfitStatusRead",
+        "type": "object"
+      },
+      "LocalAIRead": {
+        "description": "Local-model readiness \u2014 deployed (Ollama) and deployable (llmfit).",
+        "properties": {
+          "llmfit": {
+            "$ref": "#/components/schemas/LlmfitStatusRead"
+          },
+          "ollama": {
+            "$ref": "#/components/schemas/OllamaStatusRead"
+          }
+        },
+        "required": [
+          "ollama",
+          "llmfit"
+        ],
+        "title": "LocalAIRead",
         "type": "object"
       },
       "ManualOrderRequest": {
@@ -1399,6 +2120,91 @@
         "title": "Market",
         "type": "string"
       },
+      "MarketAnalysis": {
+        "description": "One AI pass over a market \u2014 estimated probability vs market price.",
+        "properties": {
+          "condition_id": {
+            "maxLength": 80,
+            "title": "Condition Id",
+            "type": "string"
+          },
+          "confidence": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "edge": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Edge",
+            "type": "string"
+          },
+          "est_probability": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Est Probability",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "market_price": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Market Price",
+            "type": "string"
+          },
+          "model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "default": "",
+            "maxLength": 16,
+            "title": "Provider",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 512,
+            "title": "Question",
+            "type": "string"
+          },
+          "reasoning": {
+            "default": "",
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "recommendation": {
+            "default": "hold",
+            "maxLength": 8,
+            "title": "Recommendation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition_id",
+          "question",
+          "created_at"
+        ],
+        "title": "MarketAnalysis",
+        "type": "object"
+      },
       "ModeUpdate": {
         "properties": {
           "confirm": {
@@ -1414,6 +2220,39 @@
           "mode"
         ],
         "title": "ModeUpdate",
+        "type": "object"
+      },
+      "ModelFitRead": {
+        "properties": {
+          "est_speed": {
+            "title": "Est Speed",
+            "type": "string"
+          },
+          "fit": {
+            "title": "Fit",
+            "type": "string"
+          },
+          "memory_gb": {
+            "title": "Memory Gb",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "quantization": {
+            "title": "Quantization",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "quantization",
+          "fit",
+          "est_speed",
+          "memory_gb"
+        ],
+        "title": "ModelFitRead",
         "type": "object"
       },
       "ModelUsage": {
@@ -1594,6 +2433,65 @@
         "title": "NodeCreate",
         "type": "object"
       },
+      "OllamaModelRead": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parameter_size": {
+            "title": "Parameter Size",
+            "type": "string"
+          },
+          "quantization": {
+            "title": "Quantization",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "size_bytes",
+          "parameter_size",
+          "quantization"
+        ],
+        "title": "OllamaModelRead",
+        "type": "object"
+      },
+      "OllamaStatusRead": {
+        "properties": {
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/OllamaModelRead"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "reachable": {
+            "title": "Reachable",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reachable",
+          "base_url",
+          "version",
+          "models"
+        ],
+        "title": "OllamaStatusRead",
+        "type": "object"
+      },
       "OrderBook": {
         "properties": {
           "asks": {
@@ -1643,6 +2541,44 @@
         "title": "OrderBookLevel",
         "type": "object"
       },
+      "ParamSpecRead": {
+        "properties": {
+          "default": {
+            "title": "Default",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max": {
+            "title": "Max",
+            "type": "string"
+          },
+          "min": {
+            "title": "Min",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "default",
+          "min",
+          "max",
+          "label"
+        ],
+        "title": "ParamSpecRead",
+        "type": "object"
+      },
       "PasswordReset": {
         "properties": {
           "password": {
@@ -1656,6 +2592,78 @@
           "password"
         ],
         "title": "PasswordReset",
+        "type": "object"
+      },
+      "PolymarketSettingsUpdate": {
+        "description": "Polymarket configuration \u2014 discovery/screening cadence and bars.",
+        "properties": {
+          "edge_threshold": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.05",
+            "title": "Edge Threshold"
+          },
+          "min_confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.6",
+            "title": "Min Confidence"
+          },
+          "refresh_hours": {
+            "default": 6,
+            "maximum": 48.0,
+            "minimum": 1.0,
+            "title": "Refresh Hours",
+            "type": "integer"
+          },
+          "research_hours": {
+            "default": 6,
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Research Hours",
+            "type": "integer"
+          },
+          "screen_top": {
+            "default": 10,
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Screen Top",
+            "type": "integer"
+          },
+          "stake": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "100",
+            "title": "Stake"
+          }
+        },
+        "title": "PolymarketSettingsUpdate",
         "type": "object"
       },
       "PortfolioSummary": {
@@ -1794,7 +2802,7 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
             "type": "string"
           },
@@ -1819,6 +2827,191 @@
         "title": "Position",
         "type": "object"
       },
+      "PredictionMarket": {
+        "description": "One Polymarket market, upserted from the Gamma API by `condition_id`.",
+        "properties": {
+          "category": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Category",
+            "type": "string"
+          },
+          "condition_id": {
+            "maxLength": 80,
+            "title": "Condition Id",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "liquidity": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Liquidity",
+            "type": "string"
+          },
+          "no_token_id": {
+            "default": "",
+            "maxLength": 80,
+            "title": "No Token Id",
+            "type": "string"
+          },
+          "outcomes": {
+            "default": "[]",
+            "title": "Outcomes",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 512,
+            "title": "Question",
+            "type": "string"
+          },
+          "resolved_outcome": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Resolved Outcome",
+            "type": "string"
+          },
+          "slug": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "default": "active",
+            "maxLength": 12,
+            "title": "Status",
+            "type": "string"
+          },
+          "volume_24h": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Volume 24H",
+            "type": "string"
+          },
+          "watched": {
+            "default": false,
+            "title": "Watched",
+            "type": "boolean"
+          },
+          "yes_price": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,25}0*$)\\d{0,16}\\.\\d{0,8}0*$)",
+            "title": "Yes Price",
+            "type": "string"
+          },
+          "yes_token_id": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Yes Token Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition_id",
+          "question",
+          "fetched_at"
+        ],
+        "title": "PredictionMarket",
+        "type": "object"
+      },
+      "RecommendRequest": {
+        "properties": {
+          "capital": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "10000",
+            "title": "Capital"
+          },
+          "days": {
+            "default": 90,
+            "maximum": 365.0,
+            "minimum": 7.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "symbol": {
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "timeframe": {
+            "default": "1h",
+            "maxLength": 8,
+            "title": "Timeframe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "title": "RecommendRequest",
+        "type": "object"
+      },
+      "RecommendResponse": {
+        "description": "The AI's pick, backtested so it ranks alongside the grid cells.",
+        "properties": {
+          "cell": {
+            "$ref": "#/components/schemas/CompareCellRead"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "reasoning": {
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "strategy_type": {
+            "title": "Strategy Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_type",
+          "params",
+          "reasoning",
+          "cell"
+        ],
+        "title": "RecommendResponse",
+        "type": "object"
+      },
       "RefreshRequest": {
         "properties": {
           "refresh_token": {
@@ -1830,6 +3023,127 @@
           "refresh_token"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "ResearchReportRead": {
+        "description": "One report \u2014 `sections` is the parsed schema-formatted content.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "sections": {
+            "additionalProperties": true,
+            "title": "Sections",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "symbol",
+          "schema_version",
+          "status",
+          "provider",
+          "model",
+          "error",
+          "created_at",
+          "sections"
+        ],
+        "title": "ResearchReportRead",
+        "type": "object"
+      },
+      "ResearchRun": {
+        "description": "Manual trigger \u2014 one symbol, or blank for every watched symbol.",
+        "properties": {
+          "symbol": {
+            "default": "",
+            "maxLength": 24,
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "title": "ResearchRun",
+        "type": "object"
+      },
+      "ResearchSettingsUpdate": {
+        "description": "Research configuration \u2014 watched symbols, interval and writer LLM.",
+        "properties": {
+          "interval_hours": {
+            "default": 12,
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Interval Hours",
+            "type": "integer"
+          },
+          "news_interval_hours": {
+            "anyOf": [
+              {
+                "maximum": 48.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "News Interval Hours"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Symbols",
+            "type": "array"
+          },
+          "writer_model": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Writer Model",
+            "type": "string"
+          },
+          "writer_provider": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Writer Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbols",
+          "writer_provider"
+        ],
+        "title": "ResearchSettingsUpdate",
         "type": "object"
       },
       "Role": {
@@ -1877,6 +3191,21 @@
             "title": "Binance Keys Configured",
             "type": "boolean"
           },
+          "council_members": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Council Members",
+            "type": "array"
+          },
+          "council_quorum": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Council Quorum",
+            "type": "string"
+          },
           "llm_providers_configured": {
             "additionalProperties": {
               "type": "boolean"
@@ -1886,6 +3215,63 @@
           },
           "mode": {
             "$ref": "#/components/schemas/TradingMode"
+          },
+          "news_interval_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "News Interval Hours"
+          },
+          "polymarket_edge_threshold": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Polymarket Edge Threshold",
+            "type": "string"
+          },
+          "polymarket_min_confidence": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Polymarket Min Confidence",
+            "type": "string"
+          },
+          "polymarket_refresh_hours": {
+            "title": "Polymarket Refresh Hours",
+            "type": "integer"
+          },
+          "polymarket_research_hours": {
+            "title": "Polymarket Research Hours",
+            "type": "integer"
+          },
+          "polymarket_screen_top": {
+            "title": "Polymarket Screen Top",
+            "type": "integer"
+          },
+          "polymarket_stake": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Polymarket Stake",
+            "type": "string"
+          },
+          "research_interval_hours": {
+            "title": "Research Interval Hours",
+            "type": "integer"
+          },
+          "research_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Research Symbols",
+            "type": "array"
+          },
+          "research_writer_model": {
+            "title": "Research Writer Model",
+            "type": "string"
+          },
+          "research_writer_provider": {
+            "title": "Research Writer Provider",
+            "type": "string"
           },
           "venue_credentials_configured": {
             "additionalProperties": {
@@ -1906,7 +3292,20 @@
           "ai_spend_cap",
           "ai_spend_today",
           "ai_action_mode",
-          "llm_providers_configured"
+          "llm_providers_configured",
+          "research_symbols",
+          "research_interval_hours",
+          "research_writer_provider",
+          "research_writer_model",
+          "news_interval_hours",
+          "council_members",
+          "council_quorum",
+          "polymarket_refresh_hours",
+          "polymarket_research_hours",
+          "polymarket_edge_threshold",
+          "polymarket_min_confidence",
+          "polymarket_screen_top",
+          "polymarket_stake"
         ],
         "title": "SettingsRead",
         "type": "object"
@@ -1950,12 +3349,22 @@
             "title": "Fees",
             "type": "string"
           },
+          "is_instance": {
+            "default": false,
+            "title": "Is Instance",
+            "type": "boolean"
+          },
           "kind": {
             "title": "Kind",
             "type": "string"
           },
           "market": {
             "title": "Market",
+            "type": "string"
+          },
+          "max_loss": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Max Loss",
             "type": "string"
           },
           "name": {
@@ -1988,16 +3397,22 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Unrealized Pnl",
             "type": "string"
+          },
+          "venue": {
+            "title": "Venue",
+            "type": "string"
           }
         },
         "required": [
           "name",
           "kind",
           "symbol",
+          "venue",
           "market",
           "timeframe",
           "enabled",
           "allocated",
+          "max_loss",
           "realized_pnl",
           "unrealized_pnl",
           "fees",
@@ -2053,6 +3468,52 @@
           "open_positions"
         ],
         "title": "StrategySummary",
+        "type": "object"
+      },
+      "StrategyTypeRead": {
+        "description": "One pickable strategy type and its parameter schema.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "params": {
+            "items": {
+              "$ref": "#/components/schemas/ParamSpecRead"
+            },
+            "title": "Params",
+            "type": "array"
+          },
+          "timeframes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Timeframes",
+            "type": "array"
+          },
+          "venue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "params",
+          "timeframes"
+        ],
+        "title": "StrategyTypeRead",
         "type": "object"
       },
       "Ticker": {
@@ -2184,7 +3645,7 @@
             "type": "string"
           },
           "symbol": {
-            "maxLength": 24,
+            "maxLength": 80,
             "title": "Symbol",
             "type": "string"
           }
@@ -2404,6 +3865,19 @@
         "title": "VenueRead",
         "type": "object"
       },
+      "WatchUpdate": {
+        "properties": {
+          "watched": {
+            "title": "Watched",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "watched"
+        ],
+        "title": "WatchUpdate",
+        "type": "object"
+      },
       "WatchdogStatus": {
         "description": "Engine liveness assessed from the heartbeat and open-position count.",
         "properties": {
@@ -2573,6 +4047,55 @@
           }
         ],
         "summary": "Decision Log",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/local": {
+      "get": {
+        "description": "Whether local models are deployed (Ollama) or deployable (llmfit).\n\nThe snapshot is cached for ~5 minutes; `refresh=true` re-probes now.",
+        "operationId": "local_models_api_ai_local_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalAIRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Local Models",
         "tags": [
           "ai"
         ]
@@ -3169,6 +4692,108 @@
         ]
       }
     },
+    "/api/costs/ledger": {
+      "get": {
+        "description": "The per-call ledger, newest first \u2014 filterable by purpose.",
+        "operationId": "costs_ledger_api_costs_ledger_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "purpose",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Purpose"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Costs Ledger",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
+    "/api/costs/summary": {
+      "get": {
+        "description": "Spend totals and breakdowns over the last 30 days.",
+        "operationId": "costs_summary_api_costs_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostsSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Costs Summary",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
     "/api/history/audit": {
       "get": {
         "description": "The audit log of config-changing actions, newest-first.",
@@ -3380,6 +5005,104 @@
         ]
       }
     },
+    "/api/lab/compare": {
+      "post": {
+        "description": "Backtest every (type \u00d7 symbol) cell over the same recent range.",
+        "operationId": "compare_grid_api_lab_compare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompareCellRead"
+                  },
+                  "title": "Response Compare Grid Api Lab Compare Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Compare Grid",
+        "tags": [
+          "lab"
+        ]
+      }
+    },
+    "/api/lab/recommend": {
+      "post": {
+        "description": "Ask the configured LLM to pick a strategy for the coin, then backtest it.",
+        "operationId": "recommend_api_lab_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Recommend",
+        "tags": [
+          "lab"
+        ]
+      }
+    },
     "/api/market/funding": {
       "get": {
         "description": "Current futures funding rate for a symbol.",
@@ -3513,6 +5236,33 @@
         ]
       }
     },
+    "/api/market/latency": {
+      "get": {
+        "description": "How delayed the price data is, per feed (ws event time + REST RTT).",
+        "operationId": "feed_latency_api_market_latency_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatencyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Feed Latency",
+        "tags": [
+          "market"
+        ]
+      }
+    },
     "/api/market/orderbook": {
       "get": {
         "description": "Order-book depth for a symbol.",
@@ -3636,7 +5386,7 @@
     },
     "/api/news": {
       "get": {
-        "description": "Recent headlines, newest first \u2014 optionally filtered by `symbol`.",
+        "description": "Recent headlines, newest first \u2014 filterable by `symbol` and `category`.",
         "operationId": "list_news_api_news_get",
         "parameters": [
           {
@@ -3653,6 +5403,22 @@
                 }
               ],
               "title": "Symbol"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
             }
           },
           {
@@ -3778,6 +5544,330 @@
         "summary": "Place Manual Order",
         "tags": [
           "orders"
+        ]
+      }
+    },
+    "/api/polymarket/analyses": {
+      "get": {
+        "description": "Recent AI bet analyses, newest first \u2014 optionally for one market.",
+        "operationId": "list_analyses_api_polymarket_analyses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "condition_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Condition Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MarketAnalysis"
+                  },
+                  "title": "Response List Analyses Api Polymarket Analyses Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Analyses",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/markets": {
+      "get": {
+        "description": "Discovered markets, most-traded first \u2014 filterable and searchable.",
+        "operationId": "list_markets_api_polymarket_markets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "watched",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Watched"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "active",
+              "title": "Status Filter"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionMarket"
+                  },
+                  "title": "Response List Markets Api Polymarket Markets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Markets",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/markets/{condition_id}/analyze": {
+      "post": {
+        "description": "Run one AI analysis for a market immediately (a paid LLM call).",
+        "operationId": "analyze_now_api_polymarket_markets__condition_id__analyze_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "condition_id",
+            "required": true,
+            "schema": {
+              "title": "Condition Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Analyze Now",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/markets/{condition_id}/watch": {
+      "put": {
+        "description": "Pin or unpin a market for scheduled AI analysis.",
+        "operationId": "update_watched_api_polymarket_markets__condition_id__watch_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "condition_id",
+            "required": true,
+            "schema": {
+              "title": "Condition Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionMarket"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Watched",
+        "tags": [
+          "polymarket"
+        ]
+      }
+    },
+    "/api/polymarket/refresh": {
+      "post": {
+        "description": "Pull the latest top markets from the Gamma API now.",
+        "operationId": "refresh_markets_api_polymarket_refresh_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Refresh Markets Api Polymarket Refresh Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Refresh Markets",
+        "tags": [
+          "polymarket"
         ]
       }
     },
@@ -3947,6 +6037,268 @@
         "summary": "Trades",
         "tags": [
           "portfolio"
+        ]
+      }
+    },
+    "/api/research": {
+      "get": {
+        "description": "Recent reports, newest first \u2014 optionally filtered by `symbol`.",
+        "operationId": "list_reports_api_research_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Symbol"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResearchReportRead"
+                  },
+                  "title": "Response List Reports Api Research Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Reports",
+        "tags": [
+          "research"
+        ]
+      }
+    },
+    "/api/research/run": {
+      "post": {
+        "description": "Write a report now \u2014 for `symbol`, or every watched symbol when blank.",
+        "operationId": "run_research_api_research_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchRun"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResearchReportRead"
+                  },
+                  "title": "Response Run Research Api Research Run Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Run Research",
+        "tags": [
+          "research"
+        ]
+      }
+    },
+    "/api/research/{report_id}": {
+      "get": {
+        "description": "One report with its full sections.",
+        "operationId": "get_report_api_research__report_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchReportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Report",
+        "tags": [
+          "research"
+        ]
+      }
+    },
+    "/api/research/{report_id}/review": {
+      "get": {
+        "description": "The newest council review for a report, with every vote.",
+        "operationId": "get_review_api_research__report_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Review",
+        "tags": [
+          "research"
+        ]
+      },
+      "post": {
+        "description": "Re-run the council on a report now (admin).",
+        "operationId": "rerun_review_api_research__report_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rerun Review",
+        "tags": [
+          "research"
         ]
       }
     },
@@ -4158,6 +6510,53 @@
         ]
       }
     },
+    "/api/settings/council": {
+      "put": {
+        "description": "Configure the AI council members and quorum.",
+        "operationId": "update_council_settings_api_settings_council_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouncilSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Council Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/settings/llm-credentials/{provider}": {
       "put": {
         "description": "Store one LLM provider's API key and/or base URL (encrypted at rest).",
@@ -4263,6 +6662,100 @@
         ]
       }
     },
+    "/api/settings/polymarket": {
+      "put": {
+        "description": "Configure Polymarket discovery and AI bet screening.\n\nScheduler-interval changes take effect on the next engine restart.",
+        "operationId": "update_polymarket_settings_api_settings_polymarket_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolymarketSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Polymarket Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/research": {
+      "put": {
+        "description": "Configure research reports and the news refresh interval.\n\nScheduler-interval changes take effect on the next engine restart.",
+        "operationId": "update_research_settings_api_settings_research_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Research Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/settings/venue-credentials/{venue}": {
       "put": {
         "description": "Store a venue's credentials (encrypted at rest).\n\nThe submitted field names must exactly match the venue's declared\n`credential_fields`, and every value must be non-empty.",
@@ -4340,6 +6833,123 @@
           }
         ],
         "summary": "List Strategies",
+        "tags": [
+          "strategies"
+        ]
+      },
+      "post": {
+        "description": "Create a strategy instance: any registered type on any chosen coin.",
+        "operationId": "create_instance_api_strategies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Instance",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/types": {
+      "get": {
+        "description": "Every pickable strategy type with its typed parameter schema.",
+        "operationId": "list_strategy_types_api_strategies_types_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyTypeRead"
+                  },
+                  "title": "Response List Strategy Types Api Strategies Types Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Strategy Types",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/strategies/{name}": {
+      "delete": {
+        "description": "Delete an instance-backed strategy. Built-ins cannot be deleted.\n\nRefused while the strategy holds an open position \u2014 close it first.",
+        "operationId": "delete_instance_api_strategies__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Instance",
         "tags": [
           "strategies"
         ]

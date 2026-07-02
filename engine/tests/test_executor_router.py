@@ -7,7 +7,6 @@ from sqlmodel import Session
 
 from appsettings.store import (
     TradingMode,
-    set_active_venue,
     set_mode,
     set_venue_credentials,
 )
@@ -95,15 +94,6 @@ def test_executor_is_cached(session: Session) -> None:
     assert len(builder.calls) == 1  # built once, then cached
 
 
-def test_active_venue_is_resolved(session: Session) -> None:
-    set_mode(session, TradingMode.live)
-    set_active_venue(session, "alpaca")
-    set_venue_credentials(session, "alpaca", {"api_key": "k", "api_secret": "s"})
-    builder = _FakeBuilder()
-    ExecutorRouter(builder=builder).resolve(session)
-    assert builder.calls == [("alpaca", TradingMode.live)]
-
-
 def test_mode_switch_changes_the_executor(session: Session) -> None:
     _binance_keys(session)
     router = ExecutorRouter(builder=_FakeBuilder())
@@ -111,3 +101,51 @@ def test_mode_switch_changes_the_executor(session: Session) -> None:
     assert isinstance(router.resolve(session), SimExecutor)
     set_mode(session, TradingMode.testnet)
     assert isinstance(router.resolve(session), VenueExecutor)
+
+
+def test_explicit_venue_overrides_the_active_setting(session: Session) -> None:
+    # A strategy's own venue routes its orders even when another is active.
+    set_mode(session, TradingMode.live)
+    _binance_keys(session)
+    builder = _FakeBuilder()
+    executor = ExecutorRouter(builder=builder).resolve(session, venue="binance")
+    assert isinstance(executor, VenueExecutor)
+    assert builder.calls == [("binance", TradingMode.live)]
+
+
+def test_testnet_without_a_sandbox_falls_back_to_sim(session: Session) -> None:
+    # Polymarket has no testnet — a real order has no test environment to go
+    # to, so Testnet mode must route its strategies through Sim.
+    set_mode(session, TradingMode.testnet)
+    set_venue_credentials(
+        session,
+        "polymarket",
+        {
+            "private_key": "pk",
+            "api_key": "k",
+            "api_secret": "s",
+            "passphrase": "p",
+            "wallet_address": "0xAB",
+        },
+    )
+    router = ExecutorRouter(builder=_FakeBuilder())
+    assert isinstance(router.resolve(session, venue="polymarket"), SimExecutor)
+
+
+def test_live_polymarket_routes_through_a_venue_executor(session: Session) -> None:
+    set_mode(session, TradingMode.live)
+    set_venue_credentials(
+        session,
+        "polymarket",
+        {
+            "private_key": "pk",
+            "api_key": "k",
+            "api_secret": "s",
+            "passphrase": "p",
+            "wallet_address": "0xAB",
+        },
+    )
+    builder = _FakeBuilder()
+    executor = ExecutorRouter(builder=builder).resolve(session, venue="polymarket")
+    assert isinstance(executor, VenueExecutor)
+    assert builder.calls == [("polymarket", TradingMode.live)]

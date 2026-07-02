@@ -2,7 +2,7 @@
 
 # Capital
 
-**Self-hosted automated trading platform for Binance, Alpaca, and Polymarket.**
+**Self-hosted automated trading platform for Binance and Polymarket.**
 
 [![CI](https://github.com/FurkanEdizkan/Capital/actions/workflows/ci.yml/badge.svg)](https://github.com/FurkanEdizkan/Capital/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -33,8 +33,13 @@ explicitly opt in to Testnet or live trading behind safeguards.
 - **Honest accounting** — every fill records its fee; PnL is always reported
   net of fees, and money math uses `Decimal` throughout.
 - **Capital allocation** — assign a budget per strategy; the engine enforces it.
-- **Multi-venue** — Binance (crypto), Alpaca (US stocks), Polymarket (prediction
-  markets), behind a common venue interface.
+- **Venue-pluggable** — a stable `Venue` interface keeps the engine
+  venue-agnostic. Binance and Polymarket ship today; each strategy carries
+  its own venue, so strategies on both run side by side.
+- **Prediction markets** — browse Polymarket's most-traded markets, pin a
+  watchlist, and let the AI estimate each bet's true probability from news
+  and market context. Enough edge becomes a suggestion (Telegram + dashboard)
+  or an automated Prediction AI trade; resolutions settle into the ledger.
 - **AI strategies** — LLM-driven strategies with per-strategy model selection,
   daily spend caps, and a per-model performance rollup.
 - **Roles & audit** — JWT login with `admin` / `user` roles; config changes are
@@ -63,7 +68,7 @@ Capital is a monorepo of two long-lived services plus a database:
 - **PostgreSQL** — strategies, trades, positions, candle cache and equity
   history. Schema managed with Alembic migrations.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a fuller breakdown.
+See [docs/architecture.md](docs/architecture.md) for a fuller breakdown.
 
 ## Quick start
 
@@ -119,32 +124,20 @@ Market data needs no API key — Sim-mode paper trading works out of the box.
 Placing orders on Testnet or Live needs venue credentials, entered (encrypted)
 through the Settings page.
 
-- [docs/binance-setup.md](docs/binance-setup.md) — Binance (crypto)
-- [docs/alpaca-setup.md](docs/alpaca-setup.md) — Alpaca (US stocks)
-- [docs/polymarket-setup.md](docs/polymarket-setup.md) — Polymarket (prediction markets)
-- [docs/venue-api-features.md](docs/venue-api-features.md) — what each venue API offers vs. what Capital uses
+- [docs/venues/binance-setup.md](docs/venues/binance-setup.md) — Binance (crypto)
+- [docs/venues/polymarket-setup.md](docs/venues/polymarket-setup.md) — Polymarket (prediction markets)
+- [docs/venues/api-features.md](docs/venues/api-features.md) — what Binance offers vs. what Capital uses
 
 ## Deployment
 
 Run the stack privately over Tailscale, or on a public cloud VM with a real
-domain and Let's Encrypt TLS — see [docs/deployment.md](docs/deployment.md).
+domain and Let's Encrypt TLS — see [docs/operations/deployment.md](docs/operations/deployment.md).
 
-## Manual setup (without Docker)
+## Working on Capital
 
-For working on a single service directly:
-
-```bash
-docker compose up -d postgres        # database only
-
-cd engine                            # Python engine — uses `uv`
-uv sync
-uv run alembic upgrade head
-uv run uvicorn main:app --reload     # http://localhost:8000
-
-cd web                               # React dashboard
-npm install
-npm run dev                          # http://localhost:5173
-```
+For local development outside Docker (running engine and web directly), the
+project structure, and the layout of `docs/`, see
+[docs/development.md](docs/development.md).
 
 ## Custom strategies
 
@@ -153,31 +146,6 @@ function that returns strategy instances — the engine auto-discovers it on
 startup. See [`engine/strategies/plugins/README.md`](engine/strategies/plugins/README.md)
 and the [`_example.py`](engine/strategies/plugins/_example.py) template.
 
-## Project structure
-
-```text
-Capital/
-├── engine/            Python trading engine + API
-│   ├── ai/            LLM provider adapters + AI strategy support
-│   ├── api/           REST + WebSocket endpoints
-│   ├── auth/          JWT login, roles, API tokens, audit log
-│   ├── backtest/      historical backtest runner
-│   ├── exchange/      Binance REST/WebSocket client
-│   ├── marketdata/    candle cache + streaming
-│   ├── notify/        Telegram notifications
-│   ├── ops/           boot recovery, watchdog, retention
-│   ├── strategies/    strategy framework, built-ins, plugin loader
-│   ├── trading/       engine loop, executors, portfolio, risk, accounting
-│   ├── mcp_server.py  MCP server — the API as agent tools
-│   └── tests/         pytest suite
-├── web/               React + Vite + TypeScript dashboard
-├── scripts/           install.sh, deploy.sh, backup/restore
-├── caddy/             reverse-proxy config for production
-├── docs/              architecture, branching, PR rules, venue setup
-├── docker-compose.yml base service definitions
-└── .github/           CI workflows, issue & PR templates
-```
-
 ## Contributing
 
 Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
@@ -185,7 +153,7 @@ Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
 
 - **Branch off `test`, open PRs into `test`.** Never PR into `main` —
   `main` is promoted from `test` automatically once CI is green. See
-  [docs/BRANCHING.md](docs/BRANCHING.md).
+  [docs/branching.md](docs/branching.md).
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org).
 - Run `ruff` + `pytest` (engine) and `npm run lint` + `build` (web) before a PR.
 - PRs are merged with a **merge commit** — branches are kept.
@@ -194,14 +162,10 @@ Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
 
 Project skills (Conventional Commits, Conventional Branches, modular service
 design) live in the [My-Skills](https://github.com/FurkanEdizkan/My-Skills)
-plugin marketplace. Install once per machine:
-
-```sh
-/plugin marketplace add FurkanEdizkan/My-Skills
-/plugin install skills@furkanedizkan-skills
-```
-
-See [AGENTS.md](AGENTS.md) for the full agent guide.
+plugin marketplace, pre-registered in [`.claude/settings.json`](.claude/settings.json).
+Claude Code will offer to trust + install them the first time you open this
+repo — no manual step required. See [AGENTS.md](AGENTS.md) for the full agent
+guide.
 
 ### For AI agents and automated contributors
 
@@ -220,10 +184,13 @@ Capital is designed to be navigable and contributable by AI agents:
 
 ## Documentation
 
-- [Architecture](docs/ARCHITECTURE.md) — how Capital is put together
-- [Branching model](docs/BRANCHING.md) — the `test → main` workflow
-- [Pull request guidelines](docs/PR_GUIDELINES.md)
-- [Releases](docs/RELEASES.md)
+- [Architecture](docs/architecture.md) — how Capital is put together
+- [Branching model](docs/branching.md) — the `test → main` workflow
+- [Pull request guidelines](docs/pull-requests.md)
+- [Releases](docs/releases.md)
+- [Development setup](docs/development.md) — manual setup, project structure
+- [Operations](docs/operations/) — deployment, backup & restore
+- [Venues](docs/venues/) — Binance & Polymarket setup + design
 - [Contributing](CONTRIBUTING.md) — dev setup and PR rules
 - [Security policy](SECURITY.md)
 - [Agent guide](AGENTS.md)
@@ -240,7 +207,7 @@ Capital is designed to be navigable and contributable by AI agents:
 | 5     | Live trading (Testnet → real)                 | Done        |
 | 6     | 24/7 hardening, resilience, deployment        | Done        |
 | 7     | AI strategies + agent/MCP integration         | Done        |
-| 8     | Multi-venue expansion (stocks, Polymarket)    | Done        |
+| 8     | Multi-venue expansion — Polymarket + AI bets  | In progress |
 
 ## License
 

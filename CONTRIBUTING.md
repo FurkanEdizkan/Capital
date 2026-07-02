@@ -50,6 +50,23 @@ npm install
 npm run dev                          # http://localhost:5173
 ```
 
+## Python toolchain (engine)
+
+The engine pins its toolchain explicitly so dev, CI, and Docker all install
+the same versions:
+
+- **Python**: the patch version is pinned in `engine/.python-version`. `uv`
+  installs and manages this Python automatically on the first `uv sync`;
+  the host's system Python is not touched.
+- **uv binary**: pinned to `0.11` in both CI (`.github/workflows/ci.yml`)
+  and the engine Dockerfile (`ghcr.io/astral-sh/uv:0.11`).
+- **Lockfile**: `engine/uv.lock` is committed and required to match
+  `engine/pyproject.toml`. CI runs `uv sync --locked` and **fails** if the
+  lock is out of date.
+
+After editing `engine/pyproject.toml` (adding / removing / bumping deps),
+run `uv lock` from `engine/` and commit the updated `uv.lock` in the same PR.
+
 ## Branching model
 
 Capital uses a **two-trunk** model.
@@ -70,7 +87,7 @@ contributors  ->  feature/*  ->  PR into test  ->  CI green  ->  merged into tes
 - A GitHub workflow opens (or refreshes) a PR from `test` into `main` whenever
   CI on `test` is green. Maintainers review and merge that PR to ship.
 
-See [docs/BRANCHING.md](docs/BRANCHING.md) for the full model and the
+See [docs/branching.md](docs/branching.md) for the full model and the
 branch-protection settings maintainers must configure.
 
 ## Pull request workflow
@@ -91,7 +108,7 @@ branch-protection settings maintainers must configure.
    every commit on your branch is preserved in history, write those cleanly and
    Conventionally too.
 
-Read [docs/PR_GUIDELINES.md](docs/PR_GUIDELINES.md) for the full checklist.
+Read [docs/pull-requests.md](docs/pull-requests.md) for the full checklist.
 
 ## Commit messages
 

@@ -1,10 +1,13 @@
 """Venue registry — the catalogue of venues the platform supports.
 
-Each `Venue` implementation (Binance, Alpaca, Polymarket, Binance Alpha) is
-registered here with its asset class and capabilities. Which venue is *active*
-— the one the engine trades through — is a runtime setting
-(`appsettings.store`), not a fixed property, so it is not stored on the
-catalogue entry.
+Each `Venue` implementation is registered here with its asset class and
+capabilities. Which venue is *active* — the one the engine trades through —
+is a runtime setting (`appsettings.store`), not a fixed property, so it is
+not stored on the catalogue entry.
+
+Capital currently supports Binance only. The `Venue` ABC and this registry
+shape are intentionally preserved so re-adding a venue later is a single
+new `VenueInfo` entry plus a `_VENUE_CLASSES` mapping in `factory.py`.
 """
 
 from dataclasses import dataclass
@@ -28,18 +31,13 @@ AVAILABLE_VENUES: tuple[VenueInfo, ...] = (
         credential_fields=("api_key", "api_secret"),
     ),
     VenueInfo(
-        "alpaca", "stocks", supports_sandbox=True,
-        credential_fields=("api_key", "api_secret"),
-    ),
-    VenueInfo(
+        # Wallet-derived L2 credentials sign requests; the private key signs
+        # the orders themselves; the wallet (funder) address holds the USDC.
+        # See docs/venues/polymarket-setup.md.
         "polymarket", "prediction-markets", supports_sandbox=False,
-        credential_fields=("wallet_private_key", "wallet_address"),
-    ),
-    VenueInfo(
-        # Binance Alpha tokenized stocks (Ondo) — read-only market data; no
-        # confirmed order API yet, so no credentials and no sandbox.
-        "binance-alpha", "tokenized-stocks", supports_sandbox=False,
-        credential_fields=(),
+        credential_fields=(
+            "private_key", "api_key", "api_secret", "passphrase", "wallet_address",
+        ),
     ),
 )
 

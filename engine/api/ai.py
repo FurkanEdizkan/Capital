@@ -11,21 +11,24 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from ai import localfit
 from ai.analyze import analyze
 from ai.providers import LLMError, get_provider
 from ai.providers.base import Decision, LLMProvider
-from ai.signals import AISignal, SignalStatus, recent_signals
+from ai.signals import (
+    AISignal,
+    SignalBlockedError,
+    SignalStatus,
+    execute_signal,
+    recent_signals,
+)
 from ai.usage import LLMUsage, ModelUsage, model_usage_summary, recent_usage, record_usage
 from api.market import get_venue_router
 from appsettings.store import get_ai_api_key, get_ai_settings
 from auth.deps import CurrentUser, SessionDep, require_admin
 from auth.models import User
-from config import settings
 from trading.executor_router import ExecutorRouter
-from trading.executors.base import ExecutionError, Order
-from trading.models import FillSide
-from trading.portfolio import get_or_create_position
-from trading.risk import RiskManager
+from trading.executors.base import ExecutionError
 from trading.venue_router import VenueRouter
 from venues.base import VenueError
 
@@ -73,6 +76,7 @@ def analyze_and_decide(
         model=completion.model,
         input_tokens=completion.input_tokens,
         output_tokens=completion.output_tokens,
+        purpose="analyze",
         action=decision.action.value,
         confidence=decision.confidence,
     )
@@ -126,41 +130,17 @@ def confirm_signal(
             status.HTTP_409_CONFLICT, f"signal is already {signal.status}"
         )
     try:
-        price = venues.resolve(session).price(signal.symbol)
+        return execute_signal(
+            session, signal, venues, executor_router=_executor_router()
+        )
     except VenueError as exc:
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY, f"could not price {signal.symbol}: {exc}"
         ) from exc
-
-    position = get_or_create_position(
-        session, signal.strategy, signal.market, signal.symbol
-    )
-    order = Order(
-        strategy=signal.strategy,
-        market=signal.market,
-        symbol=signal.symbol,
-        side=FillSide(signal.action),
-        quantity=signal.quantity,
-    )
-    reviewed = RiskManager.from_settings(settings).review(
-        session, order, position, price
-    )
-    if reviewed is None:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            "order blocked by the risk manager (size cap or kill switch)",
-        )
-    executor = _executor_router().resolve(session)
-    try:
-        executor.execute(session, reviewed, reference_price=price)
+    except SignalBlockedError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     except ExecutionError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
-
-    signal.status = SignalStatus.executed.value
-    session.add(signal)
-    session.commit()
-    session.refresh(signal)
-    return signal
 
 
 @router.post("/signals/{signal_id}/dismiss", response_model=AISignal)
@@ -174,3 +154,56 @@ def dismiss_signal(signal_id: int, _: AdminUser, session: SessionDep) -> AISigna
     session.commit()
     session.refresh(signal)
     return signal
+
+
+class OllamaModelRead(BaseModel):
+    name: str
+    size_bytes: int
+    parameter_size: str
+    quantization: str
+
+
+class OllamaStatusRead(BaseModel):
+    reachable: bool
+    base_url: str
+    version: str
+    models: list[OllamaModelRead]
+
+
+class ModelFitRead(BaseModel):
+    model: str
+    quantization: str
+    fit: str
+    est_speed: str
+    memory_gb: str
+
+
+class LlmfitStatusRead(BaseModel):
+    installed: bool
+    install_hint: str
+    hardware: dict
+    fits: list[ModelFitRead]
+    error: str
+
+
+class LocalAIRead(BaseModel):
+    """Local-model readiness — deployed (Ollama) and deployable (llmfit)."""
+
+    ollama: OllamaStatusRead
+    llmfit: LlmfitStatusRead
+
+
+@router.get("/local", response_model=LocalAIRead)
+def local_models(
+    _: AdminUser, session: SessionDep, refresh: bool = False
+) -> LocalAIRead:
+    """Whether local models are deployed (Ollama) or deployable (llmfit).
+
+    The snapshot is cached for ~5 minutes; `refresh=true` re-probes now.
+    """
+    snap = localfit.snapshot(session, force=refresh)
+    data = snap.as_dict()
+    return LocalAIRead(
+        ollama=OllamaStatusRead(**data["ollama"]),
+        llmfit=LlmfitStatusRead(**data["llmfit"]),
+    )
