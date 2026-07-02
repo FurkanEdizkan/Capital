@@ -40,6 +40,11 @@ from appsettings.store import (
     get_research_interval_hours,
     get_research_symbols,
     get_research_writer,
+    get_risk_daily_loss_limit,
+    get_risk_max_drawdown_pct,
+    get_risk_max_position_notional,
+    get_risk_stop_loss_pct,
+    get_risk_take_profit_pct,
     llm_provider_configured,
     set_ai_action_mode,
     set_ai_settings,
@@ -57,12 +62,18 @@ from appsettings.store import (
     set_research_interval_hours,
     set_research_symbols,
     set_research_writer,
+    set_risk_daily_loss_limit,
+    set_risk_max_drawdown_pct,
+    set_risk_max_position_notional,
+    set_risk_stop_loss_pct,
+    set_risk_take_profit_pct,
     set_venue_credentials,
     venue_credentials_configured,
 )
 from auth.audit import record_audit
 from auth.deps import SessionDep, require_admin
 from auth.models import User
+from config import settings as _env_settings
 from trading.portfolio import list_positions
 from venues.registry import AVAILABLE_VENUES, get_venue
 
@@ -112,6 +123,12 @@ class SettingsRead(BaseModel):
     polymarket_min_confidence: Decimal
     polymarket_screen_top: int
     polymarket_stake: Decimal
+    # Global risk limits (0 = disabled). Enforced by trading/risk.py each tick.
+    risk_stop_loss_pct: Decimal
+    risk_take_profit_pct: Decimal
+    risk_max_drawdown_pct: Decimal
+    risk_daily_loss_limit: Decimal
+    risk_max_position_notional: Decimal
 
 
 class VenueCredentialsUpdate(BaseModel):
@@ -187,6 +204,14 @@ class PolymarketSettingsUpdate(BaseModel):
     stake: Decimal = Field(default=Decimal("100"), gt=0)
 
 
+class RiskSettingsUpdate(BaseModel):
+    stop_loss_pct: Decimal = Field(ge=0, le=100)
+    take_profit_pct: Decimal = Field(ge=0, le=100)
+    max_drawdown_pct: Decimal = Field(ge=0, le=100)
+    daily_loss_limit: Decimal = Field(ge=0)
+    max_position_notional: Decimal = Field(ge=0)
+
+
 def _read(session: SessionDep) -> SettingsRead:
     ai = get_ai_settings(session)
     writer = get_research_writer(session)
@@ -220,6 +245,21 @@ def _read(session: SessionDep) -> SettingsRead:
         polymarket_min_confidence=get_polymarket_min_confidence(session),
         polymarket_screen_top=get_polymarket_screen_top(session),
         polymarket_stake=get_polymarket_stake(session),
+        risk_stop_loss_pct=get_risk_stop_loss_pct(
+            session, _env_settings.risk_stop_loss_pct
+        ),
+        risk_take_profit_pct=get_risk_take_profit_pct(
+            session, _env_settings.risk_take_profit_pct
+        ),
+        risk_max_drawdown_pct=get_risk_max_drawdown_pct(
+            session, _env_settings.risk_max_drawdown_pct
+        ),
+        risk_daily_loss_limit=get_risk_daily_loss_limit(
+            session, _env_settings.risk_daily_loss_limit
+        ),
+        risk_max_position_notional=get_risk_max_position_notional(
+            session, _env_settings.risk_max_position_notional
+        ),
     )
 
 
@@ -438,6 +478,35 @@ def update_polymarket_settings(
             "min_confidence": str(body.min_confidence),
             "screen_top": body.screen_top,
             "stake": str(body.stake),
+        },
+    )
+    return _read(session)
+
+
+@router.put("/risk", response_model=SettingsRead)
+def update_risk_settings(
+    body: RiskSettingsUpdate, admin: AdminUser, session: SessionDep
+) -> SettingsRead:
+    """Set the global risk limits (0 disables a limit).
+
+    Changes apply on the next engine tick — a stop-loss you enable may
+    immediately close an already-losing position.
+    """
+    set_risk_stop_loss_pct(session, body.stop_loss_pct)
+    set_risk_take_profit_pct(session, body.take_profit_pct)
+    set_risk_max_drawdown_pct(session, body.max_drawdown_pct)
+    set_risk_daily_loss_limit(session, body.daily_loss_limit)
+    set_risk_max_position_notional(session, body.max_position_notional)
+    record_audit(
+        session,
+        actor=admin.username,
+        action="settings.risk",
+        detail={
+            "stop_loss_pct": str(body.stop_loss_pct),
+            "take_profit_pct": str(body.take_profit_pct),
+            "max_drawdown_pct": str(body.max_drawdown_pct),
+            "daily_loss_limit": str(body.daily_loss_limit),
+            "max_position_notional": str(body.max_position_notional),
         },
     )
     return _read(session)
