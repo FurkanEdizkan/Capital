@@ -17,7 +17,6 @@ from api.market import get_venue_router
 from auth.audit import record_audit
 from auth.deps import SessionDep, require_admin
 from auth.models import User
-from config import settings
 from trading.executor_router import ExecutorRouter
 from trading.executors.base import ExecutionError, Fill
 from trading.manual_order import ManualOrderRequest, OrderBlocked, submit_manual_order
@@ -50,7 +49,7 @@ def place_manual_order(
             body,
             venues=venues,
             executor_router=_executor_router(),
-            risk=RiskManager.from_settings(settings),
+            risk=RiskManager.from_store(session),
         )
     except VenueError as exc:
         raise HTTPException(

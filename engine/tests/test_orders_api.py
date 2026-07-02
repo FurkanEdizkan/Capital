@@ -96,3 +96,25 @@ def test_manual_order_rejects_zero_quantity(orders_client: TestClient) -> None:
         headers=_auth(orders_client),
     )
     assert resp.status_code == 422  # quantity must be > 0
+
+
+def test_manual_order_honors_stored_notional_cap(
+    orders_client: TestClient, session: Session
+) -> None:
+    """A UI-set notional cap must apply to manual orders (via the store).
+
+    FakeVenue prices at 100; a 10 notional cap clips a 0.5-qty order to 0.1.
+    With the old env-only RiskManager (cap defaults 0/disabled) the fill would
+    be the full 0.5, so this asserts the stored limit is actually honored.
+    """
+    from appsettings.store import set_risk_max_position_notional
+
+    set_risk_max_position_notional(session, Decimal("10"))
+    resp = orders_client.post(
+        "/api/orders/manual", json=_order(quantity="0.5"), headers=_auth(orders_client)
+    )
+    assert resp.status_code == 200, resp.text
+    assert Decimal(resp.json()["quantity"]) == Decimal("0.1")  # 10 / price(100)
+    trades = session.exec(select(Trade)).all()
+    assert len(trades) == 1
+    assert trades[0].quantity == Decimal("0.1")

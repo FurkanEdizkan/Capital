@@ -42,7 +42,6 @@ from ops.recovery import recover_on_boot
 from strategies.builtin import all_strategies_with_instances, seed_allocations
 from trading.engine import TradingEngine
 from trading.executor_router import ExecutorRouter
-from trading.risk import RiskManager
 
 setup_logging(settings.log_level)
 log = logging.getLogger("capital")
@@ -89,7 +88,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         session_factory=session_factory,
         router=ExecutorRouter(),
         strategies=strategies,
-        risk=RiskManager.from_settings(settings),
         notifier=TelegramNotifier.from_settings(settings),
         retention_candle_days=settings.retention_candle_days,
         retention_equity_days=settings.retention_equity_days,
