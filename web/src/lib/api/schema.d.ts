@@ -4,151 +4,6 @@
  */
 
 export interface paths {
-    "/api/ai/analyze": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Analyze And Decide
-         * @description Run a free-form analyze-and-decide task through the configured LLM.
-         */
-        post: operations["analyze_and_decide_api_ai_analyze_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/decisions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Decision Log
-         * @description The recent decision log — what each model decided, newest first.
-         */
-        get: operations["decision_log_api_ai_decisions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/local": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Local Models
-         * @description Whether local models are deployed (Ollama) or deployable (llmfit).
-         *
-         *     The snapshot is cached for ~5 minutes; `refresh=true` re-probes now.
-         */
-        get: operations["local_models_api_ai_local_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Model Performance
-         * @description Per-model rollup — decisions, action mix and total cost for each model.
-         */
-        get: operations["model_performance_api_ai_models_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/signals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Signals
-         * @description Recent AI signals (notify-mode decisions), newest first.
-         */
-        get: operations["list_signals_api_ai_signals_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/signals/{signal_id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Confirm Signal
-         * @description Execute a pending AI signal through the same risk + executor path.
-         *
-         *     Re-prices at confirmation and re-runs the risk gate, so a stale or
-         *     risk-blocked signal cannot slip through. Marks the signal `executed`.
-         */
-        post: operations["confirm_signal_api_ai_signals__signal_id__confirm_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/signals/{signal_id}/dismiss": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Dismiss Signal
-         * @description Dismiss a pending AI signal without executing it.
-         */
-        post: operations["dismiss_signal_api_ai_signals__signal_id__dismiss_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -165,26 +20,6 @@ export interface paths {
          *     Rate-limited: repeated failures lock the username out (brute-force guard).
          */
         post: operations["login_api_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Me
-         * @description Return the currently authenticated operator.
-         */
-        get: operations["me_api_auth_me_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -211,27 +46,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/backtest/run": {
+    "/api/auth/me": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Run
-         * @description Replay a strategy over the requested date range and return the result.
+         * Me
+         * @description Return the currently authenticated operator.
          */
-        post: operations["run_api_backtest_run_post"];
+        get: operations["me_api_auth_me_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/connections/edges/{edge_id}": {
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_users_get"];
+        put?: never;
+        /** Create User */
+        post: operations["create_user_api_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{user_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -241,17 +94,14 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /**
-         * Delete Edge
-         * @description Delete an edge (reject a suggestion or prune a curated link).
-         */
-        delete: operations["delete_edge_api_connections_edges__edge_id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update User */
+        patch: operations["update_user_api_users__user_id__patch"];
         trace?: never;
     };
-    "/api/connections/edges/{edge_id}/approve": {
+    "/api/users/{user_id}/password": {
         parameters: {
             query?: never;
             header?: never;
@@ -260,18 +110,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Approve Edge
-         * @description Approve a pending edge so it joins the graph.
-         */
-        post: operations["approve_edge_api_connections_edges__edge_id__approve_post"];
+        /** Reset Password */
+        post: operations["reset_password_api_users__user_id__password_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/connections/graph": {
+    "/api/market/tickers": {
         parameters: {
             query?: never;
             header?: never;
@@ -279,210 +126,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Graph
-         * @description The full graph. Pending (AI-suggested) edges are opt-in.
+         * List Tickers
+         * @description Latest 24h tickers — from the live snapshot, or REST as a fallback.
          */
-        get: operations["get_graph_api_connections_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/connections/nodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Node
-         * @description Create a node (or return the existing one with the same label).
-         */
-        post: operations["create_node_api_connections_nodes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/connections/suggest/{node_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Suggest Connections
-         * @description Ask the LLM to suggest related entities for a node (stored pending).
-         */
-        post: operations["suggest_connections_api_connections_suggest__node_id__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/costs/ledger": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Costs Ledger
-         * @description The per-call ledger, newest first — filterable by purpose.
-         */
-        get: operations["costs_ledger_api_costs_ledger_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/costs/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Costs Summary
-         * @description Spend totals and breakdowns over the last 30 days.
-         */
-        get: operations["costs_summary_api_costs_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/history/audit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Audit
-         * @description The audit log of config-changing actions, newest-first.
-         */
-        get: operations["audit_api_history_audit_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/history/trades": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Trades
-         * @description The transaction log, newest-first, optionally filtered by date range.
-         */
-        get: operations["trades_api_history_trades_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/history/trades.csv": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Trades Csv
-         * @description The transaction log as a CSV download (oldest-first) for tax/reporting.
-         */
-        get: operations["trades_csv_api_history_trades_csv_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lab/compare": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Compare Grid
-         * @description Backtest every (type × symbol) cell over the same recent range.
-         */
-        post: operations["compare_grid_api_lab_compare_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lab/recommend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Recommend
-         * @description Ask the configured LLM to pick a strategy for the coin, then backtest it.
-         */
-        post: operations["recommend_api_lab_recommend_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/market/funding": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Funding
-         * @description Current futures funding rate for a symbol.
-         */
-        get: operations["get_funding_api_market_funding_get"];
+        get: operations["list_tickers_api_market_tickers_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -511,7 +158,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/market/latency": {
+    "/api/market/funding": {
         parameters: {
             query?: never;
             header?: never;
@@ -519,10 +166,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Feed Latency
-         * @description How delayed the price data is, per feed (ws event time + REST RTT).
+         * Get Funding
+         * @description Current futures funding rate for a symbol.
          */
-        get: operations["feed_latency_api_market_latency_get"];
+        get: operations["get_funding_api_market_funding_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -551,7 +198,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/market/tickers": {
+    "/api/market/latency": {
         parameters: {
             query?: never;
             header?: never;
@@ -559,52 +206,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Tickers
-         * @description Latest 24h tickers — from the live snapshot, or REST as a fallback.
+         * Feed Latency
+         * @description How delayed the price data is, per feed (ws event time + REST RTT).
          */
-        get: operations["list_tickers_api_market_tickers_get"];
+        get: operations["feed_latency_api_market_latency_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List News
-         * @description Recent headlines, newest first — filterable by `symbol` and `category`.
-         */
-        get: operations["list_news_api_news_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh News
-         * @description Fetch every configured feed now. Returns the number of new headlines.
-         */
-        post: operations["refresh_news_api_news_refresh_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -631,7 +238,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/polymarket/analyses": {
+    "/api/portfolio/summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -639,110 +246,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Analyses
-         * @description Recent AI bet analyses, newest first — optionally for one market.
+         * Summary
+         * @description Aggregate accounting — equity, PnL, fees, allocated vs idle capital.
          */
-        get: operations["list_analyses_api_polymarket_analyses_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/polymarket/markets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Markets
-         * @description Discovered markets, most-traded first — filterable and searchable.
-         */
-        get: operations["list_markets_api_polymarket_markets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/polymarket/markets/{condition_id}/analyze": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Analyze Now
-         * @description Run one AI analysis for a market immediately (a paid LLM call).
-         */
-        post: operations["analyze_now_api_polymarket_markets__condition_id__analyze_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/polymarket/markets/{condition_id}/watch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Watched
-         * @description Pin or unpin a market for scheduled AI analysis.
-         */
-        put: operations["update_watched_api_polymarket_markets__condition_id__watch_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/polymarket/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh Markets
-         * @description Pull the latest top markets from the Gamma API now.
-         */
-        post: operations["refresh_markets_api_polymarket_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/costs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Costs
-         * @description Cost visibility — trading fees by market, fee rates, and LLM spend.
-         */
-        get: operations["costs_api_portfolio_costs_get"];
+        get: operations["summary_api_portfolio_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -791,26 +298,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/portfolio/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Summary
-         * @description Aggregate accounting — equity, PnL, fees, allocated vs idle capital.
-         */
-        get: operations["summary_api_portfolio_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/portfolio/trades": {
         parameters: {
             query?: never;
@@ -831,7 +318,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/research": {
+    "/api/portfolio/costs": {
         parameters: {
             query?: never;
             header?: never;
@@ -839,302 +326,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Reports
-         * @description Recent reports, newest first — optionally filtered by `symbol`.
+         * Costs
+         * @description Cost visibility — trading fees by market, fee rates, and LLM spend.
          */
-        get: operations["list_reports_api_research_get"];
+        get: operations["costs_api_portfolio_costs_get"];
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/research/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Run Research
-         * @description Write a report now — for `symbol`, or every watched symbol when blank.
-         */
-        post: operations["run_research_api_research_run_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/research/{report_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Report
-         * @description One report with its full sections.
-         */
-        get: operations["get_report_api_research__report_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/research/{report_id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Review
-         * @description The newest council review for a report, with every vote.
-         */
-        get: operations["get_review_api_research__report_id__review_get"];
-        put?: never;
-        /**
-         * Rerun Review
-         * @description Re-run the council on a report now (admin).
-         */
-        post: operations["rerun_review_api_research__report_id__review_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Settings
-         * @description Current trading mode and whether Binance keys are stored.
-         */
-        get: operations["read_settings_api_settings_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/ai": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Ai Settings
-         * @description Configure the AI provider. The API key is encrypted at rest.
-         */
-        put: operations["update_ai_settings_api_settings_ai_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/ai-action-mode": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Ai Action Mode
-         * @description Set how AI decisions are applied: `notify` (confirm) or `auto`.
-         */
-        put: operations["update_ai_action_mode_api_settings_ai_action_mode_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/ai-spend-cap": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Ai Spend Cap
-         * @description Set the daily LLM spend cap — AI strategies pause once it is reached.
-         */
-        put: operations["update_ai_spend_cap_api_settings_ai_spend_cap_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/binance-keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Binance Keys
-         * @description Store the Binance API credentials (encrypted at rest).
-         */
-        put: operations["update_binance_keys_api_settings_binance_keys_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/council": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Council Settings
-         * @description Configure the AI council members and quorum.
-         */
-        put: operations["update_council_settings_api_settings_council_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/llm-credentials/{provider}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Llm Credentials
-         * @description Store one LLM provider's API key and/or base URL (encrypted at rest).
-         */
-        put: operations["update_llm_credentials_api_settings_llm_credentials__provider__put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/mode": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Mode
-         * @description Switch the trading mode (Sim / Testnet / Live).
-         */
-        put: operations["update_mode_api_settings_mode_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/polymarket": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Polymarket Settings
-         * @description Configure Polymarket discovery and AI bet screening.
-         *
-         *     Scheduler-interval changes take effect on the next engine restart.
-         */
-        put: operations["update_polymarket_settings_api_settings_polymarket_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/research": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Research Settings
-         * @description Configure research reports and the news refresh interval.
-         *
-         *     Scheduler-interval changes take effect on the next engine restart.
-         */
-        put: operations["update_research_settings_api_settings_research_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/venue-credentials/{venue}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Venue Credentials
-         * @description Store a venue's credentials (encrypted at rest).
-         *
-         *     The submitted field names must exactly match the venue's declared
-         *     `credential_fields`, and every value must be non-empty.
-         */
-        put: operations["update_venue_credentials_api_settings_venue_credentials__venue__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1208,26 +404,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/strategies/{name}/ai-model": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Ai Model
-         * @description Pin an AI strategy to a provider + model (Claude / OpenAI / Gemini / Ollama).
-         */
-        patch: operations["update_ai_model_api_strategies__name__ai_model_patch"];
-        trace?: never;
-    };
     "/api/strategies/{name}/allocation": {
         parameters: {
             query?: never;
@@ -1246,26 +422,6 @@ export interface paths {
          * @description Set a strategy's capital budget; the engine caps its exposure to it.
          */
         patch: operations["update_allocation_api_strategies__name__allocation_patch"];
-        trace?: never;
-    };
-    "/api/strategies/{name}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Close Strategy
-         * @description Close every open position held by the strategy.
-         */
-        post: operations["close_strategy_api_strategies__name__close_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/strategies/{name}/enabled": {
@@ -1288,6 +444,316 @@ export interface paths {
         patch: operations["update_enabled_api_strategies__name__enabled_patch"];
         trace?: never;
     };
+    "/api/strategies/{name}/ai-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Ai Model
+         * @description Pin an AI strategy to a provider + model (Claude / OpenAI / Gemini / Ollama).
+         */
+        patch: operations["update_ai_model_api_strategies__name__ai_model_patch"];
+        trace?: never;
+    };
+    "/api/strategies/{name}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close Strategy
+         * @description Close every open position held by the strategy.
+         */
+        post: operations["close_strategy_api_strategies__name__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backtest/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run
+         * @description Replay a strategy over the requested date range and return the result.
+         */
+        post: operations["run_api_backtest_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Settings
+         * @description Current trading mode and whether Binance keys are stored.
+         */
+        get: operations["read_settings_api_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Mode
+         * @description Switch the trading mode (Sim / Testnet / Live).
+         */
+        put: operations["update_mode_api_settings_mode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/binance-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Binance Keys
+         * @description Store the Binance API credentials (encrypted at rest).
+         */
+        put: operations["update_binance_keys_api_settings_binance_keys_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/venue-credentials/{venue}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Venue Credentials
+         * @description Store a venue's credentials (encrypted at rest).
+         *
+         *     The submitted field names must exactly match the venue's declared
+         *     `credential_fields`, and every value must be non-empty.
+         */
+        put: operations["update_venue_credentials_api_settings_venue_credentials__venue__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/llm-credentials/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Llm Credentials
+         * @description Store one LLM provider's API key and/or base URL (encrypted at rest).
+         */
+        put: operations["update_llm_credentials_api_settings_llm_credentials__provider__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/ai-spend-cap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Ai Spend Cap
+         * @description Set the daily LLM spend cap — AI strategies pause once it is reached.
+         */
+        put: operations["update_ai_spend_cap_api_settings_ai_spend_cap_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Ai Settings
+         * @description Configure the AI provider. The API key is encrypted at rest.
+         */
+        put: operations["update_ai_settings_api_settings_ai_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Research Settings
+         * @description Configure research reports and the news refresh interval.
+         *
+         *     Scheduler-interval changes take effect on the next engine restart.
+         */
+        put: operations["update_research_settings_api_settings_research_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/polymarket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Polymarket Settings
+         * @description Configure Polymarket discovery and AI bet screening.
+         *
+         *     Scheduler-interval changes take effect on the next engine restart.
+         */
+        put: operations["update_polymarket_settings_api_settings_polymarket_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Risk Settings
+         * @description Set the global risk limits (0 disables a limit).
+         *
+         *     Changes apply on the next engine tick — a stop-loss you enable may
+         *     immediately close an already-losing position.
+         */
+        put: operations["update_risk_settings_api_settings_risk_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/council": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Council Settings
+         * @description Configure the AI council members and quorum.
+         */
+        put: operations["update_council_settings_api_settings_council_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings/ai-action-mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Ai Action Mode
+         * @description Set how AI decisions are applied: `notify` (confirm) or `auto`.
+         */
+        put: operations["update_ai_action_mode_api_settings_ai_action_mode_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/watchdog": {
         parameters: {
             query?: never;
@@ -1300,6 +766,211 @@ export interface paths {
          * @description Engine liveness — heartbeat age and whether an alert is warranted.
          */
         get: operations["get_watchdog_api_system_watchdog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/history/trades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trades
+         * @description The transaction log, newest-first, optionally filtered by date range.
+         */
+        get: operations["trades_api_history_trades_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/history/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit
+         * @description The audit log of config-changing actions, newest-first.
+         */
+        get: operations["audit_api_history_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/history/trades.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trades Csv
+         * @description The transaction log as a CSV download (oldest-first) for tax/reporting.
+         */
+        get: operations["trades_csv_api_history_trades_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze And Decide
+         * @description Run a free-form analyze-and-decide task through the configured LLM.
+         */
+        post: operations["analyze_and_decide_api_ai_analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Model Performance
+         * @description Per-model rollup — decisions, action mix and total cost for each model.
+         */
+        get: operations["model_performance_api_ai_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Decision Log
+         * @description The recent decision log — what each model decided, newest first.
+         */
+        get: operations["decision_log_api_ai_decisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/signals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Signals
+         * @description Recent AI signals (notify-mode decisions), newest first.
+         */
+        get: operations["list_signals_api_ai_signals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/signals/{signal_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Signal
+         * @description Execute a pending AI signal through the same risk + executor path.
+         *
+         *     Re-prices at confirmation and re-runs the risk gate, so a stale or
+         *     risk-blocked signal cannot slip through. Marks the signal `executed`.
+         */
+        post: operations["confirm_signal_api_ai_signals__signal_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/signals/{signal_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Signal
+         * @description Dismiss a pending AI signal without executing it.
+         */
+        post: operations["dismiss_signal_api_ai_signals__signal_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Local Models
+         * @description Whether local models are deployed (Ollama) or deployable (llmfit).
+         *
+         *     The snapshot is cached for ~5 minutes; `refresh=true` re-probes now.
+         */
+        get: operations["local_models_api_ai_local_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1352,58 +1023,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Users */
-        get: operations["list_users_api_users_get"];
-        put?: never;
-        /** Create User */
-        post: operations["create_user_api_users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update User */
-        patch: operations["update_user_api_users__user_id__patch"];
-        trace?: never;
-    };
-    "/api/users/{user_id}/password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reset Password */
-        post: operations["reset_password_api_users__user_id__password_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/venues": {
         parameters: {
             query?: never;
@@ -1444,6 +1063,410 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/news": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List News
+         * @description Recent headlines, newest first — filterable by `symbol` and `category`.
+         */
+        get: operations["list_news_api_news_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/news/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh News
+         * @description Fetch every configured feed now. Returns the number of new headlines.
+         */
+        post: operations["refresh_news_api_news_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/markets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Markets
+         * @description Discovered markets, most-traded first — filterable and searchable.
+         */
+        get: operations["list_markets_api_polymarket_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/markets/{condition_id}/watch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Watched
+         * @description Pin or unpin a market for scheduled AI analysis.
+         */
+        put: operations["update_watched_api_polymarket_markets__condition_id__watch_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Markets
+         * @description Pull the latest top markets from the Gamma API now.
+         */
+        post: operations["refresh_markets_api_polymarket_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Analyses
+         * @description Recent AI bet analyses, newest first — optionally for one market.
+         */
+        get: operations["list_analyses_api_polymarket_analyses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polymarket/markets/{condition_id}/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze Now
+         * @description Run one AI analysis for a market immediately (a paid LLM call).
+         */
+        post: operations["analyze_now_api_polymarket_markets__condition_id__analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Graph
+         * @description The full graph. Pending (AI-suggested) edges are opt-in.
+         */
+        get: operations["get_graph_api_connections_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/nodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Node
+         * @description Create a node (or return the existing one with the same label).
+         */
+        post: operations["create_node_api_connections_nodes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/suggest/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Connections
+         * @description Ask the LLM to suggest related entities for a node (stored pending).
+         */
+        post: operations["suggest_connections_api_connections_suggest__node_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/edges/{edge_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Edge
+         * @description Approve a pending edge so it joins the graph.
+         */
+        post: operations["approve_edge_api_connections_edges__edge_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/connections/edges/{edge_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Edge
+         * @description Delete an edge (reject a suggestion or prune a curated link).
+         */
+        delete: operations["delete_edge_api_connections_edges__edge_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reports
+         * @description Recent reports, newest first — optionally filtered by `symbol`.
+         */
+        get: operations["list_reports_api_research_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Report
+         * @description One report with its full sections.
+         */
+        get: operations["get_report_api_research__report_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Research
+         * @description Write a report now — for `symbol`, or every watched symbol when blank.
+         */
+        post: operations["run_research_api_research_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/{report_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Review
+         * @description The newest council review for a report, with every vote.
+         */
+        get: operations["get_review_api_research__report_id__review_get"];
+        put?: never;
+        /**
+         * Rerun Review
+         * @description Re-run the council on a report now (admin).
+         */
+        post: operations["rerun_review_api_research__report_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare Grid
+         * @description Backtest every (type × symbol) cell over the same recent range.
+         */
+        post: operations["compare_grid_api_lab_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/recommend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recommend
+         * @description Ask the configured LLM to pick a strategy for the coin, then backtest it.
+         */
+        post: operations["recommend_api_lab_recommend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/costs/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Costs Summary
+         * @description Spend totals and breakdowns over the last 30 days.
+         */
+        get: operations["costs_summary_api_costs_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/costs/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Costs Ledger
+         * @description The per-call ledger, newest first — filterable by purpose.
+         */
+        get: operations["costs_ledger_api_costs_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1473,6 +1496,22 @@ export interface components {
          * @description One AI decision surfaced to the operator for confirmation.
          */
         AISignal: {
+            /** Id */
+            id?: number | null;
+            /** Strategy */
+            strategy: string;
+            /** Symbol */
+            symbol: string;
+            /**
+             * Venue
+             * @default binance
+             */
+            venue: string;
+            /**
+             * Market
+             * @default spot
+             */
+            market: string;
             /** Action */
             action: string;
             /**
@@ -1480,23 +1519,6 @@ export interface components {
              * @default 0
              */
             confidence: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Id */
-            id?: number | null;
-            /**
-             * Market
-             * @default spot
-             */
-            market: string;
-            /**
-             * Quantity
-             * @default 0
-             */
-            quantity: string;
             /**
              * Reasoning
              * @default
@@ -1508,19 +1530,20 @@ export interface components {
              */
             reference_price: string;
             /**
+             * Quantity
+             * @default 0
+             */
+            quantity: string;
+            /**
              * Status
              * @default pending
              */
             status: string;
-            /** Strategy */
-            strategy: string;
-            /** Symbol */
-            symbol: string;
             /**
-             * Venue
-             * @default binance
+             * Created At
+             * Format: date-time
              */
-            venue: string;
+            created_at: string;
         };
         /** ActiveVenueUpdate */
         ActiveVenueUpdate: {
@@ -1537,33 +1560,33 @@ export interface components {
         };
         /** AiModelUpdate */
         AiModelUpdate: {
+            /** Provider */
+            provider: string;
             /**
              * Model
              * @default
              */
             model: string;
-            /** Provider */
-            provider: string;
         };
         /** AiSettingsUpdate */
         AiSettingsUpdate: {
+            /** Provider */
+            provider: string;
             /**
-             * Api Key
+             * Model
              * @default
              */
-            api_key: string;
+            model: string;
             /**
              * Base Url
              * @default
              */
             base_url: string;
             /**
-             * Model
+             * Api Key
              * @default
              */
-            model: string;
-            /** Provider */
-            provider: string;
+            api_key: string;
         };
         /** AiSpendCapUpdate */
         AiSpendCapUpdate: {
@@ -1591,41 +1614,41 @@ export interface components {
         };
         /** ApiTokenCreated */
         ApiTokenCreated: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+            /** Revoked */
+            revoked: boolean;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
-            /** Id */
-            id: number;
             /** Last Used At */
             last_used_at: string | null;
-            /** Name */
-            name: string;
-            /** Revoked */
-            revoked: boolean;
-            /** Role */
-            role: string;
             /** Token */
             token: string;
         };
         /** ApiTokenRead */
         ApiTokenRead: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+            /** Revoked */
+            revoked: boolean;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
-            /** Id */
-            id: number;
             /** Last Used At */
             last_used_at: string | null;
-            /** Name */
-            name: string;
-            /** Revoked */
-            revoked: boolean;
-            /** Role */
-            role: string;
         };
         /**
          * AuditLog
@@ -1635,53 +1658,50 @@ export interface components {
          *     entries here via `auth.audit.record_audit`.
          */
         AuditLog: {
-            /** Action */
-            action: string;
+            /** Id */
+            id?: number | null;
             /** Actor */
             actor: string;
+            /** Action */
+            action: string;
+            /** Target */
+            target?: string | null;
+            /** Detail */
+            detail?: string | null;
             /**
              * Created At
              * Format: date-time
              */
             created_at?: string;
-            /** Detail */
-            detail?: string | null;
-            /** Id */
-            id?: number | null;
-            /** Target */
-            target?: string | null;
         };
         /** BacktestMetricsRead */
         BacktestMetricsRead: {
-            /** Losses */
-            losses: number;
+            /** Total Return Pct */
+            total_return_pct: string;
+            /** Win Rate Pct */
+            win_rate_pct: string;
             /** Max Drawdown Pct */
             max_drawdown_pct: string;
             /** Sharpe */
             sharpe: string;
-            /** Total Return Pct */
-            total_return_pct: string;
             /** Trades */
             trades: number;
-            /** Win Rate Pct */
-            win_rate_pct: string;
             /** Wins */
             wins: number;
+            /** Losses */
+            losses: number;
         };
         /** BacktestRequest */
         BacktestRequest: {
+            /** Strategy */
+            strategy: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
             /** End */
             end?: string | null;
-            /**
-             * Fee Rate
-             * @default 0.001
-             */
-            fee_rate: number | string;
-            /**
-             * Funding Rate
-             * @default 0
-             */
-            funding_rate: number | string;
             /**
              * Initial Capital
              * @default 10000
@@ -1693,54 +1713,57 @@ export interface components {
              */
             slippage_bps: number | string;
             /**
-             * Start
-             * Format: date-time
+             * Fee Rate
+             * @default 0.001
              */
-            start: string;
-            /** Strategy */
-            strategy: string;
+            fee_rate: number | string;
+            /**
+             * Funding Rate
+             * @default 0
+             */
+            funding_rate: number | string;
         };
         /** BacktestResponse */
         BacktestResponse: {
-            /** Candles */
-            candles: number;
-            /** Equity Curve */
-            equity_curve: components["schemas"]["EquityPoint"][];
-            /** Final Equity */
-            final_equity: string;
-            /** Initial Capital */
-            initial_capital: string;
-            /** Interval */
-            interval: string;
-            metrics: components["schemas"]["BacktestMetricsRead"];
-            /** Net Pnl */
-            net_pnl: string;
             /** Strategy */
             strategy: string;
             /** Symbol */
             symbol: string;
+            /** Interval */
+            interval: string;
+            /** Initial Capital */
+            initial_capital: string;
+            /** Final Equity */
+            final_equity: string;
+            /** Net Pnl */
+            net_pnl: string;
             /** Total Fees */
             total_fees: string;
+            /** Candles */
+            candles: number;
+            /** Equity Curve */
+            equity_curve: components["schemas"]["EquityPoint"][];
             /** Trades */
             trades: components["schemas"]["BacktestTradeRead"][];
+            metrics: components["schemas"]["BacktestMetricsRead"];
         };
         /** BacktestTradeRead */
         BacktestTradeRead: {
-            /** Fee */
-            fee: string;
-            /** Price */
-            price: string;
-            /** Quantity */
-            quantity: string;
-            /** Realized Pnl */
-            realized_pnl: string;
-            /** Side */
-            side: string;
             /**
              * Time
              * Format: date-time
              */
             time: string;
+            /** Side */
+            side: string;
+            /** Quantity */
+            quantity: string;
+            /** Price */
+            price: string;
+            /** Fee */
+            fee: string;
+            /** Realized Pnl */
+            realized_pnl: string;
         };
         /** BinanceKeysUpdate */
         BinanceKeysUpdate: {
@@ -1751,15 +1774,10 @@ export interface components {
         };
         /** Body_login_api_auth_login_post */
         Body_login_api_auth_login_post: {
-            /** Client Id */
-            client_id?: string | null;
-            /**
-             * Client Secret
-             * Format: password
-             */
-            client_secret?: string | null;
             /** Grant Type */
             grant_type?: string | null;
+            /** Username */
+            username: string;
             /**
              * Password
              * Format: password
@@ -1770,42 +1788,47 @@ export interface components {
              * @default
              */
             scope: string;
-            /** Username */
-            username: string;
+            /** Client Id */
+            client_id?: string | null;
+            /**
+             * Client Secret
+             * Format: password
+             */
+            client_secret?: string | null;
         };
         /**
          * Candle
          * @description A single OHLCV bar for one symbol/interval/market.
          */
         Candle: {
-            /** Close */
-            close: string;
-            /**
-             * Close Time
-             * Format: date-time
-             */
-            close_time: string;
-            /** High */
-            high: string;
             /** Id */
             id?: number | null;
-            /** Interval */
-            interval: string;
-            /** Low */
-            low: string;
             /** Market */
             market: string;
-            /** Open */
-            open: string;
+            /** Symbol */
+            symbol: string;
+            /** Interval */
+            interval: string;
             /**
              * Open Time
              * Format: date-time
              */
             open_time: string;
-            /** Symbol */
-            symbol: string;
+            /** Open */
+            open: string;
+            /** High */
+            high: string;
+            /** Low */
+            low: string;
+            /** Close */
+            close: string;
             /** Volume */
             volume: string;
+            /**
+             * Close Time
+             * Format: date-time
+             */
+            close_time: string;
         };
         /** CloseResult */
         CloseResult: {
@@ -1814,48 +1837,40 @@ export interface components {
         };
         /** CompareCellRead */
         CompareCellRead: {
-            /** Equity Sparkline */
-            equity_sparkline: number[];
-            /** Error */
-            error: string;
-            /** Final Equity */
-            final_equity: string;
-            /** Max Drawdown Pct */
-            max_drawdown_pct: string;
-            /** Net Pnl */
-            net_pnl: string;
+            /** Type */
+            type: string;
+            /** Symbol */
+            symbol: string;
             /** Params */
             params: {
                 [key: string]: unknown;
             };
             /** Return Pct */
             return_pct: string;
+            /** Max Drawdown Pct */
+            max_drawdown_pct: string;
             /** Sharpe */
             sharpe: string;
-            /** Symbol */
-            symbol: string;
-            /** Trades */
-            trades: number;
-            /** Type */
-            type: string;
             /** Win Rate Pct */
             win_rate_pct: string;
+            /** Trades */
+            trades: number;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Final Equity */
+            final_equity: string;
+            /** Equity Sparkline */
+            equity_sparkline: number[];
+            /** Error */
+            error: string;
         };
         /**
          * CompareRequest
          * @description A grid request — either pivot is just a different shape of the same.
          */
         CompareRequest: {
-            /**
-             * Capital
-             * @default 10000
-             */
-            capital: number | string;
-            /**
-             * Days
-             * @default 90
-             */
-            days: number;
+            /** Types */
+            types?: string[];
             /** Symbols */
             symbols: string[];
             /**
@@ -1863,101 +1878,109 @@ export interface components {
              * @default 1h
              */
             timeframe: string;
-            /** Types */
-            types?: string[];
+            /**
+             * Days
+             * @default 90
+             */
+            days: number;
+            /**
+             * Capital
+             * @default 10000
+             */
+            capital: number | string;
         };
         /**
          * CostBucket
          * @description One aggregation bucket — by model, purpose or day.
          */
         CostBucket: {
-            /** Calls */
-            calls: number;
-            /** Cost Usd */
-            cost_usd: string;
-            /** Input Tokens */
-            input_tokens: number;
             /** Key */
             key: string;
+            /** Calls */
+            calls: number;
+            /** Input Tokens */
+            input_tokens: number;
             /** Output Tokens */
             output_tokens: number;
+            /** Cost Usd */
+            cost_usd: string;
         };
         /**
          * CostsRead
          * @description Trading-cost breakdown, the fee-rate reference, and today's LLM spend.
          */
         CostsRead: {
-            /** Fee Pct Of Volume */
-            fee_pct_of_volume: string;
+            /** Total Fees */
+            total_fees: string;
             /** Fees By Market */
             fees_by_market: {
                 [key: string]: string;
             };
-            /** Llm Spend Today */
-            llm_spend_today: string;
-            /** Total Fees */
-            total_fees: string;
             /** Traded Volume */
             traded_volume: string;
+            /** Fee Pct Of Volume */
+            fee_pct_of_volume: string;
             /** Venue Fee Rates */
             venue_fee_rates: {
                 [key: string]: string;
             };
+            /** Llm Spend Today */
+            llm_spend_today: string;
         };
         /**
          * CostsSummary
          * @description Headline spend + the breakdowns the Costs screen renders.
          */
         CostsSummary: {
-            /** By Day */
-            by_day: components["schemas"]["CostBucket"][];
+            /** Today Usd */
+            today_usd: string;
+            /** Last 7D Usd */
+            last_7d_usd: string;
+            /** Last 30D Usd */
+            last_30d_usd: string;
+            /** Daily Cap Usd */
+            daily_cap_usd: string;
             /** By Model */
             by_model: components["schemas"]["CostBucket"][];
             /** By Purpose */
             by_purpose: components["schemas"]["CostBucket"][];
-            /** Daily Cap Usd */
-            daily_cap_usd: string;
-            /** Last 30D Usd */
-            last_30d_usd: string;
-            /** Last 7D Usd */
-            last_7d_usd: string;
-            /** Today Usd */
-            today_usd: string;
+            /** By Day */
+            by_day: components["schemas"]["CostBucket"][];
         };
         /** CouncilMember */
         CouncilMember: {
+            /** Provider */
+            provider: string;
             /**
              * Model
              * @default
              */
             model: string;
-            /** Provider */
-            provider: string;
         };
         /**
          * CouncilReviewRead
          * @description A council verdict plus every member's vote.
          */
         CouncilReviewRead: {
+            /** Id */
+            id: number;
+            /** Report Id */
+            report_id: number;
+            /** Verdict */
+            verdict: string;
+            /** Weighted Score */
+            weighted_score: string;
+            /** Quorum Met */
+            quorum_met: boolean;
+            /** Strategy Brief */
+            strategy_brief: string;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
-            /** Id */
-            id: number;
-            /** Quorum Met */
-            quorum_met: boolean;
-            /** Report Id */
-            report_id: number;
-            /** Strategy Brief */
-            strategy_brief: string;
-            /** Verdict */
-            verdict: string;
             /** Votes */
             votes: components["schemas"]["CouncilVoteRead"][];
-            /** Weighted Score */
-            weighted_score: string;
         };
         /**
          * CouncilSettingsUpdate
@@ -1974,14 +1997,14 @@ export interface components {
         };
         /** CouncilVoteRead */
         CouncilVoteRead: {
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
             /** Action */
             action: string;
             /** Confidence */
             confidence: string;
-            /** Model */
-            model: string;
-            /** Provider */
-            provider: string;
             /** Reasoning */
             reasoning: string;
         };
@@ -2011,57 +2034,57 @@ export interface components {
         };
         /** EquityPoint */
         EquityPoint: {
-            /** Equity */
-            equity: string;
             /**
              * Time
              * Format: date-time
              */
             time: string;
+            /** Equity */
+            equity: string;
         };
         /**
          * EquitySnapshot
          * @description A point-in-time snapshot of portfolio equity — powers the equity curve.
          */
         EquitySnapshot: {
-            /** Equity */
-            equity: string;
-            /** Fees */
-            fees: string;
             /** Id */
             id?: number | null;
-            /** Net Pnl */
-            net_pnl: string;
-            /** Realized Pnl */
-            realized_pnl: string;
             /**
              * Ts
              * Format: date-time
              */
             ts: string;
+            /** Equity */
+            equity: string;
+            /** Realized Pnl */
+            realized_pnl: string;
             /** Unrealized Pnl */
             unrealized_pnl: string;
+            /** Fees */
+            fees: string;
+            /** Net Pnl */
+            net_pnl: string;
         };
         /**
          * Fill
          * @description The result of executing an `Order`.
          */
         Fill: {
-            /** Fee */
-            fee: string;
-            /** Market */
-            market: string;
-            /** Price */
-            price: string;
-            /** Quantity */
-            quantity: string;
-            /** Realized Pnl */
-            realized_pnl: string;
-            side: components["schemas"]["FillSide"];
             /** Strategy */
             strategy: string;
+            /** Market */
+            market: string;
             /** Symbol */
             symbol: string;
+            side: components["schemas"]["FillSide"];
+            /** Quantity */
+            quantity: string;
+            /** Price */
+            price: string;
+            /** Fee */
+            fee: string;
+            /** Realized Pnl */
+            realized_pnl: string;
         };
         /**
          * FillSide
@@ -2070,6 +2093,8 @@ export interface components {
         FillSide: "buy" | "sell";
         /** FundingRate */
         FundingRate: {
+            /** Symbol */
+            symbol: string;
             /** Funding Rate */
             funding_rate: string;
             /** Mark Price */
@@ -2079,14 +2104,33 @@ export interface components {
              * Format: date-time
              */
             next_funding_time: string;
-            /** Symbol */
-            symbol: string;
         };
         /**
          * GraphEdge
          * @description A directed, labelled relation from one node to another.
          */
         GraphEdge: {
+            /** Id */
+            id?: number | null;
+            /** Source Id */
+            source_id: number;
+            /** Target Id */
+            target_id: number;
+            /**
+             * Relation
+             * @default related
+             */
+            relation: string;
+            /**
+             * Weight
+             * @default 1
+             */
+            weight: string;
+            /**
+             * Origin
+             * @default seed
+             */
+            origin: string;
             /**
              * Approved
              * @default true
@@ -2094,56 +2138,35 @@ export interface components {
             approved: boolean;
             /** Created At */
             created_at?: string | null;
-            /** Id */
-            id?: number | null;
-            /**
-             * Origin
-             * @default seed
-             */
-            origin: string;
-            /**
-             * Relation
-             * @default related
-             */
-            relation: string;
-            /** Source Id */
-            source_id: number;
-            /** Target Id */
-            target_id: number;
-            /**
-             * Weight
-             * @default 1
-             */
-            weight: string;
         };
         /**
          * GraphNode
          * @description A node: an asset, a product, or a concept.
          */
         GraphNode: {
-            /** Icon */
-            icon?: string | null;
             /** Id */
             id?: number | null;
+            /** Label */
+            label: string;
             /**
              * Kind
              * @default concept
              */
             kind: string;
-            /** Label */
-            label: string;
             /** Symbol */
             symbol?: string | null;
+            /** Icon */
+            icon?: string | null;
         };
         /**
          * GraphView
          * @description The connections graph — nodes and the edges between them.
          */
         GraphView: {
-            /** Edges */
-            edges: components["schemas"]["GraphEdge"][];
             /** Nodes */
             nodes: components["schemas"]["GraphNode"][];
+            /** Edges */
+            edges: components["schemas"]["GraphEdge"][];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2155,47 +2178,75 @@ export interface components {
          * @description Apply a strategy type to a coin as a new named instance.
          */
         InstanceCreate: {
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /** Symbol */
+            symbol: string;
             /**
-             * Allocated
-             * @default 10000
+             * Venue
+             * @default binance
              */
-            allocated: number | string;
+            venue: string;
             /**
              * Market
              * @default spot
              */
             market: string;
             /**
-             * Max Loss
-             * @default 0
-             */
-            max_loss: number | string;
-            /** Name */
-            name: string;
-            /** Params */
-            params?: {
-                [key: string]: string;
-            };
-            /** Symbol */
-            symbol: string;
-            /**
              * Timeframe
              * @default 1h
              */
             timeframe: string;
-            /** Type */
-            type: string;
+            /** Params */
+            params?: {
+                [key: string]: string;
+            };
             /**
-             * Venue
-             * @default binance
+             * Allocated
+             * @default 10000
              */
-            venue: string;
+            allocated: number | string;
+            /**
+             * Max Loss
+             * @default 0
+             */
+            max_loss: number | string;
         };
         /**
          * LLMUsage
          * @description One recorded LLM completion — tokens, estimated cost, and the decision.
          */
         LLMUsage: {
+            /** Id */
+            id?: number | null;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /**
+             * Purpose
+             * @default analyze
+             */
+            purpose: string;
+            /** Strategy */
+            strategy?: string | null;
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+            /**
+             * Estimated Cost Usd
+             * @default 0
+             */
+            estimated_cost_usd: string;
             /** Action */
             action?: string | null;
             /** Confidence */
@@ -2205,108 +2256,80 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /**
-             * Estimated Cost Usd
-             * @default 0
-             */
-            estimated_cost_usd: string;
-            /** Id */
-            id?: number | null;
-            /**
-             * Input Tokens
-             * @default 0
-             */
-            input_tokens: number;
-            /** Model */
-            model: string;
-            /**
-             * Output Tokens
-             * @default 0
-             */
-            output_tokens: number;
-            /** Provider */
-            provider: string;
-            /**
-             * Purpose
-             * @default analyze
-             */
-            purpose: string;
-            /** Strategy */
-            strategy?: string | null;
         };
         /**
          * LatencyRead
          * @description Price-feed latency — per-feed stats plus the overall degraded flag.
          */
         LatencyRead: {
+            /** Warn Ms */
+            warn_ms: number;
             /** Degraded */
             degraded: boolean;
             /** Feeds */
             feeds: components["schemas"]["LatencyStatsRead"][];
-            /** Warn Ms */
-            warn_ms: number;
         };
         /**
          * LatencyStatsRead
          * @description Rolling-window latency for one (market, symbol, kind).
          */
         LatencyStatsRead: {
-            /** Current Ms */
-            current_ms: number;
-            /** Degraded */
-            degraded: boolean;
-            /** Kind */
-            kind: string;
             /** Market */
             market: string;
-            /** Max Ms */
-            max_ms: number;
+            /** Symbol */
+            symbol: string;
+            /** Kind */
+            kind: string;
+            /** Current Ms */
+            current_ms: number;
             /** P50 Ms */
             p50_ms: number;
             /** P95 Ms */
             p95_ms: number;
+            /** Max Ms */
+            max_ms: number;
             /** Samples */
             samples: number;
-            /** Symbol */
-            symbol: string;
+            /** Degraded */
+            degraded: boolean;
         };
         /**
          * LedgerEntry
          * @description One paid call, newest first.
          */
         LedgerEntry: {
-            /** Action */
-            action: string | null;
-            /** Confidence */
-            confidence: string | null;
-            /** Cost Usd */
-            cost_usd: string;
+            /** Id */
+            id: number;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
-            /** Id */
-            id: number;
-            /** Input Tokens */
-            input_tokens: number;
-            /** Model */
-            model: string;
-            /** Output Tokens */
-            output_tokens: number;
             /** Provider */
             provider: string;
+            /** Model */
+            model: string;
             /** Purpose */
             purpose: string;
             /** Strategy */
             strategy: string | null;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Cost Usd */
+            cost_usd: string;
+            /** Action */
+            action: string | null;
+            /** Confidence */
+            confidence: string | null;
         };
         /** LedgerPage */
         LedgerPage: {
-            /** Entries */
-            entries: components["schemas"]["LedgerEntry"][];
             /** Total */
             total: number;
+            /** Entries */
+            entries: components["schemas"]["LedgerEntry"][];
         };
         /**
          * LlmCredentialsUpdate
@@ -2326,39 +2349,39 @@ export interface components {
         };
         /** LlmfitStatusRead */
         LlmfitStatusRead: {
-            /** Error */
-            error: string;
-            /** Fits */
-            fits: components["schemas"]["ModelFitRead"][];
+            /** Installed */
+            installed: boolean;
+            /** Install Hint */
+            install_hint: string;
             /** Hardware */
             hardware: {
                 [key: string]: unknown;
             };
-            /** Install Hint */
-            install_hint: string;
-            /** Installed */
-            installed: boolean;
+            /** Fits */
+            fits: components["schemas"]["ModelFitRead"][];
+            /** Error */
+            error: string;
         };
         /**
          * LocalAIRead
          * @description Local-model readiness — deployed (Ollama) and deployable (llmfit).
          */
         LocalAIRead: {
-            llmfit: components["schemas"]["LlmfitStatusRead"];
             ollama: components["schemas"]["OllamaStatusRead"];
+            llmfit: components["schemas"]["LlmfitStatusRead"];
         };
         /** ManualOrderRequest */
         ManualOrderRequest: {
+            /** Symbol */
+            symbol: string;
+            side: components["schemas"]["FillSide"];
+            /** Quantity */
+            quantity: number | string;
             /**
              * Market
              * @default spot
              */
             market: string;
-            /** Quantity */
-            quantity: number | string;
-            side: components["schemas"]["FillSide"];
-            /** Symbol */
-            symbol: string;
         };
         /**
          * Market
@@ -2370,97 +2393,97 @@ export interface components {
          * @description One AI pass over a market — estimated probability vs market price.
          */
         MarketAnalysis: {
-            /** Condition Id */
-            condition_id: string;
-            /**
-             * Confidence
-             * @default 0
-             */
-            confidence: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Edge
-             * @default 0
-             */
-            edge: string;
-            /**
-             * Est Probability
-             * @default 0
-             */
-            est_probability: string;
             /** Id */
             id?: number | null;
+            /** Condition Id */
+            condition_id: string;
+            /** Question */
+            question: string;
             /**
              * Market Price
              * @default 0
              */
             market_price: string;
             /**
-             * Model
-             * @default
+             * Est Probability
+             * @default 0
              */
-            model: string;
+            est_probability: string;
             /**
-             * Provider
-             * @default
+             * Edge
+             * @default 0
              */
-            provider: string;
-            /** Question */
-            question: string;
+            edge: string;
+            /**
+             * Recommendation
+             * @default hold
+             */
+            recommendation: string;
+            /**
+             * Confidence
+             * @default 0
+             */
+            confidence: string;
             /**
              * Reasoning
              * @default
              */
             reasoning: string;
             /**
-             * Recommendation
-             * @default hold
+             * Provider
+             * @default
              */
-            recommendation: string;
+            provider: string;
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** ModeUpdate */
         ModeUpdate: {
+            mode: components["schemas"]["TradingMode"];
             /**
              * Confirm
              * @default false
              */
             confirm: boolean;
-            mode: components["schemas"]["TradingMode"];
         };
         /** ModelFitRead */
         ModelFitRead: {
-            /** Est Speed */
-            est_speed: string;
-            /** Fit */
-            fit: string;
-            /** Memory Gb */
-            memory_gb: string;
             /** Model */
             model: string;
             /** Quantization */
             quantization: string;
+            /** Fit */
+            fit: string;
+            /** Est Speed */
+            est_speed: string;
+            /** Memory Gb */
+            memory_gb: string;
         };
         /**
          * ModelUsage
          * @description Per-model rollup of LLM activity — 'what each model did'.
          */
         ModelUsage: {
-            /** Buys */
-            buys: number;
-            /** Decisions */
-            decisions: number;
-            /** Holds */
-            holds: number;
-            /** Model */
-            model: string;
             /** Provider */
             provider: string;
+            /** Model */
+            model: string;
+            /** Decisions */
+            decisions: number;
+            /** Buys */
+            buys: number;
             /** Sells */
             sells: number;
+            /** Holds */
+            holds: number;
             /** Total Cost Usd */
             total_cost_usd: string;
         };
@@ -2469,80 +2492,80 @@ export interface components {
          * @description A single news headline pulled from an RSS feed.
          */
         NewsItem: {
-            /**
-             * Category
-             * @default world
-             */
-            category: string;
-            /**
-             * Fetched At
-             * Format: date-time
-             */
-            fetched_at: string;
             /** Id */
             id?: number | null;
-            /** Published At */
-            published_at?: string | null;
-            /** Sentiment */
-            sentiment?: string | null;
             /** Source */
             source: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
             /**
              * Summary
              * @default
              */
             summary: string;
+            /**
+             * Category
+             * @default world
+             */
+            category: string;
             /** Symbol */
             symbol?: string | null;
-            /** Title */
-            title: string;
-            /** Url */
-            url: string;
+            /** Sentiment */
+            sentiment?: string | null;
+            /** Published At */
+            published_at?: string | null;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
         };
         /** NodeCreate */
         NodeCreate: {
-            /** Icon */
-            icon?: string | null;
+            /** Label */
+            label: string;
             /**
              * Kind
              * @default concept
              */
             kind: string;
-            /** Label */
-            label: string;
             /** Symbol */
             symbol?: string | null;
+            /** Icon */
+            icon?: string | null;
         };
         /** OllamaModelRead */
         OllamaModelRead: {
             /** Name */
             name: string;
+            /** Size Bytes */
+            size_bytes: number;
             /** Parameter Size */
             parameter_size: string;
             /** Quantization */
             quantization: string;
-            /** Size Bytes */
-            size_bytes: number;
         };
         /** OllamaStatusRead */
         OllamaStatusRead: {
-            /** Base Url */
-            base_url: string;
-            /** Models */
-            models: components["schemas"]["OllamaModelRead"][];
             /** Reachable */
             reachable: boolean;
+            /** Base Url */
+            base_url: string;
             /** Version */
             version: string;
+            /** Models */
+            models: components["schemas"]["OllamaModelRead"][];
         };
         /** OrderBook */
         OrderBook: {
-            /** Asks */
-            asks: components["schemas"]["OrderBookLevel"][];
-            /** Bids */
-            bids: components["schemas"]["OrderBookLevel"][];
             /** Symbol */
             symbol: string;
+            /** Bids */
+            bids: components["schemas"]["OrderBookLevel"][];
+            /** Asks */
+            asks: components["schemas"]["OrderBookLevel"][];
         };
         /** OrderBookLevel */
         OrderBookLevel: {
@@ -2553,18 +2576,18 @@ export interface components {
         };
         /** ParamSpecRead */
         ParamSpecRead: {
-            /** Default */
-            default: string;
-            /** Label */
-            label: string;
-            /** Max */
-            max: string;
-            /** Min */
-            min: string;
             /** Name */
             name: string;
             /** Type */
             type: string;
+            /** Default */
+            default: string;
+            /** Min */
+            min: string;
+            /** Max */
+            max: string;
+            /** Label */
+            label: string;
         };
         /** PasswordReset */
         PasswordReset: {
@@ -2577,16 +2600,6 @@ export interface components {
          */
         PolymarketSettingsUpdate: {
             /**
-             * Edge Threshold
-             * @default 0.05
-             */
-            edge_threshold: number | string;
-            /**
-             * Min Confidence
-             * @default 0.6
-             */
-            min_confidence: number | string;
-            /**
              * Refresh Hours
              * @default 6
              */
@@ -2596,6 +2609,16 @@ export interface components {
              * @default 6
              */
             research_hours: number;
+            /**
+             * Edge Threshold
+             * @default 0.05
+             */
+            edge_threshold: number | string;
+            /**
+             * Min Confidence
+             * @default 0.6
+             */
+            min_confidence: number | string;
             /**
              * Screen Top
              * @default 10
@@ -2609,26 +2632,26 @@ export interface components {
         };
         /** PortfolioSummary */
         PortfolioSummary: {
-            /** Deployed Capital */
-            deployed_capital: string;
-            /** Equity */
-            equity: string;
-            /** Idle Capital */
-            idle_capital: string;
-            /** Net Pnl */
-            net_pnl: string;
-            /** Open Positions */
-            open_positions: number;
-            /** Realized Pnl */
-            realized_pnl: string;
-            /** Strategies */
-            strategies: components["schemas"]["StrategySummary"][];
             /** Total Allocated */
             total_allocated: string;
-            /** Total Fees */
-            total_fees: string;
+            /** Realized Pnl */
+            realized_pnl: string;
             /** Unrealized Pnl */
             unrealized_pnl: string;
+            /** Total Fees */
+            total_fees: string;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Equity */
+            equity: string;
+            /** Deployed Capital */
+            deployed_capital: string;
+            /** Idle Capital */
+            idle_capital: string;
+            /** Open Positions */
+            open_positions: number;
+            /** Strategies */
+            strategies: components["schemas"]["StrategySummary"][];
         };
         /**
          * Position
@@ -2639,41 +2662,41 @@ export interface components {
          *     a position goes flat so cumulative PnL is preserved).
          */
         Position: {
-            /**
-             * Entry Price
-             * @default 0
-             */
-            entry_price: string;
-            /**
-             * Fees Paid
-             * @default 0
-             */
-            fees_paid: string;
             /** Id */
             id?: number | null;
+            /** Strategy */
+            strategy: string;
             /** Market */
             market: string;
-            /** Opened At */
-            opened_at?: string | null;
+            /** Symbol */
+            symbol: string;
+            /**
+             * Side
+             * @default flat
+             */
+            side: string;
             /**
              * Qty
              * @default 0
              */
             qty: string;
             /**
+             * Entry Price
+             * @default 0
+             */
+            entry_price: string;
+            /**
              * Realized Pnl
              * @default 0
              */
             realized_pnl: string;
             /**
-             * Side
-             * @default flat
+             * Fees Paid
+             * @default 0
              */
-            side: string;
-            /** Strategy */
-            strategy: string;
-            /** Symbol */
-            symbol: string;
+            fees_paid: string;
+            /** Opened At */
+            opened_at?: string | null;
             /** Updated At */
             updated_at?: string | null;
         };
@@ -2682,27 +2705,29 @@ export interface components {
          * @description One Polymarket market, upserted from the Gamma API by `condition_id`.
          */
         PredictionMarket: {
+            /** Id */
+            id?: number | null;
+            /** Condition Id */
+            condition_id: string;
+            /** Question */
+            question: string;
+            /**
+             * Slug
+             * @default
+             */
+            slug: string;
             /**
              * Category
              * @default
              */
             category: string;
-            /** Condition Id */
-            condition_id: string;
             /** End Date */
             end_date?: string | null;
             /**
-             * Fetched At
-             * Format: date-time
+             * Yes Token Id
+             * @default
              */
-            fetched_at: string;
-            /** Id */
-            id?: number | null;
-            /**
-             * Liquidity
-             * @default 0
-             */
-            liquidity: string;
+            yes_token_id: string;
             /**
              * No Token Id
              * @default
@@ -2713,56 +2738,44 @@ export interface components {
              * @default []
              */
             outcomes: string;
-            /** Question */
-            question: string;
-            /**
-             * Resolved Outcome
-             * @default
-             */
-            resolved_outcome: string;
-            /**
-             * Slug
-             * @default
-             */
-            slug: string;
-            /**
-             * Status
-             * @default active
-             */
-            status: string;
-            /**
-             * Volume 24H
-             * @default 0
-             */
-            volume_24h: string;
-            /**
-             * Watched
-             * @default false
-             */
-            watched: boolean;
             /**
              * Yes Price
              * @default 0
              */
             yes_price: string;
             /**
-             * Yes Token Id
+             * Volume 24H
+             * @default 0
+             */
+            volume_24h: string;
+            /**
+             * Liquidity
+             * @default 0
+             */
+            liquidity: string;
+            /**
+             * Status
+             * @default active
+             */
+            status: string;
+            /**
+             * Resolved Outcome
              * @default
              */
-            yes_token_id: string;
+            resolved_outcome: string;
+            /**
+             * Watched
+             * @default false
+             */
+            watched: boolean;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
         };
         /** RecommendRequest */
         RecommendRequest: {
-            /**
-             * Capital
-             * @default 10000
-             */
-            capital: number | string;
-            /**
-             * Days
-             * @default 90
-             */
-            days: number;
             /** Symbol */
             symbol: string;
             /**
@@ -2770,21 +2783,31 @@ export interface components {
              * @default 1h
              */
             timeframe: string;
+            /**
+             * Days
+             * @default 90
+             */
+            days: number;
+            /**
+             * Capital
+             * @default 10000
+             */
+            capital: number | string;
         };
         /**
          * RecommendResponse
          * @description The AI's pick, backtested so it ranks alongside the grid cells.
          */
         RecommendResponse: {
-            cell: components["schemas"]["CompareCellRead"];
+            /** Strategy Type */
+            strategy_type: string;
             /** Params */
             params: {
                 [key: string]: unknown;
             };
             /** Reasoning */
             reasoning: string;
-            /** Strategy Type */
-            strategy_type: string;
+            cell: components["schemas"]["CompareCellRead"];
         };
         /** RefreshRequest */
         RefreshRequest: {
@@ -2796,29 +2819,29 @@ export interface components {
          * @description One report — `sections` is the parsed schema-formatted content.
          */
         ResearchReportRead: {
+            /** Id */
+            id: number;
+            /** Symbol */
+            symbol: string;
+            /** Schema Version */
+            schema_version: number;
+            /** Status */
+            status: string;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Error */
+            error: string;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
-            /** Error */
-            error: string;
-            /** Id */
-            id: number;
-            /** Model */
-            model: string;
-            /** Provider */
-            provider: string;
-            /** Schema Version */
-            schema_version: number;
             /** Sections */
             sections: {
                 [key: string]: unknown;
             };
-            /** Status */
-            status: string;
-            /** Symbol */
-            symbol: string;
         };
         /**
          * ResearchRun
@@ -2836,22 +2859,39 @@ export interface components {
          * @description Research configuration — watched symbols, interval and writer LLM.
          */
         ResearchSettingsUpdate: {
+            /** Symbols */
+            symbols: string[];
             /**
              * Interval Hours
              * @default 12
              */
             interval_hours: number;
-            /** News Interval Hours */
-            news_interval_hours?: number | null;
-            /** Symbols */
-            symbols: string[];
+            /** Writer Provider */
+            writer_provider: string;
             /**
              * Writer Model
              * @default
              */
             writer_model: string;
-            /** Writer Provider */
-            writer_provider: string;
+            /** News Interval Hours */
+            news_interval_hours?: number | null;
+        };
+        /**
+         * RiskSettingsUpdate
+         * @description Global risk limits in percent (SL/TP/drawdown) or quote currency
+         *     (loss limit, notional). 0 disables a limit.
+         */
+        RiskSettingsUpdate: {
+            /** Stop Loss Pct */
+            stop_loss_pct: number | string;
+            /** Take Profit Pct */
+            take_profit_pct: number | string;
+            /** Max Drawdown Pct */
+            max_drawdown_pct: number | string;
+            /** Daily Loss Limit */
+            daily_loss_limit: number | string;
+            /** Max Position Notional */
+            max_position_notional: number | string;
         };
         /**
          * Role
@@ -2862,119 +2902,129 @@ export interface components {
         Role: "admin" | "user";
         /** SettingsRead */
         SettingsRead: {
-            /** Ai Action Mode */
-            ai_action_mode: string;
+            mode: components["schemas"]["TradingMode"];
+            /** Binance Keys Configured */
+            binance_keys_configured: boolean;
+            /** Venue Credentials Configured */
+            venue_credentials_configured: {
+                [key: string]: boolean;
+            };
+            /** Ai Provider */
+            ai_provider: string;
+            /** Ai Model */
+            ai_model: string;
             /** Ai Base Url */
             ai_base_url: string;
             /** Ai Key Configured */
             ai_key_configured: boolean;
-            /** Ai Model */
-            ai_model: string;
-            /** Ai Provider */
-            ai_provider: string;
             /** Ai Spend Cap */
             ai_spend_cap: string;
             /** Ai Spend Today */
             ai_spend_today: string;
-            /** Binance Keys Configured */
-            binance_keys_configured: boolean;
+            /** Ai Action Mode */
+            ai_action_mode: string;
+            /** Llm Providers Configured */
+            llm_providers_configured: {
+                [key: string]: boolean;
+            };
+            /** Research Symbols */
+            research_symbols: string[];
+            /** Research Interval Hours */
+            research_interval_hours: number;
+            /** Research Writer Provider */
+            research_writer_provider: string;
+            /** Research Writer Model */
+            research_writer_model: string;
+            /** News Interval Hours */
+            news_interval_hours: number | null;
             /** Council Members */
             council_members: {
                 [key: string]: string;
             }[];
             /** Council Quorum */
             council_quorum: string;
-            /** Llm Providers Configured */
-            llm_providers_configured: {
-                [key: string]: boolean;
-            };
-            mode: components["schemas"]["TradingMode"];
-            /** News Interval Hours */
-            news_interval_hours: number | null;
-            /** Polymarket Edge Threshold */
-            polymarket_edge_threshold: string;
-            /** Polymarket Min Confidence */
-            polymarket_min_confidence: string;
             /** Polymarket Refresh Hours */
             polymarket_refresh_hours: number;
             /** Polymarket Research Hours */
             polymarket_research_hours: number;
+            /** Polymarket Edge Threshold */
+            polymarket_edge_threshold: string;
+            /** Polymarket Min Confidence */
+            polymarket_min_confidence: string;
             /** Polymarket Screen Top */
             polymarket_screen_top: number;
             /** Polymarket Stake */
             polymarket_stake: string;
-            /** Research Interval Hours */
-            research_interval_hours: number;
-            /** Research Symbols */
-            research_symbols: string[];
-            /** Research Writer Model */
-            research_writer_model: string;
-            /** Research Writer Provider */
-            research_writer_provider: string;
-            /** Venue Credentials Configured */
-            venue_credentials_configured: {
-                [key: string]: boolean;
-            };
+            /** Risk Stop Loss Pct */
+            risk_stop_loss_pct: string;
+            /** Risk Take Profit Pct */
+            risk_take_profit_pct: string;
+            /** Risk Max Drawdown Pct */
+            risk_max_drawdown_pct: string;
+            /** Risk Daily Loss Limit */
+            risk_daily_loss_limit: string;
+            /** Risk Max Position Notional */
+            risk_max_position_notional: string;
         };
         /**
          * StrategyRead
          * @description A strategy's identity, lifecycle state and accounting summary.
          */
         StrategyRead: {
-            /** Ai Model */
-            ai_model?: string | null;
-            /** Ai Provider */
-            ai_provider?: string | null;
-            /** Allocated */
-            allocated: string;
+            /** Name */
+            name: string;
+            /** Kind */
+            kind: string;
+            /** Symbol */
+            symbol: string;
+            /** Venue */
+            venue: string;
+            /** Market */
+            market: string;
+            /** Timeframe */
+            timeframe: string;
             /** Enabled */
             enabled: boolean;
+            /** Allocated */
+            allocated: string;
+            /** Max Loss */
+            max_loss: string;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /** Unrealized Pnl */
+            unrealized_pnl: string;
             /** Fees */
             fees: string;
+            /** Net Pnl */
+            net_pnl: string;
+            /** Open Positions */
+            open_positions: number;
+            /** Ai Provider */
+            ai_provider?: string | null;
+            /** Ai Model */
+            ai_model?: string | null;
             /**
              * Is Instance
              * @default false
              */
             is_instance: boolean;
-            /** Kind */
-            kind: string;
-            /** Market */
-            market: string;
-            /** Max Loss */
-            max_loss: string;
-            /** Name */
-            name: string;
-            /** Net Pnl */
-            net_pnl: string;
-            /** Open Positions */
-            open_positions: number;
-            /** Realized Pnl */
-            realized_pnl: string;
-            /** Symbol */
-            symbol: string;
-            /** Timeframe */
-            timeframe: string;
-            /** Unrealized Pnl */
-            unrealized_pnl: string;
-            /** Venue */
-            venue: string;
         };
         /** StrategySummary */
         StrategySummary: {
+            /** Strategy */
+            strategy: string;
             /** Allocated */
             allocated: string;
+            /** Realized Pnl */
+            realized_pnl: string;
+            /** Unrealized Pnl */
+            unrealized_pnl: string;
             /** Fees */
             fees: string;
             /** Net Pnl */
             net_pnl: string;
             /** Open Positions */
             open_positions: number;
-            /** Realized Pnl */
-            realized_pnl: string;
-            /** Strategy */
-            strategy: string;
-            /** Unrealized Pnl */
-            unrealized_pnl: string;
         };
         /**
          * StrategyTypeRead
@@ -2994,14 +3044,14 @@ export interface components {
         };
         /** Ticker */
         Ticker: {
-            /** Change Pct 24H */
-            change_pct_24h: string;
-            /** Price */
-            price: string;
-            /** Quote Volume 24H */
-            quote_volume_24h: string;
             /** Symbol */
             symbol: string;
+            /** Price */
+            price: string;
+            /** Change Pct 24H */
+            change_pct_24h: string;
+            /** Quote Volume 24H */
+            quote_volume_24h: string;
         };
         /** TokenPair */
         TokenPair: {
@@ -3023,6 +3073,35 @@ export interface components {
          *     non-zero when it reduces or closes a position).
          */
         Trade: {
+            /** Id */
+            id?: number | null;
+            /** Strategy */
+            strategy: string;
+            /** Market */
+            market: string;
+            /** Symbol */
+            symbol: string;
+            /** Side */
+            side: string;
+            /** Quantity */
+            quantity: string;
+            /** Price */
+            price: string;
+            /**
+             * Fee
+             * @default 0
+             */
+            fee: string;
+            /**
+             * Realized Pnl
+             * @default 0
+             */
+            realized_pnl: string;
+            /**
+             * Mode
+             * @default sim
+             */
+            mode: string;
             /** Client Order Id */
             client_order_id?: string | null;
             /**
@@ -3030,35 +3109,6 @@ export interface components {
              * Format: date-time
              */
             executed_at: string;
-            /**
-             * Fee
-             * @default 0
-             */
-            fee: string;
-            /** Id */
-            id?: number | null;
-            /** Market */
-            market: string;
-            /**
-             * Mode
-             * @default sim
-             */
-            mode: string;
-            /** Price */
-            price: string;
-            /** Quantity */
-            quantity: string;
-            /**
-             * Realized Pnl
-             * @default 0
-             */
-            realized_pnl: string;
-            /** Side */
-            side: string;
-            /** Strategy */
-            strategy: string;
-            /** Symbol */
-            symbol: string;
         };
         /**
          * TradingMode
@@ -3068,49 +3118,49 @@ export interface components {
         TradingMode: "sim" | "testnet" | "live";
         /** UserCreate */
         UserCreate: {
+            /** Username */
+            username: string;
             /** Password */
             password: string;
             /** @default user */
             role: components["schemas"]["Role"];
-            /** Username */
-            username: string;
         };
         /** UserInfo */
         UserInfo: {
-            /** Role */
-            role: string;
             /** Username */
             username: string;
+            /** Role */
+            role: string;
         };
         /** UserRead */
         UserRead: {
             /** Id */
             id: number;
-            /** Is Active */
-            is_active: boolean;
-            /** Role */
-            role: string;
             /** Username */
             username: string;
+            /** Role */
+            role: string;
+            /** Is Active */
+            is_active: boolean;
         };
         /** UserUpdate */
         UserUpdate: {
+            role?: components["schemas"]["Role"] | null;
             /** Is Active */
             is_active?: boolean | null;
-            role?: components["schemas"]["Role"] | null;
         };
         /** ValidationError */
         ValidationError: {
-            /** Context */
-            ctx?: Record<string, never>;
-            /** Input */
-            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /**
          * VenueCredentialsUpdate
@@ -3124,16 +3174,16 @@ export interface components {
         };
         /** VenueRead */
         VenueRead: {
-            /** Active */
-            active: boolean;
-            /** Asset Class */
-            asset_class: string;
-            /** Credential Fields */
-            credential_fields: string[];
             /** Name */
             name: string;
+            /** Asset Class */
+            asset_class: string;
             /** Supports Sandbox */
             supports_sandbox: boolean;
+            /** Active */
+            active: boolean;
+            /** Credential Fields */
+            credential_fields: string[];
         };
         /** WatchUpdate */
         WatchUpdate: {
@@ -3145,18 +3195,18 @@ export interface components {
          * @description Engine liveness assessed from the heartbeat and open-position count.
          */
         WatchdogStatus: {
-            /** Age Seconds */
-            age_seconds: number | null;
-            /** Alert */
-            alert: boolean;
             /** Alive */
             alive: boolean;
-            /** Last Beat */
-            last_beat: string | null;
-            /** Open Positions */
-            open_positions: number;
             /** Stale */
             stale: boolean;
+            /** Alert */
+            alert: boolean;
+            /** Last Beat */
+            last_beat: string | null;
+            /** Age Seconds */
+            age_seconds: number | null;
+            /** Open Positions */
+            open_positions: number;
         };
     };
     responses: never;
@@ -3167,215 +3217,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    analyze_and_decide_api_ai_analyze_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AnalyzeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Decision"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    decision_log_api_ai_decisions_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMUsage"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    local_models_api_ai_local_get: {
-        parameters: {
-            query?: {
-                refresh?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LocalAIRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    model_performance_api_ai_models_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelUsage"][];
-                };
-            };
-        };
-    };
-    list_signals_api_ai_signals_get: {
-        parameters: {
-            query?: {
-                status_filter?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AISignal"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    confirm_signal_api_ai_signals__signal_id__confirm_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                signal_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AISignal"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dismiss_signal_api_ai_signals__signal_id__dismiss_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                signal_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AISignal"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     login_api_auth_login_post: {
         parameters: {
             query?: never;
@@ -3386,6 +3227,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_auth_login_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_api_auth_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
             };
         };
         responses: {
@@ -3425,1793 +3299,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserInfo"];
-                };
-            };
-        };
-    };
-    refresh_api_auth_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenPair"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    run_api_backtest_run_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BacktestRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BacktestResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_edge_api_connections_edges__edge_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                edge_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    approve_edge_api_connections_edges__edge_id__approve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                edge_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GraphEdge"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_graph_api_connections_graph_get: {
-        parameters: {
-            query?: {
-                include_pending?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GraphView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_node_api_connections_nodes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NodeCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GraphNode"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    suggest_connections_api_connections_suggest__node_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                node_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GraphEdge"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    costs_ledger_api_costs_ledger_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-                purpose?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LedgerPage"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    costs_summary_api_costs_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CostsSummary"];
-                };
-            };
-        };
-    };
-    audit_api_history_audit_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuditLog"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    trades_api_history_trades_get: {
-        parameters: {
-            query?: {
-                start?: string | null;
-                end?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Trade"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    trades_csv_api_history_trades_csv_get: {
-        parameters: {
-            query?: {
-                start?: string | null;
-                end?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    compare_grid_api_lab_compare_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CompareRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CompareCellRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    recommend_api_lab_recommend_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RecommendRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RecommendResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_funding_api_market_funding_get: {
-        parameters: {
-            query: {
-                symbol: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FundingRate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_klines_api_market_klines_get: {
-        parameters: {
-            query: {
-                symbol: string;
-                interval?: string;
-                market?: components["schemas"]["Market"];
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Candle"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    feed_latency_api_market_latency_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LatencyRead"];
-                };
-            };
-        };
-    };
-    get_orderbook_api_market_orderbook_get: {
-        parameters: {
-            query: {
-                symbol: string;
-                market?: components["schemas"]["Market"];
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderBook"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_tickers_api_market_tickers_get: {
-        parameters: {
-            query?: {
-                market?: components["schemas"]["Market"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Ticker"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_news_api_news_get: {
-        parameters: {
-            query?: {
-                symbol?: string | null;
-                category?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsItem"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    refresh_news_api_news_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: number;
-                    };
-                };
-            };
-        };
-    };
-    place_manual_order_api_orders_manual_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ManualOrderRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Fill"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_analyses_api_polymarket_analyses_get: {
-        parameters: {
-            query?: {
-                condition_id?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarketAnalysis"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_markets_api_polymarket_markets_get: {
-        parameters: {
-            query?: {
-                watched?: boolean | null;
-                status_filter?: string | null;
-                category?: string | null;
-                search?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PredictionMarket"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    analyze_now_api_polymarket_markets__condition_id__analyze_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                condition_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarketAnalysis"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_watched_api_polymarket_markets__condition_id__watch_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                condition_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WatchUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PredictionMarket"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    refresh_markets_api_polymarket_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: number;
-                    };
-                };
-            };
-        };
-    };
-    costs_api_portfolio_costs_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CostsRead"];
-                };
-            };
-        };
-    };
-    equity_api_portfolio_equity_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EquitySnapshot"][];
-                };
-            };
-        };
-    };
-    positions_api_portfolio_positions_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Position"][];
-                };
-            };
-        };
-    };
-    summary_api_portfolio_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PortfolioSummary"];
-                };
-            };
-        };
-    };
-    trades_api_portfolio_trades_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Trade"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_reports_api_research_get: {
-        parameters: {
-            query?: {
-                symbol?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResearchReportRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    run_research_api_research_run_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResearchRun"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResearchReportRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_report_api_research__report_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResearchReportRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_review_api_research__report_id__review_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CouncilReviewRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    rerun_review_api_research__report_id__review_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CouncilReviewRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_settings_api_settings_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-        };
-    };
-    update_ai_settings_api_settings_ai_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiSettingsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_ai_action_mode_api_settings_ai_action_mode_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiActionModeUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_ai_spend_cap_api_settings_ai_spend_cap_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiSpendCapUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_binance_keys_api_settings_binance_keys_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BinanceKeysUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_council_settings_api_settings_council_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CouncilSettingsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_llm_credentials_api_settings_llm_credentials__provider__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                provider: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LlmCredentialsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_mode_api_settings_mode_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModeUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_polymarket_settings_api_settings_polymarket_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PolymarketSettingsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_research_settings_api_settings_research_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResearchSettingsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_venue_credentials_api_settings_venue_credentials__venue__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                venue: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VenueCredentialsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_strategies_api_strategies_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyRead"][];
-                };
-            };
-        };
-    };
-    create_instance_api_strategies_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InstanceCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_strategy_types_api_strategies_types_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyTypeRead"][];
-                };
-            };
-        };
-    };
-    delete_instance_api_strategies__name__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_ai_model_api_strategies__name__ai_model_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiModelUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_allocation_api_strategies__name__allocation_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AllocationUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    close_strategy_api_strategies__name__close_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CloseResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_enabled_api_strategies__name__enabled_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EnabledUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_watchdog_api_system_watchdog_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WatchdogStatus"];
-                };
-            };
-        };
-    };
-    list_tokens_api_tokens_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiTokenRead"][];
-                };
-            };
-        };
-    };
-    create_token_api_tokens_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ApiTokenCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiTokenCreated"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    revoke_token_api_tokens__token_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5337,6 +3424,1360 @@ export interface operations {
             };
         };
     };
+    list_tickers_api_market_tickers_get: {
+        parameters: {
+            query?: {
+                market?: components["schemas"]["Market"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ticker"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_klines_api_market_klines_get: {
+        parameters: {
+            query: {
+                symbol: string;
+                interval?: string;
+                market?: components["schemas"]["Market"];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candle"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_funding_api_market_funding_get: {
+        parameters: {
+            query: {
+                symbol: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundingRate"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_orderbook_api_market_orderbook_get: {
+        parameters: {
+            query: {
+                symbol: string;
+                market?: components["schemas"]["Market"];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderBook"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_latency_api_market_latency_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatencyRead"];
+                };
+            };
+        };
+    };
+    place_manual_order_api_orders_manual_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Fill"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_portfolio_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioSummary"];
+                };
+            };
+        };
+    };
+    equity_api_portfolio_equity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquitySnapshot"][];
+                };
+            };
+        };
+    };
+    positions_api_portfolio_positions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Position"][];
+                };
+            };
+        };
+    };
+    trades_api_portfolio_trades_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trade"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    costs_api_portfolio_costs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostsRead"];
+                };
+            };
+        };
+    };
+    list_strategies_api_strategies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"][];
+                };
+            };
+        };
+    };
+    create_instance_api_strategies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstanceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_strategy_types_api_strategies_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyTypeRead"][];
+                };
+            };
+        };
+    };
+    delete_instance_api_strategies__name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_allocation_api_strategies__name__allocation_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllocationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_enabled_api_strategies__name__enabled_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnabledUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ai_model_api_strategies__name__ai_model_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiModelUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_strategy_api_strategies__name__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_api_backtest_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacktestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_settings_api_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+        };
+    };
+    update_mode_api_settings_mode_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_binance_keys_api_settings_binance_keys_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BinanceKeysUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_venue_credentials_api_settings_venue_credentials__venue__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venue: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueCredentialsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_llm_credentials_api_settings_llm_credentials__provider__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmCredentialsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ai_spend_cap_api_settings_ai_spend_cap_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiSpendCapUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ai_settings_api_settings_ai_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_research_settings_api_settings_research_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_polymarket_settings_api_settings_polymarket_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolymarketSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_risk_settings_api_settings_risk_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_council_settings_api_settings_council_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouncilSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ai_action_mode_api_settings_ai_action_mode_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiActionModeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_watchdog_api_system_watchdog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchdogStatus"];
+                };
+            };
+        };
+    };
+    trades_api_history_trades_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+                end?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trade"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_api_history_audit_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLog"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trades_csv_api_history_trades_csv_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+                end?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_and_decide_api_ai_analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalyzeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Decision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    model_performance_api_ai_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelUsage"][];
+                };
+            };
+        };
+    };
+    decision_log_api_ai_decisions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMUsage"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_signals_api_ai_signals_get: {
+        parameters: {
+            query?: {
+                status_filter?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISignal"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_signal_api_ai_signals__signal_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                signal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISignal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_signal_api_ai_signals__signal_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                signal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISignal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    local_models_api_ai_local_get: {
+        parameters: {
+            query?: {
+                refresh?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalAIRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tokens_api_tokens_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenRead"][];
+                };
+            };
+        };
+    };
+    create_token_api_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiTokenCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_token_api_tokens__token_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_venues_api_venues_get: {
         parameters: {
             query?: never;
@@ -5377,6 +4818,648 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VenueRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_news_api_news_get: {
+        parameters: {
+            query?: {
+                symbol?: string | null;
+                category?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_news_api_news_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    list_markets_api_polymarket_markets_get: {
+        parameters: {
+            query?: {
+                watched?: boolean | null;
+                status_filter?: string | null;
+                category?: string | null;
+                search?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionMarket"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_watched_api_polymarket_markets__condition_id__watch_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                condition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionMarket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_markets_api_polymarket_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    list_analyses_api_polymarket_analyses_get: {
+        parameters: {
+            query?: {
+                condition_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketAnalysis"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_now_api_polymarket_markets__condition_id__analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                condition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketAnalysis"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_graph_api_connections_graph_get: {
+        parameters: {
+            query?: {
+                include_pending?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_node_api_connections_nodes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphNode"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_connections_api_connections_suggest__node_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphEdge"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_edge_api_connections_edges__edge_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphEdge"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_edge_api_connections_edges__edge_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reports_api_research_get: {
+        parameters: {
+            query?: {
+                symbol?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchReportRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_api_research__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchReportRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_research_api_research_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchRun"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchReportRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_review_api_research__report_id__review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouncilReviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rerun_review_api_research__report_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouncilReviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_grid_api_lab_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareCellRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recommend_api_lab_recommend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    costs_summary_api_costs_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostsSummary"];
+                };
+            };
+        };
+    };
+    costs_ledger_api_costs_ledger_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                purpose?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
                 };
             };
             /** @description Validation Error */
