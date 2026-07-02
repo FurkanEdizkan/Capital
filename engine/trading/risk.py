@@ -19,6 +19,13 @@ from decimal import Decimal
 
 from sqlmodel import Session, select
 
+from appsettings.store import (
+    get_risk_daily_loss_limit,
+    get_risk_max_drawdown_pct,
+    get_risk_max_position_notional,
+    get_risk_stop_loss_pct,
+    get_risk_take_profit_pct,
+)
 from config import Settings
 from config import settings as _env_settings
 from trading.executors.base import Order
@@ -61,14 +68,6 @@ class RiskManager:
     ) -> "RiskManager":
         """Build from the runtime settings store, falling back to env config
         for any limit the operator has not set through the UI."""
-        from appsettings.store import (
-            get_risk_daily_loss_limit,
-            get_risk_max_drawdown_pct,
-            get_risk_max_position_notional,
-            get_risk_stop_loss_pct,
-            get_risk_take_profit_pct,
-        )
-
         env = settings if settings is not None else _env_settings
         return cls(
             max_position_notional=get_risk_max_position_notional(

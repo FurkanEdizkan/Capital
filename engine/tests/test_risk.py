@@ -33,9 +33,10 @@ def _order(side: FillSide, qty: str) -> Order:
 
 def test_from_store_reads_stored_limits(session: Session) -> None:
     from appsettings.store import set_risk_max_position_notional, set_risk_stop_loss_pct
+    from config import Settings
     set_risk_stop_loss_pct(session, Decimal("5"))
     set_risk_max_position_notional(session, Decimal("1000"))
-    rm = RiskManager.from_store(session)
+    rm = RiskManager.from_store(session, Settings())
     assert rm.stop_loss_pct == Decimal("5")
     assert rm.max_position_notional == Decimal("1000")
     assert rm.take_profit_pct == Decimal(0)  # unset → disabled
@@ -46,6 +47,14 @@ def test_from_store_falls_back_to_env_settings(session: Session) -> None:
     env = Settings(risk_stop_loss_pct=Decimal("7"))  # nothing stored
     rm = RiskManager.from_store(session, env)
     assert rm.stop_loss_pct == Decimal("7")
+
+
+def test_from_store_prefers_stored_over_env(session: Session) -> None:
+    from appsettings.store import set_risk_stop_loss_pct
+    from config import Settings
+    set_risk_stop_loss_pct(session, Decimal("5"))
+    rm = RiskManager.from_store(session, Settings(risk_stop_loss_pct=Decimal("7")))
+    assert rm.stop_loss_pct == Decimal("5")  # stored wins over env
 
 
 # --- stop-loss / take-profit ----------------------------------------------
