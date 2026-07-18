@@ -193,6 +193,70 @@ def test_ai_spend_cap_rejects_negative(settings_client: TestClient) -> None:
     assert resp.status_code == 422
 
 
+def test_read_settings_exposes_risk_limits_defaulting_to_zero(
+    settings_client: TestClient,
+) -> None:
+    r = settings_client.get("/api/settings", headers=_auth(settings_client))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["risk_stop_loss_pct"] == "0"
+    assert body["risk_max_position_notional"] == "0"
+
+
+def test_update_risk_settings_persists_and_returns(settings_client: TestClient) -> None:
+    headers = _auth(settings_client)
+    r = settings_client.put(
+        "/api/settings/risk",
+        headers=headers,
+        json={
+            "stop_loss_pct": "5",
+            "take_profit_pct": "10",
+            "max_drawdown_pct": "15",
+            "daily_loss_limit": "250",
+            "max_position_notional": "1000",
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["risk_stop_loss_pct"] == "5"
+    r2 = settings_client.get("/api/settings", headers=headers)
+    body = r2.json()
+    assert body["risk_stop_loss_pct"] == "5"
+    assert body["risk_take_profit_pct"] == "10"
+    assert body["risk_max_drawdown_pct"] == "15"
+    assert body["risk_daily_loss_limit"] == "250"
+    assert body["risk_max_position_notional"] == "1000"
+
+
+def test_update_risk_settings_rejects_negative_and_over_100(
+    settings_client: TestClient,
+) -> None:
+    headers = _auth(settings_client)
+    r = settings_client.put(
+        "/api/settings/risk",
+        headers=headers,
+        json={
+            "stop_loss_pct": "-1",
+            "take_profit_pct": "10",
+            "max_drawdown_pct": "15",
+            "daily_loss_limit": "0",
+            "max_position_notional": "0",
+        },
+    )
+    assert r.status_code == 422
+    r = settings_client.put(
+        "/api/settings/risk",
+        headers=headers,
+        json={
+            "stop_loss_pct": "150",
+            "take_profit_pct": "10",
+            "max_drawdown_pct": "15",
+            "daily_loss_limit": "0",
+            "max_position_notional": "0",
+        },
+    )
+    assert r.status_code == 422
+
+
 def test_venue_credentials_audited_without_values(
     settings_client: TestClient, session: Session
 ) -> None:

@@ -19,7 +19,15 @@ from decimal import Decimal
 
 from sqlmodel import Session, select
 
+from appsettings.store import (
+    get_risk_daily_loss_limit,
+    get_risk_max_drawdown_pct,
+    get_risk_max_position_notional,
+    get_risk_stop_loss_pct,
+    get_risk_take_profit_pct,
+)
 from config import Settings
+from config import settings as _env_settings
 from trading.executors.base import Order
 from trading.models import EquitySnapshot, FillSide, Position, PositionSide, Trade
 from trading.portfolio import unrealized_pnl
@@ -52,6 +60,23 @@ class RiskManager:
             take_profit_pct=settings.risk_take_profit_pct,
             daily_loss_limit=settings.risk_daily_loss_limit,
             max_drawdown_pct=settings.risk_max_drawdown_pct,
+        )
+
+    @classmethod
+    def from_store(
+        cls, session: Session, settings: Settings | None = None
+    ) -> "RiskManager":
+        """Build from the runtime settings store, falling back to env config
+        for any limit the operator has not set through the UI."""
+        env = settings if settings is not None else _env_settings
+        return cls(
+            max_position_notional=get_risk_max_position_notional(
+                session, env.risk_max_position_notional
+            ),
+            stop_loss_pct=get_risk_stop_loss_pct(session, env.risk_stop_loss_pct),
+            take_profit_pct=get_risk_take_profit_pct(session, env.risk_take_profit_pct),
+            daily_loss_limit=get_risk_daily_loss_limit(session, env.risk_daily_loss_limit),
+            max_drawdown_pct=get_risk_max_drawdown_pct(session, env.risk_max_drawdown_pct),
         )
 
     # -- stop-loss / take-profit ---------------------------------------------

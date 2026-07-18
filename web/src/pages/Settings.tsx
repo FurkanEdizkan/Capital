@@ -17,6 +17,7 @@ import {
   Modal,
   SectionHeader,
   SegmentedControl,
+  Toggle,
 } from "../components/ui";
 import { GuideButton } from "../components/GuideModal";
 import {
@@ -33,6 +34,7 @@ import {
   updateLlmCredentials,
   updateMode,
   updateResearchSettings,
+  updateRiskSettings,
   updateVenueCredentials,
 } from "../lib/api/settings";
 import {
@@ -62,6 +64,9 @@ function fieldLabel(field: string): string {
   const spaced = field.replaceAll("_", " ");
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
+
+/** A "0"/"0.00" risk limit is disabled — show it as an empty field. */
+const nonZero = (v: string): string => (Number(v) > 0 ? v : "");
 
 const selectStyle = {
   height: 34,
@@ -117,6 +122,13 @@ export function Settings() {
   const [pmScreenTop, setPmScreenTop] = useState("10");
   const [pmStake, setPmStake] = useState("100");
 
+  // Risk controls — value "" or "0" means the limit is disabled.
+  const [riskStopLoss, setRiskStopLoss] = useState("");
+  const [riskTakeProfit, setRiskTakeProfit] = useState("");
+  const [riskMaxDrawdown, setRiskMaxDrawdown] = useState("");
+  const [riskDailyLoss, setRiskDailyLoss] = useState("");
+  const [riskMaxNotional, setRiskMaxNotional] = useState("");
+
   const [localAi, setLocalAi] = useState<LocalAI | null>(null);
   const [localBusy, setLocalBusy] = useState(false);
   // Per-LLM-provider credential inputs: provider → { api_key, base_url }.
@@ -153,6 +165,11 @@ export function Settings() {
     setPmConfidence(String(s.polymarket_min_confidence));
     setPmScreenTop(String(s.polymarket_screen_top));
     setPmStake(String(s.polymarket_stake));
+    setRiskStopLoss(nonZero(s.risk_stop_loss_pct));
+    setRiskTakeProfit(nonZero(s.risk_take_profit_pct));
+    setRiskMaxDrawdown(nonZero(s.risk_max_drawdown_pct));
+    setRiskDailyLoss(nonZero(s.risk_daily_loss_limit));
+    setRiskMaxNotional(nonZero(s.risk_max_position_notional));
   }, []);
 
   const load = useCallback(async () => {
@@ -290,6 +307,20 @@ export function Settings() {
         }),
       );
       setNotice("Polymarket settings saved. Interval changes apply on restart.");
+    });
+
+  const saveRisk = () =>
+    run(async () => {
+      applySettings(
+        await updateRiskSettings({
+          stop_loss_pct: riskStopLoss || "0",
+          take_profit_pct: riskTakeProfit || "0",
+          max_drawdown_pct: riskMaxDrawdown || "0",
+          daily_loss_limit: riskDailyLoss || "0",
+          max_position_notional: riskMaxNotional || "0",
+        }),
+      );
+      setNotice("Risk controls saved — applied on the next engine tick.");
     });
 
   const saveAiActionMode = (mode: string) =>
@@ -942,6 +973,31 @@ export function Settings() {
 
       <Card>
         <SectionHeader
+          title="Risk controls"
+          subtitle="Global limits enforced before every order. 0 / off disables a limit."
+        />
+        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ fontSize: 12, color: "var(--text-2)" }}>
+            Changes apply on the next engine tick — a stop-loss you enable may
+            immediately close an already-losing position.
+          </div>
+
+          <RiskRow label="Stop-loss" hint="% of entry value; force-closes a losing position" unit="%" value={riskStopLoss} onChange={setRiskStopLoss} recommended="5" />
+          <RiskRow label="Take-profit" hint="% of entry value; force-closes a winning position" unit="%" value={riskTakeProfit} onChange={setRiskTakeProfit} recommended="10" />
+          <RiskRow label="Max drawdown (kill switch)" hint="% from equity peak; halts new exposure" unit="%" value={riskMaxDrawdown} onChange={setRiskMaxDrawdown} recommended="15" />
+          <RiskRow label="Daily loss limit (kill switch)" hint="quote currency; halts new exposure for the day" unit="USDT" value={riskDailyLoss} onChange={setRiskDailyLoss} placeholder="e.g. 2% of equity" />
+          <RiskRow label="Max position notional" hint="quote currency; caps a single order's size" unit="USDT" value={riskMaxNotional} onChange={setRiskMaxNotional} placeholder="e.g. 20% of equity" />
+
+          <div>
+            <Button kind="primary" onClick={() => void saveRisk()} disabled={busy}>
+              Save risk controls
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader
           title="AI council"
           subtitle="Models that vote on each research report. The confidence-weighted majority becomes the unified verdict; an empty list disables the council."
         />
@@ -1119,6 +1175,63 @@ export function Settings() {
           />
         </div>
       </Modal>
+    </div>
+  );
+}
+
+/**
+ * RiskRow — one risk limit. Percentage rows (those with a `recommended` default)
+ * get a Toggle that arms/clears the value, pre-filling the recommended default
+ * on enable. Currency rows have no recommended default, so the numeric Input
+ * alone controls them (a value > 0 arms the limit, blank/0 disables it) — a
+ * dead toggle there could never switch on, so it is replaced by a spacer that
+ * keeps the rows aligned. Inputs are floored at 0, and percentages capped at
+ * 100, so a stray negative can't leave the field and toggle disagreeing.
+ */
+function RiskRow({
+  label,
+  hint,
+  unit,
+  value,
+  onChange,
+  recommended,
+  placeholder,
+}: {
+  label: string;
+  hint: string;
+  unit: string;
+  value: string;
+  onChange: (v: string) => void;
+  recommended?: string;
+  placeholder?: string;
+}) {
+  const enabled = Number(value) > 0;
+  const isPercent = unit === "%";
+  // Toggle width (md size) — keep the spacer the same so rows stay aligned.
+  const TOGGLE_WIDTH = 34;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {recommended !== undefined ? (
+        <Toggle checked={enabled} onChange={(on) => onChange(on ? recommended : "")} />
+      ) : (
+        <span style={{ width: TOGGLE_WIDTH, flex: "0 0 auto" }} />
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, color: "var(--text)" }}>{label}</div>
+        <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{hint}</div>
+      </div>
+      <div style={{ width: 160 }}>
+        <Input
+          full
+          type="number"
+          min="0"
+          max={isPercent ? "100" : undefined}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          suffix={unit}
+          placeholder={placeholder ?? "off"}
+        />
+      </div>
     </div>
   );
 }

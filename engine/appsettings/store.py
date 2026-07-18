@@ -35,6 +35,11 @@ _AI_BASE_URL = "ai_base_url"
 _AI_API_KEY = "ai_api_key"
 _AI_SPEND_CAP = "ai_spend_cap_usd"
 _AI_ACTION_MODE = "ai_action_mode"
+_RISK_STOP_LOSS = "risk_stop_loss_pct"
+_RISK_TAKE_PROFIT = "risk_take_profit_pct"
+_RISK_MAX_DRAWDOWN = "risk_max_drawdown_pct"
+_RISK_DAILY_LOSS = "risk_daily_loss_limit"
+_RISK_MAX_NOTIONAL = "risk_max_position_notional"
 
 #: How an AI strategy's decision is applied. `notify` (the default) surfaces it
 #: for operator confirmation; `auto` executes it straight through the risk gate.
@@ -202,6 +207,59 @@ def get_ai_spend_cap(session: Session) -> Decimal:
 def set_ai_spend_cap(session: Session, cap: Decimal) -> None:
     """Set the daily LLM spend cap in USD (`0` disables the cap)."""
     set_setting(session, _AI_SPEND_CAP, str(cap))
+
+
+# -- risk limits ----------------------------------------------------------------
+# Runtime-editable risk controls. Each getter takes a `default` so callers can
+# supply the env fallback; `_decimal_setting` returns `default` only when the
+# key is unset — an explicitly-stored `"0"` is returned as `Decimal(0)`.
+
+
+def get_risk_stop_loss_pct(session: Session, default: Decimal = Decimal(0)) -> Decimal:
+    """Stop-loss as a percent of a position's entry value (0 = disabled)."""
+    return _decimal_setting(session, _RISK_STOP_LOSS, default)
+
+
+def set_risk_stop_loss_pct(session: Session, pct: Decimal) -> None:
+    set_setting(session, _RISK_STOP_LOSS, str(pct))
+
+
+def get_risk_take_profit_pct(session: Session, default: Decimal = Decimal(0)) -> Decimal:
+    """Take-profit as a percent of a position's entry value (0 = disabled)."""
+    return _decimal_setting(session, _RISK_TAKE_PROFIT, default)
+
+
+def set_risk_take_profit_pct(session: Session, pct: Decimal) -> None:
+    set_setting(session, _RISK_TAKE_PROFIT, str(pct))
+
+
+def get_risk_max_drawdown_pct(session: Session, default: Decimal = Decimal(0)) -> Decimal:
+    """Kill-switch drawdown limit as a percent from the equity peak (0 = disabled)."""
+    return _decimal_setting(session, _RISK_MAX_DRAWDOWN, default)
+
+
+def set_risk_max_drawdown_pct(session: Session, pct: Decimal) -> None:
+    set_setting(session, _RISK_MAX_DRAWDOWN, str(pct))
+
+
+def get_risk_daily_loss_limit(session: Session, default: Decimal = Decimal(0)) -> Decimal:
+    """Kill-switch daily realized-loss limit in quote currency (0 = disabled)."""
+    return _decimal_setting(session, _RISK_DAILY_LOSS, default)
+
+
+def set_risk_daily_loss_limit(session: Session, amount: Decimal) -> None:
+    set_setting(session, _RISK_DAILY_LOSS, str(amount))
+
+
+def get_risk_max_position_notional(
+    session: Session, default: Decimal = Decimal(0)
+) -> Decimal:
+    """Per-order notional cap in quote currency (0 = disabled)."""
+    return _decimal_setting(session, _RISK_MAX_NOTIONAL, default)
+
+
+def set_risk_max_position_notional(session: Session, amount: Decimal) -> None:
+    set_setting(session, _RISK_MAX_NOTIONAL, str(amount))
 
 
 # -- per-provider LLM credentials ---------------------------------------------

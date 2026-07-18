@@ -12,7 +12,6 @@ from enum import StrEnum
 
 from sqlmodel import Field, Session, SQLModel, select
 
-from config import settings
 from trading.executor_router import ExecutorRouter
 from trading.executors.base import Order
 from trading.models import FillSide
@@ -127,7 +126,7 @@ def execute_signal(
         side=FillSide(signal.action),
         quantity=signal.quantity,
     )
-    reviewed = RiskManager.from_settings(settings).review(
+    reviewed = RiskManager.from_store(session).review(
         session, order, position, price
     )
     if reviewed is None:

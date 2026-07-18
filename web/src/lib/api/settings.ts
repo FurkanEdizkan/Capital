@@ -110,6 +110,20 @@ export async function updatePolymarketSettings(body: {
   return data;
 }
 
+export async function updateRiskSettings(body: {
+  stop_loss_pct: string;
+  take_profit_pct: string;
+  max_drawdown_pct: string;
+  daily_loss_limit: string;
+  max_position_notional: string;
+}): Promise<Settings> {
+  const { data, error } = await api.PUT("/api/settings/risk", { body });
+  if (error || !data) {
+    throw new Error(errorDetail(error, "Failed to update risk settings"));
+  }
+  return data;
+}
+
 export async function updateCouncilSettings(body: {
   members: { provider: string; model: string }[];
   quorum: string;
