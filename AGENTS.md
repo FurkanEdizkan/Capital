@@ -37,19 +37,28 @@ in **Capital**. Humans: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Skills
 
-This repo's Claude skills live in the
-[`FurkanEdizkan/My-Skills`](https://github.com/FurkanEdizkan/My-Skills) plugin
-marketplace, not in `.claude/skills/`. The marketplace and the `skills` plugin
-are pre-registered in [`.claude/settings.json`](.claude/settings.json), so
-Claude Code will offer to trust + install them automatically the first time you
-open this repo. If you need to install manually:
+Capital ships two kinds of Claude skills:
 
-```sh
-/plugin marketplace add FurkanEdizkan/My-Skills
-/plugin install skills@furkanedizkan-skills
-```
+- **Vendored, always present** — committed under
+  [`.claude/skills/`](.claude/skills/) so every contributor and agent has them
+  on clone with no setup: `conventional-commits` and `conventional-branches`
+  (use these when writing commits/branches), plus `design-taste-frontend`.
+  Versions are pinned in
+  [`.claude/skills/skills-lock.json`](.claude/skills/skills-lock.json); run
+  `npm run skills:check` to see upstream updates and `npm run skills:update` to
+  pull them (opt-in — never runs in a git hook). See
+  [`.claude/skills/README.md`](.claude/skills/README.md).
+- **Marketplace plugin** — the
+  [`FurkanEdizkan/My-Skills`](https://github.com/FurkanEdizkan/My-Skills)
+  marketplace + `skills` plugin are pre-registered in
+  [`.claude/settings.json`](.claude/settings.json) and provide the rest
+  (`modular-services`, `three-tier-git-flow`, `create-github-issue`). Claude
+  Code offers to install it on first open; to do it manually:
 
-Provided: `conventional-commits`, `conventional-branches`, `modular-services`.
+  ```sh
+  /plugin marketplace add FurkanEdizkan/My-Skills
+  /plugin install skills@furkanedizkan-skills
+  ```
 
 ## Before you say "done"
 
