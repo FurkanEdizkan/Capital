@@ -5,6 +5,10 @@
 # Scripts must stay LF even on Windows checkouts.
 *.sh text eol=lf
 
+# Vendored skills are content-hashed by scripts/skills-sync.mjs; pin them to LF
+# so the checked-out bytes always match the sha256 recorded in skills-lock.json.
+.claude/skills/** text eol=lf
+
 # Treat common binary assets as binary (no EOL munging, no textual diff).
 *.png binary
 *.jpg binary

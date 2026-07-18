@@ -3,7 +3,9 @@
   "private": true,
   "description": "Repo-level tooling (husky + commitlint). Apps live in engine/ and web/.",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "skills:check": "node scripts/skills-sync.mjs check",
+    "skills:update": "node scripts/skills-sync.mjs update"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",

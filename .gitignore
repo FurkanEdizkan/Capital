@@ -24,3 +24,16 @@ __pycache__/
 # enables the skills plugin for anyone working in this repo (see AGENTS.md).
 .claude/*
 !.claude/settings.json
+# Team-shared skills are vendored under .claude/skills/ and committed so every
+# contributor gets them on clone (no plugin install needed). Only the folders
+# listed below + skills-lock.json are tracked; all other .claude/ content —
+# local settings, locally-installed skills, worktrees — stays ignored. Versions
+# are managed by scripts/skills-sync.mjs (see .claude/skills/README.md); add a
+# new "!.claude/skills/<name>/" line plus a lock entry to share more.
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/skills-lock.json
+!.claude/skills/README.md
+!.claude/skills/conventional-commits/
+!.claude/skills/conventional-branches/
+!.claude/skills/design-taste-frontend/
