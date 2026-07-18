@@ -1,0 +1,33 @@
+{
+  "lockfileVersion": 1,
+  "_comment": "Vendored Claude Code skills committed for the whole team. Managed by scripts/skills-sync.mjs — see .claude/skills/README.md. 'sha256' is the sha of the exact SKILL.md bytes (LF) committed here; 'commit' pins the upstream repo at vendor time.",
+  "skills": {
+    "conventional-commits": {
+      "source": "github:FurkanEdizkan/My-Skills",
+      "ref": "main",
+      "path": "skills/conventional-commits/SKILL.md",
+      "commit": "70ff514624c7f9ee4576edcef662f8733c6c1aef",
+      "sha256": "7ecbc3f1271ee486de17e08fdac62322c73210f524d5e86c0594b91c42e8b206",
+      "license": "Apache-2.0",
+      "vendoredAt": "2026-07-18"
+    },
+    "conventional-branches": {
+      "source": "github:FurkanEdizkan/My-Skills",
+      "ref": "main",
+      "path": "skills/conventional-branches/SKILL.md",
+      "commit": "70ff514624c7f9ee4576edcef662f8733c6c1aef",
+      "sha256": "b51dc2f6205aa5bfb79940b4c2f7c8d9683ea7d1dbd9bd0ab208c52704d9aad6",
+      "license": "Apache-2.0",
+      "vendoredAt": "2026-07-18"
+    },
+    "design-taste-frontend": {
+      "source": "github:Leonxlnx/taste-skill",
+      "ref": "main",
+      "path": "skills/taste-skill/SKILL.md",
+      "commit": "7c397f22d3af6f2b3f1925eb147d8e8801086151",
+      "sha256": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89",
+      "license": "MIT",
+      "vendoredAt": "2026-07-18"
+    }
+  }
+}
